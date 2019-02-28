@@ -8,18 +8,18 @@ deltaT = 15;
 dT = 0.04;
 gamma = t(end)/deltaT;
 
-X = zeros(0);
+X = zeros(size(x));
 
 n = 1;
+c = 0;
 for T=0:dT:deltaT
+    T = n*dT;
     while n<N && t(n+1)<=gamma*T
         n = n+1;
     end
-    if n>=N
-        break
-    end
-    c = (gamma*T-t(n))/(t(n+1)-t(n));
-    X(end+1) = 0.8*(x(n)*c+x(n+1)*(1-c));
+    c = (gamma*toc-t(n))/(t(n+1)-t(n));
+    X() = 0.8*(x(n)*c+x(n+1)*(1-c));
+    n = n+1;
 end
 
 fig = figure('Visible', 'on');
@@ -34,10 +34,17 @@ set(fig, 'WindowButtonDownFcn', @(~, ~) show());
 p1 = plot(ax, 0, 0, 'o');
 
     function show()
-        for el=X
-            set (p1 , 'XData', 0.4*el);
+        tic
+        n = 1;
+        c = 0;
+        while n<N
+            set (p1 , 'XData', 0.8*(x(n)*c+x(n+1)*(1-c)));
             drawnow limitrate;
             pause(dT);
+            while n<N && t(n+1)<=gamma*toc
+                n = n+1;
+            end
+            c = (gamma*toc-t(n))/(t(n+1)-t(n));
         end
     end
 
