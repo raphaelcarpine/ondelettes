@@ -5,7 +5,7 @@ t = t-t(1);
 N = length(t);
 
 deltaT = 15;
-dT = 0.04;
+dT = 0.01;
 gamma = t(end)/deltaT;
 
 x = x(:, 1:int16(size(x,2)/2));
@@ -21,11 +21,11 @@ for T=0:dT:deltaT
         break
     end
     c = (gamma*T-t(n))/(t(n+1)-t(n));
-    X(end+1,:) = 0.8*(x(n,:)*c+x(n+1,:)*(1-c));
+    X(end+1,:) = x(n,:)*c+x(n+1,:)*(1-c);
 end
 
 
-if isa(objet, 'Structure') && size(x, 1)==objet.ddl
+if isa(objet, 'Structure') && size(x, 2)==objet.ddl
     lignes = 1;
 else
     lignes = 2;
@@ -44,49 +44,67 @@ ax = gca;
 set(ax,'DataAspectRatio',[1 1 1])
 ax.Position = ax.OuterPosition;
 hold(ax, 'on');
-xlim([-1 colonnes]);
-ylim([0.5-lignes 0.5]);
+xlim([-1.5, colonnes+0.5]);
+ylim([0.5-lignes, 0.5]);
 set(fig, 'WindowButtonDownFcn', @(~, ~) show());
 
 updates = {};
 n = size(X, 2);
-X(1, end+1) = 0;
 for k=1:n
     if isa(objet, 'Structure') && k<=objet.ddl
-        X(:, k) = X(:, k)/max(abs(X(:, k)));
+        alpha = 1/max(abs(X(:, k)));
         draw = plot(ax, k-1, 0, 'o');
-        updatek = @(Xt) set(draw, 'XData', k-1+0.4*Xt(k));
+        updatek = @(Xt) set(draw, 'XData', k-1+0.5*alpha*Xt(k));
         updates{end+1} = updatek;
     else
         if isa(objet, 'Structure')
             tmd = objet.TMDs{k-objet.ddl}{1};
             ddl = objet.TMDs{k-objet.ddl}{2};
+            struc = 1;
         else
             tmd = objet;
-            ddl = n+1;
+            ddl = 1;
+            struc = 0;
         end
         
         if isa(tmd, 'TMDpendule')
-            draw1 = plot(ax, [ddl-1 ddl-1], [0 -1]);
-%             draw2 = plot(ax, ddl-1, -1, 'o');
-            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.4*Xt(ddl) ddl-1+0.4*Xt(ddl)+sin(Xt(k))], 'YData', [0 -cos(Xt(k))]);
-%             set(draw2, 'XData', ddl-1+0.4*Xt(ddl)+0.4*sin(Xt(k)), 'YData', -0.4*cos(Xt(k)));
+            L = 0.5*tmd.l/max(abs(X(:, ddl)));
+            alpha = 1/max(abs(X(:, ddl)));
+            draw1 = plot(ax, [ddl-1 ddl-1], [0 -L]);
+            ax.ColorOrderIndex = ax.ColorOrderIndex-1;
+            draw2 = plot(ax, ddl-1, -L, 'o');
+            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.5*struc*alpha*Xt(ddl) ddl-1+0.5*struc*alpha*Xt(ddl)+L*sin(Xt(k))], 'YData', [0 -L*cos(Xt(k))]);
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.5*struc*alpha*Xt(ddl)+L*sin(Xt(k)), 'YData', -L*cos(Xt(k)));
             updates{end+1} = updatek;
+            updates{end+1} = updatek1;
+        elseif isa(tmd, 'TMDmasseressort')
+            alpha = 1/max(abs(X(:, ddl)));
+            draw1 = plot(ax, [ddl-1 ddl-1 ddl-1 ddl-1], [0 -0.5 -0.5 -1]);
+            ax.ColorOrderIndex = ax.ColorOrderIndex-1;
+            draw2 = plot(ax, ddl-1, -1, 'o');
+            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.5*struc*alpha*Xt(ddl), ddl-1+0.5*struc*alpha*Xt(ddl), ddl-1+0.5*struc*alpha*Xt(ddl)+0.5*alpha*Xt(k), ddl-1+0.5*struc*alpha*Xt(ddl)+0.5*alpha*Xt(k)]);
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.5*struc*alpha*Xt(ddl)+0.5*alpha*Xt(k));
+            updates{end+1} = updatek;
+            updates{end+1} = updatek1;
         end
     end
 end
 
     function show()
-        for Xt=X.'
-            for kupdate = 1:length(updates)
-                update = updates{kupdate};
-                update(Xt);
+        try
+            for Xt=X.'
+                for kupdate = 1:length(updates)
+                    update = updates{kupdate};
+                    update(Xt);
+                end
+                drawnow limitrate;
+                pause(dT);
             end
-            drawnow limitrate;
-            pause(dT);
+        catch
         end
     end
 
-show();
+drawnow;
+% show();
 end
 

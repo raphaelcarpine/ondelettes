@@ -5,7 +5,7 @@ t = t-t(1);
 N = length(t);
 
 deltaT = 15;
-dT = 0.04;
+dT = 0.01;
 gamma = t(end)/deltaT;
 
 x = x(:, 1:int16(size(x,2)/2));
@@ -39,18 +39,20 @@ end
 
 fig = figure;
 axis off;
+% axis equal;
 ax = gca;
+set(ax,'DataAspectRatio',[1 1 1])
 ax.Position = ax.OuterPosition;
 hold(ax, 'on');
-xlim([-0.5 colonnes-0.5]);
+xlim([-1.5 colonnes+0.5]);
 ylim([0.5-lignes 0.5]);
 set(fig, 'WindowButtonDownFcn', @(~, ~) show());
 
 updates = {};
 n = size(X, 2);
-X(1, end+1) = 0;
 for k=1:n
     if isa(objet, 'Structure') && k<=objet.ddl
+        X(:, k) = X(:, k)/max(abs(X(:, k)));
         draw = plot(ax, k-1, 0, 'o');
         updatek = @(Xt) set(draw, 'XData', k-1+0.4*Xt(k));
         updates{end+1} = updatek;
@@ -58,33 +60,50 @@ for k=1:n
         if isa(objet, 'Structure')
             tmd = objet.TMDs{k-objet.ddl}{1};
             ddl = objet.TMDs{k-objet.ddl}{2};
+            struc = 1;
         else
             tmd = objet;
-            ddl = n+1;
+            ddl = 1;
+            struc = 0;
         end
         
         if isa(tmd, 'TMDpendule')
-            draw1 = plot(ax, [k-1 k-1], [0 -1]);
-            draw2 = plot(ax, k-1, -1, 'o');
-            updatek = @(Xt) set(draw1, 'XData', [k-1+0.4*Xt(ddl) k-1+0.4*Xt(ddl)+0.4*sin(Xt(k))]),
-            set(draw1, 'YData', [0 -0.4*cos(Xt(k))]),
-            set(draw1, 'XData', [k-1+0.4*Xt(ddl) k-1+0.4*Xt(ddl)+0.4*sin(Xt(k))]);
+            L = 
+            draw1 = plot(ax, [ddl-1 ddl-1], [0 -1]);
+            ax.ColorOrderIndex = ax.ColorOrderIndex-1;
+            draw2 = plot(ax, ddl-1, -1, 'o');
+            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.4*struc*Xt(ddl) ddl-1+0.4*struc*Xt(ddl)+sin(Xt(k))], 'YData', [0 -cos(Xt(k))]);
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.4*struc*Xt(ddl)+sin(Xt(k)), 'YData', -cos(Xt(k)));
             updates{end+1} = updatek;
+            updates{end+1} = updatek1;
+        elseif isa(tmd, 'TMDmasseressort')
+            X(:, k) = X(:, k)/max(abs(X(:, k)));
+            draw1 = plot(ax, [ddl-1 ddl-1 ddl-1 ddl-1], [0 -0.5 -0.5 -1]);
+            ax.ColorOrderIndex = ax.ColorOrderIndex-1;
+            draw2 = plot(ax, ddl-1, -1, 'o');
+            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.4*struc*Xt(ddl), ddl-1+0.4*struc*Xt(ddl), ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k), ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k)]);
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k));
+            updates{end+1} = updatek;
+            updates{end+1} = updatek1;
         end
     end
 end
 
     function show()
-        for Xt=X.'
-            for kupdate = 1:length(updates)
-                update = updates{kupdate};
-                update(Xt);
+        try
+            for Xt=X.'
+                for kupdate = 1:length(updates)
+                    update = updates{kupdate};
+                    update(Xt);
+                end
+                drawnow limitrate;
+                pause(dT);
             end
-            drawnow limitrate;
-            pause(dT);
+        catch
         end
     end
 
-show();
+drawnow;
+% show();
 end
 

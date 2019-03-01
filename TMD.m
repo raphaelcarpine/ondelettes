@@ -24,6 +24,7 @@ classdef TMD
             %   Detailed explanation goes here
             F = @(t, X) [X(2); 1/obj.m1(X(1))*obj.f(X(1), X(2))];
             [t, x] = differentialEq([x0 v0], F, T, true);
+            animate(obj, t, x);
         end
         
         function amortissementFreq(obj, ampl, freqs, periodesRegimeTransitoire)

@@ -1,22 +1,20 @@
-% ms = TMDmasseressort(100, 1, @(x,v)0);
-% tour1 = Structure(1, 1, @(x,v) 0.0*v, {{ms, 1}});
-% tour2 = Structure([1 0;0 100], [2 -1;-1 1], @(x,v) [0.0*v(1);0], {});
+% pendule = TMDpendule(9.81^2, 1, 9.81, @(theta,omega) sign(omega));
+% pendule.reponseLibre(0, 2, 500);
 % 
-% tour1.reponseLibreAvecTMD(0,1, 40);
-% tour2.reponseLibreAvecTMD([0 0],[1 0], 40);
+% mr = TMDmasseressort(1, 1, @(x, v) 0.01*sign(v));
+% mr.reponseLibre(0, 2, 500);
+% 
+% pendule = TMDpendule(9.81^2, 1, 9.81, @(theta,omega) 50*omega*(abs(theta)<0.1));
+% tour = Structure(50, 50, @(x,v) 0.0*v, {{pendule, 1}});
+% tour.reponseLibreAvecTMD(0, 1, 200);
 
-pendule = TMDpendule(9.81^2, 1, 9.81, @(theta,omega) 50*omega*(abs(theta)<5*pi/180));
-[t, x] = pendule.reponseLibre(pi/2-0.0001, 0, 200);
-tempsCaracteristique(t, x(:, 1))
+% l = 1;
+% pendule = TMDpendule(l^2, 1, l, @(theta,omega) 0);
+% tour = Structure(50, 50, @(x,v) 10*v, {{pendule, 1}});
+% tour.reponseForceeAvecTMD(0, 0, 100, @(t) [1 0], true);
 
-pendule2 = TMDpendule(9.81^2, 2, 9.81, @(theta,omega) 50*omega*(abs(theta)<5*pi/180));
-
-tour = Structure(50, 50, @(x,v) 0.0*v, {{pendule, 1}, {pendule2, 1}});
-tour2 = Structure([50 0;0 50], [100 -50;-50 50], @(x,v) [0;0], {{pendule, 1}, {pendule2, 2}});
-
-% tour.reponseLibreSansTMD(0, 1, 200);
-[t, x] = tour.reponseLibreAvecTMD(0, 5, 200);
-[t, x] = tour2.reponseLibreAvecTMD([0 0], [5 0], 200);
-tempsCaracteristique(t, x(:, 1))
-
-animate(tour2, t, x);
+mr = TMDmasseressort(1, 1, @(x, v) 0.05*v);
+mr.reponseLibre(0, 1, 200);
+tour = Structure(50, 50, @(x,v) 10*v, {{mr, 1}});
+tour.reponseLibre(0, 1, 1000, false);
+tour.diagrammeBode(1, 1, 1/(2*pi)*exp(linspace(-1, 1, 200)), 500, true);

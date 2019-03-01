@@ -27,21 +27,20 @@ switch visible
     case false
         stats = 'off';
 end
-[t, x] = solver(f, [0 T], x0, odeset('RelTol',1e-10,'Stats',stats)); %,'OutputFcn',@odeplot
+[t, x] = solver(f, [0 T], x0, odeset('RelTol',1e-6,'Stats',stats)); %,'OutputFcn',@odeplot
 if visible
     fig = figure;
     n = size(x,2)/2;
     points = {};
     for k=1:n
         subplot(n, 1, k);
-        set(gca, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
         hold on
-        plot(t, x(:,k), 'Color', [0 0.4470 0.7410]);
-        points{end+1} = plot(t, x(:,k), 'o', 'Color', [0 0.4470 0.7410]);
+        plot(t, x(:,k), 'b');
+        points{end+1} = plot(t, x(:,k), 'bo');
         hold off
         xlabel('t');
         ylabel(names(k));
-    end
+    end    
     set(fig, 'WindowButtonDownFcn', @(~, ~) tooglePoints(points));
 end
 
