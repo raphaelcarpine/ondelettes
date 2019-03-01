@@ -1,4 +1,4 @@
-function animate(object, t, x)
+function animate(objet, t, x)
 %animate Summary of this function goes here
 %   Detailed explanation goes here
 t = t-t(1);
@@ -8,43 +8,80 @@ deltaT = 15;
 dT = 0.04;
 gamma = t(end)/deltaT;
 
-X = zeros(size(x));
+x = x(:, 1:int16(size(x,2)/2));
+
+X = zeros(0);
 
 n = 1;
-c = 0;
 for T=0:dT:deltaT
-    T = n*dT;
     while n<N && t(n+1)<=gamma*T
         n = n+1;
     end
-    c = (gamma*toc-t(n))/(t(n+1)-t(n));
-    X() = 0.8*(x(n)*c+x(n+1)*(1-c));
-    n = n+1;
+    if n>=N
+        break
+    end
+    c = (gamma*T-t(n))/(t(n+1)-t(n));
+    X(end+1,:) = 0.8*(x(n,:)*c+x(n+1,:)*(1-c));
 end
 
-fig = figure('Visible', 'on');
+
+if isa(objet, 'Structure') && size(x, 1)==objet.ddl
+    lignes = 1;
+else
+    lignes = 2;
+end
+if isa(objet, 'Structure')
+    colonnes = objet.ddl;
+else
+    colonnes = 1;
+end
+
+
+fig = figure;
 axis off;
 ax = gca;
 ax.Position = ax.OuterPosition;
 hold(ax, 'on');
-xlim([-0.5 0.5]);
-ylim([-0.5 0.5]);
+xlim([-0.5 colonnes-0.5]);
+ylim([0.5-lignes 0.5]);
 set(fig, 'WindowButtonDownFcn', @(~, ~) show());
 
-p1 = plot(ax, 0, 0, 'o');
+updates = {};
+n = size(X, 2);
+X(1, end+1) = 0;
+for k=1:n
+    if isa(objet, 'Structure') && k<=objet.ddl
+        draw = plot(ax, k-1, 0, 'o');
+        updatek = @(Xt) set(draw, 'XData', k-1+0.4*Xt(k));
+        updates{end+1} = updatek;
+    else
+        if isa(objet, 'Structure')
+            tmd = objet.TMDs{k-objet.ddl}{1};
+            ddl = objet.TMDs{k-objet.ddl}{2};
+        else
+            tmd = objet;
+            ddl = n+1;
+        end
+        
+        if isa(tmd, 'TMDpendule')
+            draw1 = plot(ax, [k-1 k-1], [0 -1]);
+            draw2 = plot(ax, k-1, -1, 'o');
+            updatek = @(Xt) set(draw1, 'XData', [k-1+0.4*Xt(ddl) k-1+0.4*Xt(ddl)+0.4*sin(Xt(k))]),
+            set(draw1, 'YData', [0 -0.4*cos(Xt(k))]),
+            set(draw1, 'XData', [k-1+0.4*Xt(ddl) k-1+0.4*Xt(ddl)+0.4*sin(Xt(k))]);
+            updates{end+1} = updatek;
+        end
+    end
+end
 
     function show()
-        tic
-        n = 1;
-        c = 0;
-        while n<N
-            set (p1 , 'XData', 0.8*(x(n)*c+x(n+1)*(1-c)));
+        for Xt=X.'
+            for kupdate = 1:length(updates)
+                update = updates{kupdate};
+                update(Xt);
+            end
             drawnow limitrate;
             pause(dT);
-            while n<N && t(n+1)<=gamma*toc
-                n = n+1;
-            end
-            c = (gamma*toc-t(n))/(t(n+1)-t(n));
         end
     end
 
