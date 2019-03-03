@@ -37,7 +37,7 @@ if visible
         set(gca, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
         hold on
         plot(t, x(:,k), 'Color', [0 0.4470 0.7410]);
-        points{end+1} = plot(t, x(:,k), 'o', 'Color', [0 0.4470 0.7410]);
+        points{end+1} = plot(t, x(:,k), 'o', 'Color', [0 0.4470 0.7410], 'Visible', 'off');
         hold off
         xlabel('t');
         ylabel(names(k));

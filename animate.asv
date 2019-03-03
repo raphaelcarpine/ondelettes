@@ -21,11 +21,11 @@ for T=0:dT:deltaT
         break
     end
     c = (gamma*T-t(n))/(t(n+1)-t(n));
-    X(end+1,:) = 0.8*(x(n,:)*c+x(n+1,:)*(1-c));
+    X(end+1,:) = x(n,:)*c+x(n+1,:)*(1-c);
 end
 
 
-if isa(objet, 'Structure') && size(x, 1)==objet.ddl
+if isa(objet, 'Structure') && size(x, 2)==objet.ddl
     lignes = 1;
 else
     lignes = 2;
@@ -44,17 +44,18 @@ ax = gca;
 set(ax,'DataAspectRatio',[1 1 1])
 ax.Position = ax.OuterPosition;
 hold(ax, 'on');
-xlim([-1.5 colonnes+0.5]);
-ylim([0.5-lignes 0.5]);
+xlim([-1.5, colonnes+0.5]);
+ylim([0.5-lignes, 0.5]);
 set(fig, 'WindowButtonDownFcn', @(~, ~) show());
 
 updates = {};
 n = size(X, 2);
 for k=1:n
     if isa(objet, 'Structure') && k<=objet.ddl
-        X(:, k) = X(:, k)/max(abs(X(:, k)));
-        draw = plot(ax, k-1, 0, 'o');
-        updatek = @(Xt) set(draw, 'XData', k-1+0.4*Xt(k));
+        alpha = 1/max(abs(X(:, k)));
+        draw = plot(ax, k-1, 0, 'o', 'MarkerSize',20);
+        set(draw, 'MarkerFaceColor', get(draw, 'Color'));
+        updatek = @(Xt) set(draw, 'XData', k-1+0.5*alpha*Xt(k));
         updates{end+1} = updatek;
     else
         if isa(objet, 'Structure')
@@ -68,26 +69,31 @@ for k=1:n
         end
         
         if isa(tmd, 'TMDpendule')
-            L = 
-            draw1 = plot(ax, [ddl-1 ddl-1], [0 -1]);
+            L = 0.5*tmd.l/max(abs(X(:, ddl)));
+            alpha = 1/max(abs(X(:, ddl)));
+            draw1 = plot(ax, [ddl-1 ddl-1], [0 -L]);
             ax.ColorOrderIndex = ax.ColorOrderIndex-1;
-            draw2 = plot(ax, ddl-1, -1, 'o');
-            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.4*struc*Xt(ddl) ddl-1+0.4*struc*Xt(ddl)+sin(Xt(k))], 'YData', [0 -cos(Xt(k))]);
-            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.4*struc*Xt(ddl)+sin(Xt(k)), 'YData', -cos(Xt(k)));
+            draw2 = plot(ax, ddl-1, -L, 'o', 'MarkerSize', 10);
+            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.5*struc*alpha*Xt(ddl) ddl-1+0.5*struc*alpha*Xt(ddl)+L*sin(Xt(k))], 'YData', [0 -L*cos(Xt(k))]);
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.5*struc*alpha*Xt(ddl)+L*sin(Xt(k)), 'YData', -L*cos(Xt(k)));
             updates{end+1} = updatek;
             updates{end+1} = updatek1;
         elseif isa(tmd, 'TMDmasseressort')
-            X(:, k) = X(:, k)/max(abs(X(:, k)));
-            draw1 = plot(ax, [ddl-1 ddl-1 ddl-1 ddl-1], [0 -0.5 -0.5 -1]);
+            alpha = 1/max(abs(X(:, ddl)));
+            draw1 = plot(ax, ressort(ddl-1, ddl-1, 0, -1, 1), ressort(ddl-1, ddl-1, 0, -1, 2));
             ax.ColorOrderIndex = ax.ColorOrderIndex-1;
-            draw2 = plot(ax, ddl-1, -1, 'o');
-            updatek = @(Xt) set(draw1, 'XData', [ddl-1+0.4*struc*Xt(ddl), ddl-1+0.4*struc*Xt(ddl), ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k), ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k)]);
-            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.4*struc*Xt(ddl)+0.4*Xt(k));
+            draw2 = plot(ax, ddl-1, -1, 'o', 'MarkerSize', 10);
+            updatek = @(Xt) set(draw1, 'XData', ressort(ddl-1+0.5*struc*alpha*Xt(ddl), ddl-1+0.5*struc*alpha*Xt(ddl)+0.5*alpha*Xt(k), 0, -1, 1));
+            updatek1 = @(Xt) set(draw2, 'XData', ddl-1+0.5*struc*alpha*Xt(ddl)+0.5*alpha*Xt(k));
             updates{end+1} = updatek;
             updates{end+1} = updatek1;
         end
     end
 end
+
+    function update(Xt)
+        
+    end
 
     function show()
         try
@@ -105,5 +111,30 @@ end
 
 drawnow;
 % show();
+end
+
+
+function XY = ressort(x1, x2, y1, y2, dim)
+alpha = 0.1;
+n = 6;
+
+L = x2-x1;
+H = y2-y1;
+XY = zeros(2, 4+2*n);
+
+XY(:, 1) = [x1 y1];
+XY(:, 2) = [x1 (y1+y2)/2];
+XY(:, end-1) = [x2 (y1+y2)/2];
+XY(:, end) = [x2 y2];
+
+for k=1:n
+    XY(1, 2*k+1) = x1 + L*(4*k-3)/(4*n);
+    XY(1, 2*k+2) = x1 + L*(4*k-1)/(4*n);
+    XY(2, 2*k+1) = (y1+y2)/2 + alpha*H;
+    XY(2, 2*k+2) = (y1+y2)/2 - alpha*H;
+end
+
+XY = XY(dim, :);
+
 end
 
