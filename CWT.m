@@ -11,6 +11,7 @@ end
 
 ondelettes = containers.Map;
 ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2*Q);
+ondelettes('fourrier') = @(Q) @(t) 1/sqrt(2*pi)*exp(2*1i*pi*t);
 
 
 Psi = ondelettes(ondelette);
@@ -39,5 +40,10 @@ figure;
 surf(freqs2, T2, abs(map), 'edgecolor', 'none');
 xlabel('f');
 ylabel('t');
+
+% figure;
+% surf(freqs2, T2, angle(map), 'edgecolor', 'none');
+% xlabel('f');
+% ylabel('t');
 
 end
