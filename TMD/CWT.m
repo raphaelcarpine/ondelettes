@@ -30,7 +30,7 @@ end
 
 
 ondelettes = containers.Map;
-ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2*Q);
+ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2/Q);
 ondelettes('fourrier') = @(Q) @(t) 1/sqrt(2*pi)*exp(2*1i*pi*t);
 
 
@@ -57,36 +57,36 @@ for i = 1:length(freqs)
 end
 
 figure;
-surf(freqs2, T2, abs(map), 'edgecolor', 'none');
+surf(freqs2, T2, log(abs(map)), 'edgecolor', 'none');
 xlabel('f');
 ylabel('t');
 zlabel('arg');
 
 
-phi = angle(map);
-for ifreq = 1:length(freqs)
-    for iT = 1:length(T)-1
-        delta = phi(ifreq, iT+1) - phi(ifreq, iT);
-        if abs(delta + 2*pi) < abs(delta)
-            phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) + 2*pi;
-        elseif abs(delta - 2*pi) < abs(delta)
-            phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) - 2*pi;
-        end
-    end
-end
-iT = int16(length(T)/2);
-for ifreq = 1:length(freqs)-1
-    delta = phi(ifreq+1, iT) - phi(ifreq, iT);
-    if abs(delta + 2*pi) < abs(delta)
-        phi(ifreq+1:end, :) = phi(ifreq+1:end, :) + 2*pi;
-    elseif abs(delta - 2*pi) < abs(delta)
-        phi(ifreq+1:end, :) = phi(ifreq+1:end, :) - 2*pi;
-    end
-end
-figure;
-surf(freqs2, T2, phi + 2*pi*freqs'*T, 'edgecolor', 'none');
-xlabel('f');
-ylabel('t');
-zlabel('phi+omega*t');
+% phi = angle(map);
+% for ifreq = 1:length(freqs)
+%     for iT = 1:length(T)-1
+%         delta = phi(ifreq, iT+1) - phi(ifreq, iT);
+%         if abs(delta + 2*pi) < abs(delta)
+%             phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) + 2*pi;
+%         elseif abs(delta - 2*pi) < abs(delta)
+%             phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) - 2*pi;
+%         end
+%     end
+% end
+% iT = int16(length(T)/2);
+% for ifreq = 1:length(freqs)-1
+%     delta = phi(ifreq+1, iT) - phi(ifreq, iT);
+%     if abs(delta + 2*pi) < abs(delta)
+%         phi(ifreq+1:end, :) = phi(ifreq+1:end, :) + 2*pi;
+%     elseif abs(delta - 2*pi) < abs(delta)
+%         phi(ifreq+1:end, :) = phi(ifreq+1:end, :) - 2*pi;
+%     end
+% end
+% figure;
+% surf(freqs2, T2, phi + 2*pi*freqs'*T, 'edgecolor', 'none');
+% xlabel('f');
+% ylabel('t');
+% zlabel('phi+omega*t');
 
 end

@@ -8,7 +8,6 @@ deltaT = 15;
 dT = 0.01;
 gamma = t(end)/deltaT;
 
-x = x(:, 1:int16(size(x,2)/2));
 
 X = zeros(0);
 

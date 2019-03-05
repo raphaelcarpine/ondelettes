@@ -41,16 +41,19 @@ end
         n = size(x, 2);
         fig = figure;
         points = {};
+        axes = [];
         for k=1:n
-            subplot(n, 1, k);
+            axes(end+1) = subplot(n, 1, k);
             set(gca, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
             hold on
             plot(t, x(:,k), 'Color', [0 0.4470 0.7410]);
             points{end+1} = plot(t, x(:,k), 'o', 'Color', [0 0.4470 0.7410], 'Visible', 'off');
             hold off
-            xlabel('t');
+%             xlabel('t');
             ylabel(xname + k);
         end
+        xlabel('t');
+        linkaxes(axes,'x')
         set(fig, 'WindowButtonDownFcn', @(~, ~) tooglePoints(points));
     end
 
