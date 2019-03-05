@@ -30,10 +30,10 @@ end
 close(wait);
 
 for j = 1:length(T)
-    freqs2(:, j) = freqs;
+    freqs2(:, j) = freqs';
 end
 for i = 1:length(freqs)
-    T2(i, :) = T.';
+    T2(i, :) = T;
 end
 
 figure;
@@ -41,9 +41,29 @@ surf(freqs2, T2, abs(map), 'edgecolor', 'none');
 xlabel('f');
 ylabel('t');
 
-% figure;
-% surf(freqs2, T2, angle(map), 'edgecolor', 'none');
-% xlabel('f');
-% ylabel('t');
+
+phi = angle(map);
+for ifreq = 1:length(freqs)
+    for iT = 1:length(T)-1
+        delta = phi(ifreq, iT+1) - phi(ifreq, iT);
+        if abs(delta + 2*pi) < abs(delta)
+            phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) + 2*pi;
+        elseif abs(delta - 2*pi) < abs(delta)
+            phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) - 2*pi;
+        end
+    end
+end
+for ifreq = 1:length(freqs)-1
+    delta = phi(ifreq, 1) - phi(ifreq+1, 1);
+    if abs(delta + 2*pi) < abs(delta)
+        phi(ifreq, 1) = phi(ifreq, iT+1:end) + 2*pi;
+    elseif abs(delta - 2*pi) < abs(delta)
+        phi(ifreq, iT+1:end) = phi(ifreq, iT+1:end) - 2*pi;
+    end
+end
+figure;
+surf(freqs2, T2, phi - 2*pi*freqs'*T, 2*pi, 'edgecolor', 'none');
+xlabel('f');
+ylabel('t');
 
 end

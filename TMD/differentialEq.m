@@ -33,8 +33,8 @@ a = va(:, n+1:2*n);
 
 if visible
     multiplePlot(t, x, "x");
-    multiplePlot(t, v, "v");
-    multiplePlot(t, a, "a");
+%     multiplePlot(t, v, "v");
+%     multiplePlot(t, a, "a");
 end
 
     function multiplePlot(t, x, xname)
