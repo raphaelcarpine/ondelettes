@@ -1,5 +1,5 @@
 
-function WvltOut=WvltComp(X,Y,WvltFreq,Qin,varargin)
+function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
 p = inputParser ;
 %% parametres par defaut
 ZeroPaddingDef = 1;
@@ -9,7 +9,7 @@ ctDef = 5;
 addRequired(p,'X')
 addRequired(p,'Y')
 addRequired(p,'WvltFreq')
-addRequired(p,'Q')
+addRequired(p,'Qin')
 addParameter(p,'ZeroPadding',ZeroPaddingDef);
 addParameter(p,'CenterSignal',CenterSignalDef);
 addParameter(p,'ct',ctDef);
@@ -22,6 +22,14 @@ CenterSignal = p.Results.CenterSignal;
 ct = p.Results.ct;
 %%
 Fs = 1/mean(X(2:end)-X(1:end-1)); %Frequence d'echantillonage
+
+Diff = diff(X);
+Diff = Diff/Diff(1);
+for i = 2:length(D)
+    if abs(Diff(i)-1) > 1e-5
+        warning('pas de temps non constant');
+    end
+end
 
 if ~iscolumn(Y)
     Y =transpose(Y); %Y en colonne

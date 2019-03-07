@@ -31,7 +31,7 @@ end
 
 ondelettes = containers.Map;
 ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2/Q);
-ondelettes('fourrier') = @(Q) @(t) 1/sqrt(2*pi)*exp(2*1i*pi*t);
+ondelettes('fourier') = @(Q) @(t) 1/sqrt(2*pi)*exp(2*1i*pi*t);
 
 
 Psi = ondelettes(ondelette);
