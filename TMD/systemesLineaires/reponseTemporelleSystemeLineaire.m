@@ -11,8 +11,8 @@ K = mu*[omega0^2/mu + omega1^2, -omega1^2; -omega1^2, omega1^2];
 Mat = [-M\C, -M\K; eye(2), zeros(2)];
 [V,D] = eig(Mat);
 
-X0 = [v0 -v0;x0 0];
-coeffs = V\X0*V;
+X0 = [v0; -v0;x0; 0];
+coeffs = X0\V;
 
 x = zeros(size(t));
 for k=1:4
