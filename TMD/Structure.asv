@@ -116,10 +116,6 @@ classdef Structure
             p = inputParser;
             defaultAvecTMD = true;
             defaultVisible = true;
-            addRequired(p, 'obj');
-            addRequired(p, 'x0');
-            addRequired(p, 'v0');
-            addRequired(p, 'T');
             addOptional(p,'avecTMD', defaultAvecTMD);
             addParameter(p,'visible', defaultVisible);
             parse(p, obj, x0, v0, T, avecTMD, varargin{:});

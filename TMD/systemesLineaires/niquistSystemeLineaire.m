@@ -1,11 +1,11 @@
-mu = 1;
+mu = 0.01;
 omega0 = 2*pi;
 omega1 = 2*pi/(1+mu);
-omega1 = 2*pi/2.01;
 zeta0 = 0;
-Zeta1 = linspace(0, 2, 100000);
-Zeta1 = linspace(0, 2, 100000);
-sqrt(3*mu/8/(1+mu))
+Zeta1 = linspace(0, 0.1, 100000);
+
+disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
+disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
 
 racines = nan(4, length(Zeta1));
 for k = 1:length(Zeta1)
@@ -27,28 +27,55 @@ b2 = uicontrol('Parent',fb,'Style','text', 'String',num2str(zeta1),...
 
 %%
 f = figure;
+pos = get(f, 'Position');
+pos(1) = 200;
+set(f, 'Position', pos);
 ax = axes('Parent', f);
 hold(ax, 'on');
-plot(real(racines)', imag(racines)', '.', 'Parent', ax);
+colors = get(ax, 'ColorOrder');
+index = get(ax,'ColorOrderIndex');
+plot(real(racines)', imag(racines)', '.', 'Parent', ax, 'Color', colors(index, :));
+xlabel('Re');
+ylabel('Im');
 
 racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 points = plot(real(racines), imag(racines), 'o', 'Parent', ax);
 hold(ax, 'off');
 
 %%
-freqs = logspace(-1, 1, 10000);
+freqs = logspace(-0.5, 0.5, 10000);
 
-bode = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
+[bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
 
 f2 = figure;
 pos = get(f, 'Position');
-pos(1) = pos(1) + pos(3);
+pos(1) = pos(1) + pos(3) + 5;
+pos(2) = pos(2) - pos(4);
+pos(4) = pos(4)*2;
 set(f2, 'Position', pos);
-ax2 = axes('Parent', f2);
-fbode = loglog(freqs, abs(bode)', 'Parent', ax2);
-xlabel(ax2, 'f');
-ylabel(ax2, '|H|');
-grid(ax2, 'on');
+
+axes1 = [];
+fbode = [];
+
+axes1(end+1) = subplot(3, 1, 1);
+fbode(end+1) = loglog(freqs, abs(bode0)', 'Parent', axes1(end));
+set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+ylabel('|H0|');
+
+axes1(end+1) = subplot(3, 1, 2);
+fbode(end+1) = loglog(freqs, abs(bode1)', 'Parent', axes1(end));
+set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+ylabel('|H1|');
+
+axes1(end+1) = subplot(3, 1, 3);
+fbode(end+1) = semilogx(freqs, angle(bode1./bode0)', 'Parent', axes1(end));
+set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+ylim(axes1(end), [-pi pi]);
+ylabel('arg(H1/H0)');
+
+xlabel('f');
+linkaxes(axes1,'x')
+
 
 %%
 pos = get(f, 'Position');
@@ -78,6 +105,8 @@ function updateZeta(b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs)
 racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 set(points, 'XData', real(racines), 'YData', imag(racines));
 set(b2, 'String', num2str(zeta1));
-bode = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
-set(fbode, 'YData', abs(bode)');
+[bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
+set(fbode(1), 'YData', abs(bode0)');
+set(fbode(2), 'YData', abs(bode1)');
+set(fbode(3), 'YData', angle(bode1./bode0)');
 end
