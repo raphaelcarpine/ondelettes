@@ -41,18 +41,20 @@ x = sin(2*pi*t) + 2*sin(4*pi*t+1);
 CWT(t, x, logspace(-0.5, 0.5, 100), 200);
 
 %%
-m0 = 100;
+mu = 1;
+m0 = 1/mu;
 m1 = 1;
-k0 = 100;
-k1 = (1/1.01)^2;
+k0 = 1/mu;
+k1 = (1/(1+mu))^2;
 c0 = 0;
-c1 = 2/1.01*sqrt(3*0.01/8/1.01);
+c1 = 2/(1+mu)*sqrt(3*mu/8/(1+mu));
+% c1 = 2/(1+mu)*sqrt(mu/(1+mu));
 mr = TMDmasseressort(m1, k1, @(x, v) c1*v);
 tour = Structure(m0, k0, @(x,v) 0*v, {{mr, 1}});
 [t, X] = tour.reponseLibre(0, 1, 500, true);
 % x = X(:, 1);
 % CWT(t, x, 1/(2*pi)*exp(linspace(-0.1, 0.1, 200)), 2, 'fourier', 1);
-tour.diagrammeBode(1, 1, 1/(2*pi)*logspace(-0.3, 0.3, 100), 100, true);
+tour.diagrammeBode(1, 1, 1/(2*pi)*logspace(-0.3, 0.3, 100), 200, true);
 
 
 

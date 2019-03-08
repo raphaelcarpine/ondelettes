@@ -10,7 +10,7 @@ n2 = omega0^2 + 4*lambda0*lambda1;
 n1 = 2*lambda1*omega0^2 + 2*lambda0*omega1^2;
 n0 = omega0^2*omega1^2;
 d4 = 1;
-d3 = 2*lambda0 + 2*lambda1;
+d3 = 2*lambda0 + 2*lambda1 + 2*lambda1*mu;
 d2 = omega0^2 + omega1^2 + 4*lambda0*lambda1 + mu*omega1^2;
 d1 = 2*lambda0*omega1^2 + 2*lambda1*omega0^2;
 d0 = omega0^2*omega1^2;
@@ -21,7 +21,7 @@ bodeOut = H(2*1i*pi*freqs);
 
 end
 
-% 
+
 % syms p mu omega0 omega1 lambda0 lambda1;
 % 
 % M = diag([1, mu]);
@@ -30,7 +30,7 @@ end
 % 
 % X = (p^2*M+p*C+K)\[p*2*lambda0+omega0^2; 0];
 % X(1)
-
+% 
 % (
 % 2*lambda0*p^3
 % + omega0^2*p^2 + 4*lambda0*lambda1*p^2
@@ -38,10 +38,8 @@ end
 % + omega0^2*omega1^2
 % )/(
 % p^4
-% + 2*lambda0*p^3 + 2*lambda1*p^3
-% + 2*lambda1*mu*p^3
+% + 2*lambda0*p^3 + 2*lambda1*p^3 + 2*lambda1*mu*p^3
 % + omega0^2*p^2 + omega1^2*p^2 + 4*lambda0*lambda1*p^2 + mu*omega1^2*p^2
 % + 2*lambda0*omega1^2*p + 2*lambda1*omega0^2*p
 % + omega0^2*omega1^2
 % )
- 

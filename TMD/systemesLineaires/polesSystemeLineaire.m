@@ -4,11 +4,12 @@ function poles = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1)
 lambda0 = omega0*zeta0;
 lambda1 = omega1*zeta1;
 
-d4 = mu;
-d3 = 2*lambda0*mu + 2*lambda1*mu + 2*lambda1*mu^2;
-d2 = mu*omega0^2 + mu*omega1^2 + mu^2*omega1^2 + 4*lambda0*lambda1*mu;
-d1 = 2*lambda0*mu*omega1^2 + 2*lambda1*mu*omega0^2;
-d0 = mu*omega0^2*omega1^2;
+
+d4 = 1;
+d3 = 2*lambda0 + 2*lambda1 + 2*lambda1*mu;
+d2 = omega0^2 + omega1^2 + mu*omega1^2 + 4*lambda0*lambda1;
+d1 = 2*lambda0*omega1^2 + 2*lambda1*omega0^2;
+d0 = omega0^2*omega1^2;
 
 poly = [d4, d3, d2, d1, d0];
 poles = roots(poly);
