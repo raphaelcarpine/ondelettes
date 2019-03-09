@@ -12,12 +12,14 @@ Mat = [-M\C, -M\K; eye(2), zeros(2)];
 [V,D] = eig(Mat);
 
 X0 = [v0; -v0;x0; 0];
-coeffs = X0\V;
+coeffs = V\X0;
 
 x = zeros(size(t));
 for k=1:4
     x = x + coeffs(k)*V(3,k)*exp(D(k,k)*t);
 end
+
+x = real(x);
 
 end
 

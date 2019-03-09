@@ -1,12 +1,20 @@
-mu = 0.01;
+mu = 0.001;
 omega0 = 2*pi;
 omega1 = 2*pi/(1+mu);
 zeta0 = 0;
-Zeta1 = linspace(0, 0.1, 100000);
+Zeta1 = linspace(0, 0.005, 100000);
 
 disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
 disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
 
+
+freqs = logspace(-0.5, 0.5, 10000);
+
+t = linspace(0, 10000, 100000);
+x0 = 0;
+v0 = 1;
+
+%%
 racines = nan(4, length(Zeta1));
 for k = 1:length(Zeta1)
     zeta1 = Zeta1(k);
@@ -43,7 +51,20 @@ points = plot(real(racines), imag(racines), 'o', 'Parent', ax);
 hold(ax, 'off');
 
 %%
-freqs = logspace(-0.5, 0.5, 10000);
+f3 = figure;
+pos = get(f, 'Position');
+pos(2) = pos(2) - pos(4) - 100;
+set(f3, 'Position', pos); 
+ax3 = axes('Parent', f3);
+
+Xt = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
+
+reponseTemp = plot(t, Xt, 'Parent', ax3);
+xlabel('t');
+ylabel('x');
+
+
+%%
 
 [bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
 
@@ -78,22 +99,24 @@ linkaxes(axes1,'x')
 
 
 %%
-pos = get(f, 'Position');
+pos = get(f3, 'Position');
 pos(4) = 100;
-pos(2) = pos(2) - pos(4) - 100;
+pos(1) = pos(1) + pos(3);
 set(fb, 'Position', pos); 
 
-b.Callback = @(es,ed) updateZeta(b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs);
+b.Callback = @(es,ed) updateZeta(b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp);
 
 %%
-set(f, 'CloseRequestFcn', closeFunction(f, f2, fb));
-set(f2, 'CloseRequestFcn', closeFunction(f, f2, fb));
-set(fb, 'CloseRequestFcn', closeFunction(f, f2, fb));
+set(f, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
+set(f2, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
+set(f3, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
+set(fb, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
 
-function func = closeFunction(f, f2, fb)
+function func = closeFunction(f, f2, f3, fb)
     function Func(~, ~)
         delete(f);
         delete(f2);
+        delete(f3);
         delete(fb);
     end
 func = @Func;
@@ -101,7 +124,7 @@ end
 
 
 %%
-function updateZeta(b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs)
+function updateZeta(b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)
 racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 set(points, 'XData', real(racines), 'YData', imag(racines));
 set(b2, 'String', num2str(zeta1));
@@ -109,4 +132,6 @@ set(b2, 'String', num2str(zeta1));
 set(fbode(1), 'YData', abs(bode0)');
 set(fbode(2), 'YData', abs(bode1)');
 set(fbode(3), 'YData', angle(bode1./bode0)');
+Xt = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
+set(reponseTemp, 'YData', Xt);
 end
