@@ -2,7 +2,7 @@ mu = 0.001;
 omega0 = 2*pi;
 omega1 = 2*pi/(1+mu);
 zeta0 = 0;
-Zeta1 = linspace(0, 0.005, 100000);
+Zeta1 = linspace(0, 0.2, 100000);
 
 disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
 disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
@@ -10,7 +10,7 @@ disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
 
 freqs = logspace(-0.5, 0.5, 10000);
 
-t = linspace(0, 10000, 100000);
+t = linspace(0, 2000, 100000);
 x0 = 0;
 v0 = 1;
 
@@ -25,20 +25,16 @@ for k = 1:length(Zeta1)
 end
 
 %%
-fb = figure;
+f = figure;
 zeta1 = Zeta1(1);
-b = uicontrol('Parent',fb,'Style','slider', 'value',zeta1,...
-    'min', Zeta1(1), 'max', Zeta1(end),'Position',[81,54,419,23]);
-bgcolor = fb.Color;
-b2 = uicontrol('Parent',fb,'Style','text', 'String',num2str(zeta1),...
-    'BackgroundColor',bgcolor,'Position',[240,25,100,23]);
+b = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.05 0.1 0.45 0.05],'Style','slider',...
+    'value',zeta1, 'min', Zeta1(1), 'max', Zeta1(end));
+bgcolor = f.Color;
+b2 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.05 0.05 0.45 0.05],'Style','edit',...
+    'String',num2str(zeta1), 'BackgroundColor',bgcolor);
 
 %%
-f = figure;
-pos = get(f, 'Position');
-pos(1) = 200;
-set(f, 'Position', pos);
-ax = axes('Parent', f);
+ax = axes('Parent', f, 'Position', [0.05 0.65 0.45 0.3]);
 hold(ax, 'on');
 colors = get(ax, 'ColorOrder');
 index = get(ax,'ColorOrderIndex');
@@ -51,11 +47,7 @@ points = plot(real(racines), imag(racines), 'o', 'Parent', ax);
 hold(ax, 'off');
 
 %%
-f3 = figure;
-pos = get(f, 'Position');
-pos(2) = pos(2) - pos(4) - 100;
-set(f3, 'Position', pos); 
-ax3 = axes('Parent', f3);
+ax3 = axes('Parent', f, 'Position', [0.05 0.25 0.45 0.3]);
 
 Xt = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
 
@@ -68,30 +60,23 @@ ylabel('x');
 
 [bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
 
-f2 = figure;
-pos = get(f, 'Position');
-pos(1) = pos(1) + pos(3) + 5;
-pos(2) = pos(2) - pos(4);
-pos(4) = pos(4)*2;
-set(f2, 'Position', pos);
-
 axes1 = [];
 fbode = [];
 
-axes1(end+1) = subplot(3, 1, 1);
-fbode(end+1) = loglog(freqs, abs(bode0)', 'Parent', axes1(end));
-set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+axes1(1) = axes('Parent', f, 'Position', [0.58 0.7 0.4 0.25]);
+fbode(1) = loglog(freqs, abs(bode0)', 'Parent', axes1(end));
+set(axes1(1), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
 ylabel('|H0|');
 
-axes1(end+1) = subplot(3, 1, 2);
-fbode(end+1) = loglog(freqs, abs(bode1)', 'Parent', axes1(end));
-set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+axes1(2) = axes('Parent', f, 'Position', [0.58 0.4 0.4 0.25]);
+fbode(2) = loglog(freqs, abs(bode1)', 'Parent', axes1(2));
+set(axes1(2), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
 ylabel('|H1|');
 
-axes1(end+1) = subplot(3, 1, 3);
-fbode(end+1) = semilogx(freqs, angle(bode1./bode0)', 'Parent', axes1(end));
-set(axes1(end), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
-ylim(axes1(end), [-pi pi]);
+axes1(3) = axes('Parent', f, 'Position', [0.58 0.1 0.4 0.25]);
+fbode(3) = semilogx(freqs, angle(bode1./bode0)', 'Parent', axes1(3));
+set(axes1(3), 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', ':');
+ylim(axes1(3), [-pi pi]);
 ylabel('arg(H1/H0)');
 
 xlabel('f');
@@ -99,35 +84,16 @@ linkaxes(axes1,'x')
 
 
 %%
-pos = get(f3, 'Position');
-pos(4) = 100;
-pos(1) = pos(1) + pos(3);
-set(fb, 'Position', pos); 
-
-b.Callback = @(es,ed) updateZeta(b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp);
-
-%%
-set(f, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
-set(f2, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
-set(f3, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
-set(fb, 'CloseRequestFcn', closeFunction(f, f2, f3, fb));
-
-function func = closeFunction(f, f2, f3, fb)
-    function Func(~, ~)
-        delete(f);
-        delete(f2);
-        delete(f3);
-        delete(fb);
-    end
-func = @Func;
-end
+b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp);
+b2.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, str2double(es.String), fbode, freqs, x0, v0, t, reponseTemp);
 
 
 %%
-function updateZeta(b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)
+function updateZeta(b, b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)
 racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 set(points, 'XData', real(racines), 'YData', imag(racines));
 set(b2, 'String', num2str(zeta1));
+set(b, 'Value', zeta1);
 [bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
 set(fbode(1), 'YData', abs(bode0)');
 set(fbode(2), 'YData', abs(bode1)');
