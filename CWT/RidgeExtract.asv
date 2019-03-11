@@ -101,7 +101,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     [M2,I] = max(mesuEdge(:)); % Maximum global hors effets de bord pour initialiser le chainage
     
-    if M2<MinModu
+    if M2<MinModu || isnan(M2)
         break
     end
     
@@ -171,13 +171,23 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     mesuEdge(sub2ind([ny,nx],ind_freq,ridge.time{C_r})) = NaN; % Idem hors effets de bord
     
     % On convertit les indices en frequences
-    WvltFreqLocal = [WvltFreq(ind_freq-1); WvltFreq(ind_freq); WvltFreq(ind_freq+1)];
+    try
+        WvltFreqLocal = [WvltFreq(ind_freq-1); WvltFreq(ind_freq); WvltFreq(ind_freq+1)];
+    catch
+        disp('fezfez');
+    end
+    ampl = abs(wavelet);
     mesuEdgeLocal = NaN(3, length(ind_freq));
     for iT = 1:length(ind_freq)
-    mesuEdgeLocal = [...
-        mesuEdge(ind_freq-1, ridge.time{C_r});...
-        mesuEdge(ind_freq, ridge.time{C_r});...
-        mesuEdge(ind_freq+1, ridge.time{C_r})];
+        try
+            mesuEdgeLocal(:,iT) = [...
+                ampl(ind_freq(iT)-1, ridge.time{C_r}(iT));...
+                ampl(ind_freq(iT), ridge.time{C_r}(iT));...
+                ampl(ind_freq(iT)+1, ridge.time{C_r}(iT))];
+        catch
+            disp('gzrfz');
+        end
+    end
     ridge.freq{C_r} = localMax3Points(WvltFreqLocal, mesuEdgeLocal);
     
     % On convertit les indices en temps

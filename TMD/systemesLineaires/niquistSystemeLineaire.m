@@ -99,7 +99,7 @@ b = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.05 0.14 0.45 0.03
 bgcolor = f.Color;
 b2 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.31 0.09 0.15 0.05],'Style','edit',...
     'String',num2str(zeta1), 'BackgroundColor',bgcolor);
-b3 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.09 0.15 0.05],'Style','text',...
+b3 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.09 0.1 0.05],'Style','text',...
     'String','zeta1', 'BackgroundColor',bgcolor);
 
 b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp);
@@ -151,7 +151,7 @@ ylabel('ampl');
 figure;
 hold on;
 for k = 1:length(ridge.time)
-    plot(ridge.time{k}, abs(ridge.freq{k}));
+    plot(ridge.time{k}, ridge.freq{k});
 end
 hold off;
 set(gca, 'XGrid', 'on', 'YGrid', 'on')

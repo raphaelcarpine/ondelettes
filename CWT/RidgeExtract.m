@@ -95,15 +95,15 @@ end
 
 %%
 for C_r=1:NbMaxRidges % Pour chaque ridge
+    [M2,I] = max(mesuEdge(:)); % Maximum global hors effets de bord pour initialiser le chainage
+    
+    if M2<MinModu || isnan(M2)
+        break
+    end
+    
     ind_freq = NaN(size(X)) ; % Indice des fréquences du ridge
     ridge.time{C_r} = NaN(size(X)) ; % Instants associés
     ridge.val{C_r}  = NaN(size(X)) ; % Valeur (complexe) de la CWT
-    
-    [M2,I] = max(mesuEdge(:)); % Maximum global hors effets de bord pour initialiser le chainage
-    
-    if M2<MinModu
-        break
-    end
     
     [a,b] = ind2sub(size(mesu),I);    % Conversion de l'index du max global en freq,instant
     
@@ -171,22 +171,14 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     mesuEdge(sub2ind([ny,nx],ind_freq,ridge.time{C_r})) = NaN; % Idem hors effets de bord
     
     % On convertit les indices en frequences
-    try
-        WvltFreqLocal = [WvltFreq(ind_freq-1); WvltFreq(ind_freq); WvltFreq(ind_freq+1)];
-    catch
-        disp('fezfez');
-    end
+    WvltFreqLocal = [WvltFreq(ind_freq-1); WvltFreq(ind_freq); WvltFreq(ind_freq+1)];
     ampl = abs(wavelet);
     mesuEdgeLocal = NaN(3, length(ind_freq));
     for iT = 1:length(ind_freq)
-        try
-            mesuEdgeLocal(:,iT) = [...
-                ampl(ind_freq(iT)-1, ridge.time{C_r}(iT));...
-                ampl(ind_freq(iT), ridge.time{C_r}(iT));...
-                ampl(ind_freq(iT)+1, ridge.time{C_r}(iT))];
-        catch
-            disp('gzrfz');
-        end
+        mesuEdgeLocal(:,iT) = [...
+            ampl(ind_freq(iT)-1, ridge.time{C_r}(iT));...
+            ampl(ind_freq(iT), ridge.time{C_r}(iT));...
+            ampl(ind_freq(iT)+1, ridge.time{C_r}(iT))];
     end
     ridge.freq{C_r} = localMax3Points(WvltFreqLocal, mesuEdgeLocal);
     
