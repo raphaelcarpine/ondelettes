@@ -4,8 +4,8 @@ p = inputParser ;
 %% Param def
 WvltNameDef = 'Cauchy'; % famille d'ondelettes, seul Cauchy ici 
 ZeroPaddingDef = 1; % zero-padding par defaut
-ctDef = 5; % ct=5 par defaut (pour zero-padding ET effets de bord)
-PlotScaleDef = 'abs'; % par defaut, on trace la CWT en module
+ctDef = 3; % ct=5 par defaut (pour zero-padding ET effets de bord)
+PlotScaleDef = 'log'; % par defaut, on trace la CWT en module
 FreqScaleDef = 'lin'; % echelle de l'axe des frequences lineaire par defaut
 TitleDef = []; % titre de la figure
 VisibleDef = 'on'; % figure visible par defaut (si bcp de pts, figure lourde a afficher... 'off' utile pour sauvegarder l'image sans l'afficher)

@@ -4,7 +4,7 @@ p = inputParser ;
 %% parametres par defaut
 ZeroPaddingDef = 1;
 CenterSignalDef = false;
-ctDef = 5;
+ctDef = 3;
 %%
 addRequired(p,'X')
 addRequired(p,'Y')
@@ -25,7 +25,7 @@ Fs = 1/mean(X(2:end)-X(1:end-1)); %Frequence d'echantillonage
 
 Diff = diff(X);
 Diff = Diff/Diff(1);
-for i = 2:length(D)
+for i = 2:length(Diff)
     if abs(Diff(i)-1) > 1e-5
         warning('pas de temps non constant');
     end
@@ -36,7 +36,7 @@ if ~iscolumn(Y)
 end
 %%
 if CenterSignal
-    Y = y-mean(y);
+    Y = Y-mean(Y);
 end
 %%
 WvltOut = zeros(length(WvltFreq),length(Y),length(Qin));

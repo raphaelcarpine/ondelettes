@@ -67,6 +67,28 @@ mr = TMDmasseressort(1, 0, @(x, v) 2*sign(v)*abs(v)^(1));
 tour = Structure(50, 50, @(x,v) 0.0*v, {{mr, 1}});
 tour.reponseLibre(1, 0, 200, true);
 
+%%
+pendule = TMDpendule(9.81^2, 1, 9.81, @(theta,omega) 1*sign(omega)*abs(omega)^(0));
+[t, x] = pendule.reponseLibre(pi-0.05, 0, 350);
+
+Q = 2;
+fmin = 0.01;
+fmax = 0.2;
+NbFreq = 200;
+WvltFreq = linspace(fmin, fmax, NbFreq);
+T = linspace(t(1), t(end), 350*100/(2*pi)*2);
+X = interp1(t, x, T);
+WvltPlot(T, X, WvltFreq, Q);
+
+ridge = RidgeExtract(T, X, Q, fmin, fmax, NbFreq);
+figure;
+plot(ridge.time{1}, abs(ridge.val{1}));
+figure;
+plot(abs(ridge.val{1}), ridge.freq{1});
+
+
+
+
 
 
 
