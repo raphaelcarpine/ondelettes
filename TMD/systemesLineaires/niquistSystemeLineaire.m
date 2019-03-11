@@ -2,7 +2,7 @@ mu = 0.001;
 omega0 = 2*pi;
 omega1 = 2*pi/(1+mu);
 zeta0 = 0;
-Zeta1 = linspace(0, 0.2, 100000);
+Zeta1 = linspace(0, 0.05, 100000);
 
 disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
 disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
