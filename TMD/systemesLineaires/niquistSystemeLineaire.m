@@ -158,6 +158,16 @@ set(gca, 'XGrid', 'on', 'YGrid', 'on')
 xlabel('t');
 ylabel('f');
 
+figure;
+hold on;
+for k = 1:length(ridge.time)
+    plot(abs(ridge.val{k}), ridge.freq{k});
+end
+hold off;
+set(gca, 'XGrid', 'on', 'YGrid', 'on')
+xlabel('ampl');
+ylabel('f');
+
 % figure;
 % plot(abs(ridge.val{1}), ridge.freq{1});
 end
