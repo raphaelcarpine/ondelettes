@@ -10,7 +10,7 @@ p = inputParser;
 defaultSolver = @ode45;
 defaultOutput = 'x';
 validOutputs = {'x', 'v', 'a'};
-checkOutput = @(x) any(validatestring(x,validOutputs));
+checkOutput = @(x) ismember(x,validOutputs);
 
 addRequired(p,'x0');
 addRequired(p,'f');

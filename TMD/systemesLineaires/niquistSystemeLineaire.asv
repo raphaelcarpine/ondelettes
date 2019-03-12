@@ -105,8 +105,16 @@ b3 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.09 0.1 0.05]
 b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp);
 b2.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, str2double(es.String), fbode, freqs, x0, v0, t, reponseTemp);
 
+bw = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.05 0.02 0.15 0.05],'Style','pushbutton',...
+    'String', 'ondelette');
+bw2 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.31 0.02 0.15 0.05],'Style','edit',...
+    'String',num2str(Q), 'BackgroundColor',bgcolor);
+bw3 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.02 0.1 0.05],'Style','text',...
+    'String','Q =', 'BackgroundColor',bgcolor);
+bw.Callback = @(~,~) getWavelet(t, reponseTemp, bw2, fmin, fmax, NbFreq);
+
 %%
-WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp);
+WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', );
 
 %%
 function updateZeta(b, b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)
@@ -122,6 +130,60 @@ set(fbode(3), 'YData', angle(bode1./bode0)');
 Xt = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
 set(reponseTemp, 'YData', Xt);
 end
+
+function getWavelet(t, reponseTemp, bw2, fmin, fmax, NbFreq)
+Xt = get(reponseTemp, 'YData');
+Q = str2double(get(bw2, 'String'));
+
+WvltFreq = linspace(fmin, fmax, NbFreq);
+WvltPlot(t, Xt, WvltFreq, Q);
+
+ridge = RidgeExtract(t, Xt, Q, fmin, fmax, NbFreq);
+
+figure;
+hold on;
+for k = 1:length(ridge.time)
+    plot(ridge.time{k}, abs(ridge.val{k}));
+end
+hold off;
+set(gca, 'YScale', 'log', 'XGrid', 'on', 'YGrid', 'on')
+xlabel('t');
+ylabel('ampl');
+
+figure;
+hold on;
+for k = 1:length(ridge.time)
+    plot(ridge.time{k}, ridge.freq{k});
+end
+hold off;
+set(gca, 'XGrid', 'on', 'YGrid', 'on')
+xlabel('t');
+ylabel('f');
+
+figure;
+hold on;
+for k = 1:length(ridge.time)
+    plot(abs(ridge.val{k}), ridge.freq{k});
+end
+hold off;
+set(gca, 'XGrid', 'on', 'YGrid', 'on')
+xlabel('ampl');
+ylabel('f');
+
+% figure;
+% plot(abs(ridge.val{1}), ridge.freq{1});
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 

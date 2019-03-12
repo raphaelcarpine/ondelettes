@@ -21,6 +21,14 @@ ZeroPadding = p.Results.ZeroPadding;
 CenterSignal = p.Results.CenterSignal;
 ct = p.Results.ct;
 %%
+if length(WvltFreq) > 500
+    str = input('length(WvltFreq) > 500, continue ?', 's');
+    if ~any(validatestring(str, {'y', 'yes', 'oui', 'true'}))
+        error('length(WvltFreq) > 500');
+    end
+end
+
+%%
 Fs = 1/mean(X(2:end)-X(1:end-1)); %Frequence d'echantillonage
 
 Diff = diff(X);
