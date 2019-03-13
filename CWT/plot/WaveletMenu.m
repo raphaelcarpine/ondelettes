@@ -17,7 +17,7 @@ addRequired(p, 'NbFreq');
 addOptional(p, 'X', defaultX);
 addOptional(p, 'Y', defaultY);
 addParameter(p,'Parent', defaultParent, checkParent);
-addParameter(p,'WaveletPlot', defaultWaveletPlot);
+addParameter(p,'WaveletPlot', defaultWaveletPlot); %si les données viennent d'une courbe directement
 
 parse(p, fmin,fmax,NbFreq, varargin{:})
 
@@ -32,8 +32,8 @@ if fig == 0
 end
 
 if p.Results.WaveletPlot == 0
-    getX = @() X;
-    getY = @() Y;
+    getX = @() p.Results.X;
+    getY = @() p.Results.Y;
 else
     getX = @() get(p.Results.WaveletPlot, 'XData');
     getY = @() get(p.Results.WaveletPlot, 'YData');
@@ -76,13 +76,13 @@ checkboxGeneral = uicontrol('Parent',fig, 'Units', 'characters','Position', [1 9
         ridge = RidgeExtract(x, y, Q, fmin, fmax, NbFreq, 'NbMaxParallelRidges', PR);
         
         if checkboxTimeAmpl.Value
-            RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs', 'ScaleY', 'log')
+            RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs', 'ScaleY', 'log');
         end
         if checkboxTimeFreq.Value
-            RidgeQtyPlot2(ridge, 'time', 'freq')
+            RidgeQtyPlot2(ridge, 'time', 'freq');
         end
         if checkboxAmplFreq.Value
-            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs', 'ScaleX', 'log')
+            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs', 'ScaleX', 'log');
         end
     end
 

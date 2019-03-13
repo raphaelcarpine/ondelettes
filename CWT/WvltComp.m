@@ -2,7 +2,7 @@
 function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
 p = inputParser ;
 %% parametres par defaut
-ZeroPaddingDef = 1;
+ZeroPaddingDef = 0;
 CenterSignalDef = false;
 ctDef = 3;
 %%
@@ -22,7 +22,7 @@ CenterSignal = p.Results.CenterSignal;
 ct = p.Results.ct;
 %%
 if length(WvltFreq) > 500
-    str = input('length(WvltFreq) > 500, continue ?', 's');
+    str = input('length(WvltFreq) > 500, continue ? ', 's');
     if ~any(validatestring(str, {'y', 'yes', 'oui', 'true'}))
         error('length(WvltFreq) > 500');
     end

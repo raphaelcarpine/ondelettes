@@ -6,8 +6,6 @@ etDef = 1;
 efDef = 1;
 ctLeftDef = 3;
 ctRightDef = 3;
-ctLeftDef = 0;
-ctRightDef = 0;
 NbMaxRidgesDef = 100;
 NbMaxParallelRidgesDef = 1;
 MinModuDef = 0;
@@ -50,12 +48,10 @@ end
 %%  %%  %%  %%  %%  %%
 
 WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
-
 wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
-% wavelet = CWT(X, Y, WvltFreq, length(X), 'cauchy', Q);
 
-mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);
+mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 
 mesu(mesu<MinModu) = NaN; % retrait des max. locaux < MinModu
 
@@ -98,9 +94,7 @@ end
 [ny,nx]=size(mesu); % ny = nb de freq de CWT, nx = nb de points du signal
 
 %%
-ridge.time = {};
-ridge.val = {};
-ridge.freq = {};
+NbRidges = 0;
 for C_r=1:NbMaxRidges % Pour chaque ridge
     [M2,I] = max(mesuEdge(:)); % Maximum global hors effets de bord pour initialiser le chainage
     
@@ -191,10 +185,12 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     % On convertit les indices en temps
     ridge.time{C_r} = X(ridge.time{C_r});
+    
+    NbRidges = NbRidges+1;
 end
 %% retrait des ridges trop courts
 d_r=0;
-for C_r=1:length(ridge.time)
+for C_r=1:NbRidges
     if length(ridge.time{C_r-d_r})<=LengthMin        
         FieldList = fieldnames(ridge);
         for C_Field = 1:length(FieldList)
@@ -210,11 +206,11 @@ if isempty(ridge.time)
     return
 end
 %% Calcul de la phase (argument complexe)
-for C_r = 1:length(ridge.time)
+for C_r = 1:NbRidges
     ridge.pha{C_r} = angle(ridge.val{C_r});
 end
 %% frequence instantanee alternative plus lisse, en reliant les discontinuites (saut d'une freq. a une autre)
-for C_r = 1:length(ridge.time)
+for C_r = 1:NbRidges
     FreqLeft = ridge.freq{C_r}(1:end-1);
     FreqRight = ridge.freq{C_r}(2:end);
     Range = diff(ridge.freq{C_r})~=0; % Liste des sauts de freq.
@@ -229,7 +225,7 @@ for C_r = 1:length(ridge.time)
     end
 end
 %% evaluation de la dissipation
-for C_r = 1:length(ridge.time)
+for C_r = 1:NbRidges
     % Si mesure de vitesse
     ridge.bandwidth{C_r} = -diff(log(abs(ridge.val{C_r})))*Fs; % -A'/A
     ridge.bandwidth{C_r} = [ridge.bandwidth{C_r}(1),ridge.bandwidth{C_r}]/(2*pi); % = -A'/2*pi*A
@@ -256,7 +252,7 @@ for C_Field = 1:length(FieldList)
     end
 end
 FieldList = fieldnames(ridge);
-for C_r = 1:length(ridge.time)
+for C_r = 1:NbRidges
     Scales = CauFreq./ridge.freq{C_r}; % Echelles associees au ridge
     DeltaTimeLeft = ctLeft*Scales*DeltaTPsi; % ct * Delta t_psi/a associes a gauche
     DeltaTimeRight = ctRight*Scales*DeltaTPsi; % ct * Delta t_psi/a associes a droite
@@ -281,7 +277,7 @@ for C_r = 1:length(ridge.time)
 end
 %% Retrait des ridges entierement dans la zone d'effets de bord
 d_r=0;
-for C_r=1:length(ridge.time)
+for C_r=1:NbRidges
     if all(isnan(ridge.val{C_r-d_r}))
         FieldList = fieldnames(ridge);
         

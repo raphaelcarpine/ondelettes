@@ -1,4 +1,4 @@
-function CWT(t, X, freqs, Nt, ondelette, Q)
+function map = CWT(t, X, freqs, Nt, ondelette, Q)
 %CWT Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,7 +30,8 @@ end
 
 
 ondelettes = containers.Map;
-ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2/Q);
+ondelettes('gabor') = @(Q) @(t) exp(2*1i*pi*t - t.^2/(Q^2/pi^2));
+ondelettes('cauchy') = @(Q) @(t) (1i ./ (2*pi*t/(2*Q^2) + 1i)).^(2*Q^2+1/2);
 ondelettes('fourier') = @(Q) @(t) 1/sqrt(2*pi)*exp(2*1i*pi*t);
 
 
@@ -60,7 +61,7 @@ figure;
 surf(freqs2, T2, log(abs(map)), 'edgecolor', 'none');
 xlabel('f');
 ylabel('t');
-zlabel('arg');
+zlabel('log(arg)');
 
 
 % phi = angle(map);

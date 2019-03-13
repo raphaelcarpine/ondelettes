@@ -101,11 +101,11 @@ WaveletMenu(fmin,fmax,NbFreq, T, X);
 %%
 fmin = 0.5;
 fmax = 1.5;
-NbFreq = 50;
+NbFreq = 101;
 
-T = linspace(0, 100, 100*40+1);
+T = linspace(0, 100, 100*200+1);
 T = T(1:(end-1));
-X = (sin(2*pi*T)+0).*(T<50);
+X = sin(2*pi*T);
 
 figure;
 ax = plot(T, X);
