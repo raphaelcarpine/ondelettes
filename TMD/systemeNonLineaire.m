@@ -86,12 +86,12 @@ WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q, 'MaxParallelRi
 %%
 function updateC(b, b2, bn, bn2, m0, m1, k0, k1, c0, f1, c1, n1, x0, v0, Tf, T, reponseTemp)
 if isnan(c1)
-    c1 = get(b, 'Value');
+    c1 = str2double(get(b2, 'String'));
 end
 set(b2, 'String', num2str(c1));
 set(b, 'Value', c1);
 if isnan(n1)
-    n1 = get(bn, 'Value');
+    n1 = str2double(get(bn2, 'String'));
 end
 set(bn2, 'String', num2str(n1));
 set(bn, 'Value', n1);

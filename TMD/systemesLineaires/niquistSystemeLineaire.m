@@ -106,7 +106,7 @@ b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Va
 b2.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, str2double(es.String), fbode, freqs, x0, v0, t, reponseTemp);
 
 %%
-WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q);
+WaveletMenu('fmin',fmin,'fmax',fmax,'NbFreq',NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q);
 
 %%
 function updateZeta(b, b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)

@@ -59,8 +59,8 @@ paramPan = uipanel('Parent',fig, 'Units', 'normalized');
 plotPan = uipanel('Parent',fig, 'Units', 'normalized');
 
 buttonWavelet.Position = [0.02 0.02 0.96 0.15];
-paramPan.Position = [0.02 0.19 0.4 0.79];
-plotPan.Position = [0.44 0.19 0.54 0.79];
+paramPan.Position = [0.02 0.19 0.47 0.79];
+plotPan.Position = [0.51 0.19 0.47 0.79];
 
 %%
 strfmin = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
@@ -104,42 +104,33 @@ checkboxGeneral = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','che
 
 
 checkboxTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'time, ampl', 'Value', false);
+    'String', 'time, amplitude', 'Value', false);
 xscaleTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 yscaleTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 
 checkboxTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'time, freq', 'Value', false);
+    'String', 'time, frequence', 'Value', false);
 xscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 yscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 
 checkboxAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'ampl, freq', 'Value', false);
+    'String', 'amplitude, frequence', 'Value', false);
 xscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 yscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
+    'String', 'linear, frequence', 'Value', false);
 
-Checkboxs = [checkboxGeneral, checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq];
-XScales = [0, xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq];
-YScales = [0, yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq];
-n = length(Checkboxs);
+Checkboxs = [checkboxGeneral, checkboxTimeAmpl, checkboxAmplFreq, checkboxAmplFreq];
+XScales = [nan, xscaleTimeAmpl, xscaleAmplFreq, xscaleAmplFreq];
+YScales = [nan, yscaleTimeAmpl, yscaleAmplFreq, yscaleAmplFreq];
+n = length(Strs);
 for k=1:n
-    Checkboxs(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
-end
-for k=2:n
-    XScales(k).Position = [0.51, 0.01+(n-k)/n, 0.23, 1/n-0.02];
-    YScales(k).Position = [0.76, 0.01+(n-k)/n, 0.23, 1/n-0.02];
-end
-
-scalesNames = {'linear', 'log'};
-for k=2:n
-    XScales(k).Callback = @(~,~) set(XScales(k), 'String', scalesNames{XScales(k).Value+1});
-    YScales(k).Callback = @(~,~) set(YScales(k), 'String', scalesNames{YScales(k).Value+1});
+    Strs(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
+    Edits(k).Position = [0.51, 0.01+(n-k)/n, 0.48, 1/n-0.02];
 end
 
 
