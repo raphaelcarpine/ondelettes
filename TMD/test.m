@@ -84,7 +84,7 @@ X = interp1(t, x, T);
 WaveletMenu(fmin,fmax,NbFreq, T, X);
 
 %%
-mr = TMDmasseressort(1, 1, @(x,v) 0.01*v);
+mr = TMDmasseressort(1, 1, @(x,v) 0.1*v);
 [t, x] = mr.reponseLibre(0, 1, 1000);
 
 Q = 2;
@@ -99,6 +99,17 @@ X = interp1(t, x, T);
 WaveletMenu(fmin,fmax,NbFreq, T, X);
 
 %%
+t = linspace(-10, 10, 100000);
+N = -0.4;
+figure;
+hold on
+for n=N
+    plot(t, real((1i./(t+1i)).^(n+1)));
+    plot(t, imag((1i./(t+1i)).^(n+1)));
+end
+hold off
+
+%%
 fmin = 0.5;
 fmax = 1.5;
 NbFreq = 50;
@@ -111,6 +122,44 @@ figure;
 ax = plot(T, X);
 
 WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', ax);
+
+%%
+fmin = 0.5;
+fmax = 1.5;
+NbFreq = 50;
+
+T = linspace(0, 100, 100*40+1);
+T = T(1:(end-1));
+X = (sin(2*pi*T)+0).*exp(-T/10);
+
+figure;
+ax = plot(T, X);
+
+WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', ax);
+
+
+%%
+mu = 0.01;
+m0 = 1/mu;
+m1 = 1;
+k0 = 1/mu;
+k1 = (1/(1+mu))^2;
+c0 = 0;
+c1 = 2/(1+mu)*sqrt(3*mu/8/(1+mu));
+% c1 = 2/(1+mu)*sqrt(mu/(1+mu));
+mr = TMDmasseressort(m1, k1, @(x, v) 0.1*sign(v)*abs(v)^2);
+tour = Structure(m0, k0, @(x,v) 0*v, {{mr, 1}});
+[t, X] = tour.reponseLibre(0, 1, 500, true);
+x = X(:,1)';
+
+T = linspace(t(1), t(end), 500/2/pi*200);
+X = interp1(t, x, T);
+
+fmin = 0.5/2/pi;
+fmax = 1.5/2/pi;
+NbFreq = 200;
+
+WaveletMenu(fmin,fmax,NbFreq, T, X);
 
 
 

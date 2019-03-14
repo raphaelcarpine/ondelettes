@@ -2,7 +2,7 @@
 function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
 p = inputParser ;
 %% parametres par defaut
-ZeroPaddingDef = 0;
+ZeroPaddingDef = 1;
 CenterSignalDef = false;
 ctDef = 3;
 %%

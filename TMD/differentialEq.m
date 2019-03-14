@@ -39,6 +39,8 @@ switch visible
         stats = 'off';
 end
 
+%%
+
 [t, X] = solver(f, [0 T], x0, odeset('RelTol',1e-10,'Stats',stats)); %,'OutputFcn',@odeplot
 n = size(X,2)/2;
 x = X(:, 1:n);

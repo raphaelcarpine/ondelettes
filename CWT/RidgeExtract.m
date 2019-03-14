@@ -6,8 +6,8 @@ etDef = 1;
 efDef = 1;
 ctLeftDef = 3;
 ctRightDef = 3;
-ctLeftDef = 0;
-ctRightDef = 0;
+% ctLeftDef = 0;
+% ctRightDef = 0;
 NbMaxRidgesDef = 100;
 NbMaxParallelRidgesDef = 1;
 MinModuDef = 0;
@@ -52,7 +52,7 @@ end
 WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
 
 wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
-% wavelet = CWT(X, Y, WvltFreq, length(X), 'cauchy', Q);
+% wavelet = WvltCompTemp(X, Y, WvltFreq, length(X), Q);
 
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);

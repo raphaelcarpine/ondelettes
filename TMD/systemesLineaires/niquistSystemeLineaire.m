@@ -2,12 +2,12 @@ clear all;
 close all;
 
 
-mu = 0.001;
+mu = 0.01;
 omega0 = 2*pi;
+zeta0 = 0.01;
 omega1 = 2*pi/(1+mu);
-% omega1 = 2*pi*1.01;
-zeta0 = 0;
-Zeta1 = linspace(0, 0.05, 100000);
+% omega1 = 2*pi/(1+mu)*0.99;
+Zeta1 = linspace(0, 0.3, 100000);
 
 disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
 disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
@@ -16,12 +16,12 @@ disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
 freqs = logspace(-0.5, 0.5, 10000);
 
 %reponse temporelle
-t = linspace(0, 400, 10000);
+t = linspace(0, 60, 10000);
 x0 = 0;
 v0 = 1;
 
 %ondelette
-Q = 100;
+Q = 1;
 fmin = 0.9;
 fmax = 1.1;
 NbFreq = 200;
@@ -106,7 +106,7 @@ b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Va
 b2.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, str2double(es.String), fbode, freqs, x0, v0, t, reponseTemp);
 
 %%
-WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp);
+WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q);
 
 %%
 function updateZeta(b, b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp)
