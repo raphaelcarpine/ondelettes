@@ -4,9 +4,8 @@ close all;
 
 mu = 0.01;
 omega0 = 2*pi;
-zeta0 = 0.01;
-omega1 = 2*pi/(1+mu);
-% omega1 = 2*pi/(1+mu)*0.99;
+zeta0 = 0.0;
+omega1 = 2*pi/(1+mu)*0.99;
 Zeta1 = linspace(0, 0.3, 100000);
 
 disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);

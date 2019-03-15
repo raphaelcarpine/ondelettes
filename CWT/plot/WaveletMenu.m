@@ -32,7 +32,7 @@ fig = p.Results.Parent;
 if fig == 0
     fig = figure;
     fig.Units = 'characters';
-    fig.Position(3) = 60;
+    fig.Position(3) = 65;
     fig.Position(4) = 15;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
@@ -142,6 +142,13 @@ for k=2:n
     YScales(k).Callback = @(~,~) set(YScales(k), 'String', scalesNames{YScales(k).Value+1});
 end
 
+LogScales = [yscaleTimeAmpl, xscaleAmplFreq];
+for scale = LogScales
+    set(scale, 'Value', 1);
+    set(scale, 'String', scalesNames{scale.Value+1});
+end
+
+
 
 %%
     function show()
@@ -164,10 +171,12 @@ end
                 'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String') );
         end
         if checkboxTimeFreq.Value
-            RidgeQtyPlot2(ridge, 'time', 'freq');
+            RidgeQtyPlot2(ridge, 'time', 'freq',...
+                'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String') );
         end
         if checkboxAmplFreq.Value
-            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs', 'ScaleX', 'log');
+            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
+                'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String') );
         end
     end
 

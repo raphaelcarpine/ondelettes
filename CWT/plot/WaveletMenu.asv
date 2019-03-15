@@ -32,7 +32,7 @@ fig = p.Results.Parent;
 if fig == 0
     fig = figure;
     fig.Units = 'characters';
-    fig.Position(3) = 60;
+    fig.Position(3) = 65;
     fig.Position(4) = 15;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
@@ -59,8 +59,8 @@ paramPan = uipanel('Parent',fig, 'Units', 'normalized');
 plotPan = uipanel('Parent',fig, 'Units', 'normalized');
 
 buttonWavelet.Position = [0.02 0.02 0.96 0.15];
-paramPan.Position = [0.02 0.19 0.47 0.79];
-plotPan.Position = [0.51 0.19 0.47 0.79];
+paramPan.Position = [0.02 0.19 0.4 0.79];
+plotPan.Position = [0.44 0.19 0.54 0.79];
 
 %%
 strfmin = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
@@ -104,34 +104,49 @@ checkboxGeneral = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','che
 
 
 checkboxTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'time, amplitude', 'Value', false);
+    'String', 'time, ampl', 'Value', false);
 xscaleTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 yscaleTimeAmpl = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 
 checkboxTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'time, frequence', 'Value', false);
+    'String', 'time, freq', 'Value', false);
 xscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 yscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 
 checkboxAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'amplitude, frequence', 'Value', false);
+    'String', 'ampl, freq', 'Value', false);
 xscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 yscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear, frequence', 'Value', false);
+    'String', 'linear', 'Value', false);
 
-Checkboxs = [checkboxGeneral, checkboxTimeAmpl, checkboxAmplFreq, checkboxAmplFreq];
-XScales = [nan, xscaleTimeAmpl, xscaleAmplFreq, xscaleAmplFreq];
-YScales = [nan, yscaleTimeAmpl, yscaleAmplFreq, yscaleAmplFreq];
-n = length(Strs);
+Checkboxs = [checkboxGeneral, checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq];
+XScales = [0, xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq];
+YScales = [0, yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq];
+n = length(Checkboxs);
 for k=1:n
-    Strs(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
-    Edits(k).Position = [0.51, 0.01+(n-k)/n, 0.48, 1/n-0.02];
+    Checkboxs(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
 end
+for k=2:n
+    XScales(k).Position = [0.51, 0.01+(n-k)/n, 0.23, 1/n-0.02];
+    YScales(k).Position = [0.76, 0.01+(n-k)/n, 0.23, 1/n-0.02];
+end
+
+scalesNames = {'linear', 'log'};
+for k=2:n
+    XScales(k).Callback = @(~,~) set(XScales(k), 'String', scalesNames{XScales(k).Value+1});
+    YScales(k).Callback = @(~,~) set(YScales(k), 'String', scalesNames{YScales(k).Value+1});
+end
+
+LogScales = [yscaleTimeAmpl, xscaleAmplFreq];
+for scale = LogScales
+    set(XScales(k), 'String', scalesNames{XScales(k).Value+1});
+end
+
 
 
 %%
@@ -155,10 +170,12 @@ end
                 'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String') );
         end
         if checkboxTimeFreq.Value
-            RidgeQtyPlot2(ridge, 'time', 'freq');
+            RidgeQtyPlot2(ridge, 'time', 'freq',...
+                'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String') );
         end
         if checkboxAmplFreq.Value
-            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs', 'ScaleX', 'log');
+            RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
+                'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String') );
         end
     end
 

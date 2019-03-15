@@ -2,12 +2,12 @@ clear all;
 close all;
 
 
-mu = 0.01;
+mu = 10000;
 omega0 = 2*pi;
 zeta0 = 0;
 omega1 = 2*pi/(1+mu);
 % omega1 = 2*pi/(1+mu)*0.99;
-c1 = 0;
+c1 = 100000;
 minC1 = 0;
 maxC1 = 2;
 n1 = 1;
@@ -81,7 +81,8 @@ bn.Callback = @(es,ed) updateC(b, b2, bn, bn2, m0, m1, k0, k1, c0, f1, nan, es.V
 bn2.Callback = @(es,ed) updateC(b, b2, bn, bn2, m0, m1, k0, k1, c0, f1, nan, str2double(es.String), x0, v0, Tf, T, reponseTemp);
 
 %%
-WaveletMenu(fmin,fmax,NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges);
+WaveletMenu('WaveletPlot', reponseTemp, 'fmin', fmin, 'fmax', fmax,...
+    'NbFreq', NbFreq, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges);
 
 %%
 function updateC(b, b2, bn, bn2, m0, m1, k0, k1, c0, f1, c1, n1, x0, v0, Tf, T, reponseTemp)

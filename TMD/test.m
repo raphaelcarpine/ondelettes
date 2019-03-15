@@ -84,7 +84,7 @@ X = interp1(t, x, T);
 WaveletMenu(fmin,fmax,NbFreq, T, X);
 
 %%
-mr = TMDmasseressort(1, 1, @(x,v) 0.1*v);
+mr = TMDmasseressort(1, 1, @(x,v) 0.1*sign(v)*abs(v)^2);
 [t, x] = mr.reponseLibre(0, 1, 1000);
 
 Q = 2;
@@ -96,7 +96,7 @@ T = linspace(t(1), t(end), 1000*30/(2*pi)*2);
 X = interp1(t, x, T);
 
 
-WaveletMenu(fmin,fmax,NbFreq, T, X);
+WaveletMenu(T, X, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq);
 
 %%
 t = linspace(-10, 10, 100000);
