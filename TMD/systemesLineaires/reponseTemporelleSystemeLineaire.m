@@ -1,4 +1,4 @@
-function x = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
+function [x, v] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
 %reponseTemporelleSystemeLineaire Summary of this function goes here
 %   Detailed explanation goes here
 lambda0 = omega0*zeta0;
@@ -15,11 +15,14 @@ X0 = [v0; -v0;x0; 0];
 coeffs = V\X0;
 
 x = zeros(size(t));
+v = zeros(size(t));
 for k=1:4
     x = x + coeffs(k)*V(3,k)*exp(D(k,k)*t);
+    v = v + coeffs(k)*V(1,k)*exp(D(k,k)*t);
 end
 
 x = real(x);
+v = real(v);
 
 end
 

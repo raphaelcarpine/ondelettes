@@ -15,7 +15,7 @@ disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
 freqs = logspace(-0.5, 0.5, 10000);
 
 %reponse temporelle
-t = linspace(0, 200, 10000);
+t = linspace(0, 60, 10000);
 x0 = 0;
 v0 = 1;
 
@@ -39,7 +39,7 @@ end
 %%
 f = figure;
 f.Position(2) = f.Position(2) - 0.5*f.Position(4);
-f.Position(3:4) = f.Position(3:4) + 0.5*f.Position(3:4);
+f.Position(3:4) = f.Position(3:4) + 0.5*f.Position(4);
 
 
 zeta1 = Zeta1(1);
