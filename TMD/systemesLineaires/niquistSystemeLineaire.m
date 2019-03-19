@@ -1,23 +1,29 @@
+function niquistSystemeLineaire()
+
 clear all;
 close all;
+
+plotValue = 'V';
 
 
 mu = 0.01;
 omega0 = 2*pi;
 zeta0 = 0.0;
 omega1 = 2*pi/(1+mu);
-Zeta1 = linspace(0, 0.3, 100000);
-
-disp(['equal pic design : zeta = ' num2str(sqrt(3*mu/8/(1+mu)))]);
-disp(['amortissement max : zeta = ' num2str(sqrt(mu/(1+mu)))]);
+nZeta1 = 10000;
+Zeta10 = 0;
+Zeta11 = 0.3;
+Zeta1 = linspace(Zeta10, Zeta11, nZeta1);
 
 %diagrame de bode
 freqs = logspace(-0.5, 0.5, 10000);
 
 %reponse temporelle
-t = linspace(0, 200, 10000);
-x0 = 0;
-v0 = 1;
+T = 200;
+nT = 10000;
+t = linspace(0, T, nT);
+x0 = [0 1];
+v0 = [0 0];
 
 %ondelette
 Q = 1;
@@ -29,12 +35,11 @@ NbFreq = 200;
 racines = nan(4, length(Zeta1));
 for k = 1:length(Zeta1)
     zeta1 = Zeta1(k);
-    r = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
-    r = r(imag(r) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
-    for i = 1:length(r)
-        racines(i, k) = r(i);
-    end
+    racines(:,k) = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 end
+racines = racines(~isnan(racines));
+racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
+
 
 %%
 f = figure;
@@ -49,7 +54,7 @@ ax = axes('Parent', f, 'Position', [0.05 0.65 0.45 0.3]);
 hold(ax, 'on');
 colors = get(ax, 'ColorOrder');
 index = get(ax,'ColorOrderIndex');
-plot(real(racines)', imag(racines)', '.', 'Parent', ax, 'Color', colors(index, :));
+poles = plot(real(racines)', imag(racines)', '.', 'Parent', ax, 'Color', colors(index, :));
 xlabel('Re');
 ylabel('Im');
 
@@ -61,11 +66,11 @@ hold(ax, 'off');
 %reponse temporelle
 ax3 = axes('Parent', f, 'Position', [0.05 0.25 0.45 0.3]);
 
-[Xt, Vt] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
+[X, V, A, Xtmd] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
 
-reponseTemp = plot(t, Xt, 'Parent', ax3);
+reponseTemp = plot(t, eval(plotValue), 'Parent', ax3);
 xlabel('t');
-ylabel('x');
+ylabel(plotValue);
 
 
 %bode
@@ -95,45 +100,113 @@ linkaxes(axes1,'x')
 
 %plan poincaré
 ax2 = axes('Parent', f, 'Position', [0.58 0.1 0.4 0.25]);
-poinca = plot(Xt, Vt, 'Parent', ax2);
+poinca = plot(X, V, 'Parent', ax2);
 xlabel(ax2, 'x');
 ylabel(ax2, 'v');
 
 
 %%
 b = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.05 0.14 0.45 0.03],'Style','slider',...
-    'value',zeta1, 'min', Zeta1(1), 'max', Zeta1(end));
+    'value',zeta1, 'min', Zeta10, 'max', Zeta11);
 bgcolor = f.Color;
 b2 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.31 0.09 0.15 0.05],'Style','edit',...
     'String',num2str(zeta1), 'BackgroundColor',bgcolor);
-b3 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.09 0.1 0.05],'Style','text',...
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.2 0.09 0.1 0.05],'Style','text',...
     'String','zeta1', 'BackgroundColor',bgcolor);
 
-b.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, es.Value, fbode, freqs, x0, v0, t, reponseTemp, poinca);
-b2.Callback = @(es,ed) updateZeta(b, b2, points, mu, omega0, omega1, zeta0, str2double(es.String), fbode, freqs, x0, v0, t, reponseTemp, poinca);
+b.Callback = @(es,ed) updateZeta(es.Value);
+b2.Callback = @(es,ed) updateZeta(es.String);
+
+bT = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.41 0.18 0.09 0.04],'Style','edit',...
+    'String',num2str(T), 'BackgroundColor',bgcolor);
+
+bT.Callback = @(~,~) updateT();
+
+bmu = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.01 0.01 0.09 0.04],'Style','edit',...
+    'String',num2str(mu), 'BackgroundColor',bgcolor);
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.01 0.05 0.09 0.04],'Style','text',...
+    'String','mu', 'BackgroundColor',bgcolor);
+
+bw = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.11 0.01 0.09 0.04],'Style','edit',...
+    'String',num2str(omega1/omega0), 'BackgroundColor',bgcolor);
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.11 0.05 0.09 0.04],'Style','text',...
+    'String','w1/w0', 'BackgroundColor',bgcolor);
+
+bzeta0 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.21 0.01 0.09 0.04],'Style','edit',...
+    'String',num2str(zeta0), 'BackgroundColor',bgcolor);
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.21 0.05 0.09 0.04],'Style','text',...
+    'String','zeta2', 'BackgroundColor',bgcolor);
+
+bZeta10 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.31 0.01 0.09 0.04],'Style','edit',...
+    'String',num2str(Zeta10), 'BackgroundColor',bgcolor);
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.31 0.05 0.09 0.04],'Style','text',...
+    'String','Zeta1(1)', 'BackgroundColor',bgcolor);
+
+bZeta11 = uicontrol('Parent',f, 'Units', 'normalized','Position', [0.41 0.01 0.09 0.04],'Style','edit',...
+    'String',num2str(Zeta11), 'BackgroundColor',bgcolor);
+uicontrol('Parent',f, 'Units', 'normalized','Position', [0.41 0.05 0.09 0.04],'Style','text',...
+    'String','Zeta1(end)', 'BackgroundColor',bgcolor);
+
+bmu.Callback = @(~,~) updateAll();
+bw.Callback = @(~,~) updateAll();
+bzeta0.Callback = @(~,~) updateAll();
+bZeta10.Callback = @(~,~) updateAll();
+bZeta11.Callback = @(~,~) updateAll();
 
 %%
 WaveletMenu('fmin',fmin,'fmax',fmax,'NbFreq',NbFreq, 'WaveletPlot', reponseTemp, 'Q', Q);
 
 %%
-function updateZeta(b, b2, points, mu, omega0, omega1, zeta0, zeta1, fbode, freqs, x0, v0, t, reponseTemp, poinca)
-racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
-racines = racines(imag(racines) >= 0);
-set(points, 'XData', real(racines), 'YData', imag(racines));
-set(b2, 'String', num2str(zeta1));
-set(b, 'Value', zeta1);
-[bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
-set(fbode(1), 'YData', abs(bode0)');
-set(fbode(2), 'YData', abs(bode1)');
-% set(fbode(3), 'YData', angle(bode1./bode0)');
-[Xt, Vt] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1);
-set(reponseTemp, 'YData', Xt);
-set(poinca, 'XData', Xt, 'YData', Vt);
+    function updateT()
+        T = eval(get(bT, 'String'));
+        [X, V, A, Xtmd] = reponseTemporelleSystemeLineaire(x0, v0, linspace(0, T, nT), mu, omega0, omega1, zeta0, zeta1);
+        set(reponseTemp, 'XData', linspace(0, T, nT), 'YData', eval(plotValue));
+        set(poinca, 'XData', X, 'YData', V);
+    end
+
+    function updateZeta(zeta)
+        if nargin == 1
+            if isnumeric(zeta)
+                zeta1 = zeta;
+            else
+                zeta1 = eval(zeta);
+            end
+        end
+        racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
+        racines = racines(imag(racines) >= 0);
+        set(points, 'XData', real(racines), 'YData', imag(racines));
+        set(b2, 'String', num2str(zeta1));
+        set(b, 'Value', zeta1);
+        [bode0, bode1] = bodeSystemeLineaire(mu, omega0, omega1, zeta0, zeta1, freqs);
+        set(fbode(1), 'YData', abs(bode0)');
+        set(fbode(2), 'YData', abs(bode1)');
+        % set(fbode(3), 'YData', angle(bode1./bode0)');
+        
+        updateT();
+    end
+
+    function updateAll()
+        mu = eval(get(bmu, 'String'));
+        omega1 = omega0*eval(get(bw, 'String'));
+        zeta0 = eval(get(bzeta0, 'String'));
+        Zeta10 = eval(get(bZeta10, 'String'));
+        Zeta11 = eval(get(bZeta11, 'String'));
+        Zeta1 = linspace(Zeta10, Zeta11, nZeta1);
+        
+        set(b, 'min', Zeta10, 'max', Zeta11);
+        
+        racines = nan(4, nZeta1);
+        for k = 1:nZeta1
+            zeta = Zeta1(k);
+            racines(:,k) = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta);
+        end
+        racines = racines(~isnan(racines));
+        racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
+        set(poles, 'XData', real(racines)', 'YData', imag(racines)');
+        
+        updateZeta();
+    end
+
+
+
 end
-
-
-
-
-
-
-

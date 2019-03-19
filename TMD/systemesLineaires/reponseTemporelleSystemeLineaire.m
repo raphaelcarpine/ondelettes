@@ -1,4 +1,4 @@
-function [x, v] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
+function [x, v, a, xtmd] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
 %reponseTemporelleSystemeLineaire Summary of this function goes here
 %   Detailed explanation goes here
 lambda0 = omega0*zeta0;
@@ -11,18 +11,24 @@ K = mu*[omega0^2/mu + omega1^2, -omega1^2; -omega1^2, omega1^2];
 Mat = [-M\C, -M\K; eye(2), zeros(2)];
 [V,D] = eig(Mat);
 
-X0 = [v0; 0; x0; 0];
+X0 = [v0(1); v0(2); x0(1); x0(2)];
 coeffs = V\X0;
 
 x = zeros(size(t));
 v = zeros(size(t));
+a = zeros(size(t));
+xtmd = zeros(size(t));
 for k=1:4
     x = x + coeffs(k)*V(3,k)*exp(D(k,k)*t);
     v = v + coeffs(k)*V(1,k)*exp(D(k,k)*t);
+    a = a + D(k,k)*coeffs(k)*V(3,k)*exp(D(k,k)*t);
+    xtmd = xtmd + coeffs(k)*V(4,k)*exp(D(k,k)*t);
 end
 
 x = real(x);
 v = real(v);
+a = real(a);
+xtmd = real(xtmd);
 
 end
 
