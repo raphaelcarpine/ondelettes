@@ -1,4 +1,4 @@
-function [x, v, a, xtmd] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
+function [x, v, a, xtmd, vtmd, atmd] = reponseTemporelleSystemeLineaire(x0, v0, t, mu, omega0, omega1, zeta0, zeta1)
 %reponseTemporelleSystemeLineaire Summary of this function goes here
 %   Detailed explanation goes here
 lambda0 = omega0*zeta0;
@@ -18,17 +18,23 @@ x = zeros(size(t));
 v = zeros(size(t));
 a = zeros(size(t));
 xtmd = zeros(size(t));
+vtmd = zeros(size(t));
+atmd = zeros(size(t));
 for k=1:4
     x = x + coeffs(k)*V(3,k)*exp(D(k,k)*t);
     v = v + coeffs(k)*V(1,k)*exp(D(k,k)*t);
-    a = a + D(k,k)*coeffs(k)*V(3,k)*exp(D(k,k)*t);
+    a = a + D(k,k)*coeffs(k)*V(1,k)*exp(D(k,k)*t);
     xtmd = xtmd + coeffs(k)*V(4,k)*exp(D(k,k)*t);
+    vtmd = vtmd + coeffs(k)*V(2,k)*exp(D(k,k)*t);
+    atmd = atmd + D(k,k)*coeffs(k)*V(2,k)*exp(D(k,k)*t);
 end
 
 x = real(x);
 v = real(v);
 a = real(a);
 xtmd = real(xtmd);
+vtmd = real(vtmd);
+atmd = real(atmd);
 
 end
 
