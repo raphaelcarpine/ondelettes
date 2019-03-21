@@ -9,9 +9,10 @@ nZeta1 = 100000;
 Zeta10 = 0;
 Zeta11 = 0.95;
 Zeta1 = linspace(Zeta10, Zeta11, nZeta1);
-zeta1Points = linspace(Zeta10, Zeta11, 7);
+zeta1Points = linspace(Zeta10, Zeta11, 4);
 
 
+realOnly = false;
 
 pointMarkers = {'o','s','^','v','d','>','<','p','h','+','*','.','x'};
 
@@ -23,7 +24,9 @@ for k = 1:length(Zeta1)
     racines(:,k) = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
 end
 racines = racines(~isnan(racines));
-racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
+if realOnly
+    racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
+end
 
 
 %%
@@ -48,7 +51,9 @@ for i=1:length(zeta1Points)
     zeta1 = zeta1Points(i);
     mark = pointMarkers{mod(i-1,length(pointMarkers))+1};
     racines = polesSystemeLineaire(mu, omega0, omega1, zeta0, zeta1);
-    racines = racines(imag(racines) >= 0);
+    if realOnly
+        racines = racines(imag(racines) >= 0);
+    end
     points(i) = plot(real(racines), imag(racines), mark, 'Parent', ax, 'MarkerSize', 10, 'LineWidth', 2,...
         'DisplayName', ['\zeta_1 = ', num2str(zeta1)]);
 end
