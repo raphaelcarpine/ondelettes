@@ -2,12 +2,12 @@ clear all;
 close all;
 
 
-mu = 10000;
+mu = 0.01;
 omega0 = 2*pi;
 zeta0 = 0;
 omega1 = 2*pi/(1+mu);
 % omega1 = 2*pi/(1+mu)*0.99;
-c1 = 100000;
+c1 = 1;
 minC1 = 0;
 maxC1 = 2;
 n1 = 1;
@@ -16,7 +16,7 @@ maxN1 = 5;
 f1 = @(c, n) @(x,v) c*sign(v)*abs(v)^n;
 
 %reponse temporelle
-Tf = 50;
+Tf = 100;
 ptsParPeriode = 200;
 T = linspace(0, Tf, Tf*omega0/2/pi*ptsParPeriode);
 x0 = 0;

@@ -9,6 +9,7 @@ defaultScaleX = 'linear';
 defaultScaleY = 'linear';
 defaultEvaluationFunctionX = '';
 defaultEvaluationFunctionY = '';
+defaultShowEdge = true;
 
 validQty = {'time', 'val', 'freq', 'diff', 'amor', 'freq2', 'pha'};
 checkQty = @(str) ismember(str, validQty);
@@ -25,6 +26,7 @@ addParameter(p,'ScaleX', defaultScaleX);
 addParameter(p,'ScaleY', defaultScaleY);
 addParameter(p,'EvaluationFunctionX', defaultEvaluationFunctionX, checkEvaluationFunction);
 addParameter(p,'EvaluationFunctionY', defaultEvaluationFunctionY, checkEvaluationFunction);
+addParameter(p,'showEdge', defaultShowEdge);
 
 parse(p, ridge, QtyX, QtyY, varargin{:})
 
@@ -41,6 +43,8 @@ end
 ScaleX = p.Results.ScaleX;
 ScaleY = p.Results.ScaleY;
 
+showEdge = p.Results.showEdge;
+
 ax = p.Results.Axes;
 if ax == 0
     fig = figure;
@@ -54,6 +58,9 @@ for k_ridge = 1:length(ridge.freq)
     x = eval([EvaluationFunctionX, '(ridge.', QtyX, '{', num2str(k_ridge), '});']);
     y = eval([EvaluationFunctionY, '(ridge.', QtyY, '{', num2str(k_ridge), '});']);
     plot(x, y, 'Parent', ax);
+    if showEdge
+        %TODO
+    end
 end
 
 %legend('show','location','best')
