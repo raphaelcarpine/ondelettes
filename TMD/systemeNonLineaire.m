@@ -17,7 +17,7 @@ f1 = @(c, n) @(x,v) c*sign(v)*abs(v)^n;
 
 %reponse temporelle
 Tf = 100;
-ptsParPeriode = 200;
+ptsParPeriode = 100;
 T = linspace(0, Tf, Tf*omega0/2/pi*ptsParPeriode);
 x0 = 0;
 v0 = 1;
