@@ -11,6 +11,8 @@ defaultSolver = @ode45;
 defaultOutput = 'x';
 validOutputs = {'x', 'v', 'a'};
 checkOutput = @(x) ismember(x,validOutputs);
+defaultRelTol = 1e-10;
+defaultMaxStep = 0.01*T;
 
 addRequired(p,'x0');
 addRequired(p,'f');
@@ -18,11 +20,16 @@ addRequired(p,'T');
 addOptional(p,'visible', true);
 addParameter(p,'solver', defaultSolver);
 addParameter(p,'output', defaultOutput, checkOutput);
+addParameter(p,'RelTol', defaultRelTol);
+addParameter(p,'MaxStep', defaultMaxStep);
+
 
 parse(p, x0, f, T, visible, varargin{:})
 
 solver = p.Results.solver;
 output = p.Results.output;
+RelTol = p.Results.RelTol;
+MaxStep = p.Results.MaxStep;
 
 % switch nargin
 %     case 3
@@ -41,7 +48,7 @@ end
 
 %%
 
-[t, X] = solver(f, [0 T], x0, odeset('RelTol',1e-10,'Stats',stats)); %,'OutputFcn',@odeplot
+[t, X] = solver(f, [0 T], x0, odeset('RelTol',RelTol,'Stats',stats,'MaxStep',MaxStep)); %,'OutputFcn',@odeplot
 n = size(X,2)/2;
 x = X(:, 1:n);
 v = X(:, n+1:2*n);
