@@ -209,7 +209,8 @@ end
         for kCheck = 1:length(Checkboxs2)
             cb = Checkboxs2(kCheck);
             if cb.Value
-                FiguresCheckboxs2(kCheck) = figure;
+                figcb = figure;
+                FiguresCheckboxs2(kCheck) = axes(figcb);
             end
         end
         for kPlot = 1:nbPlots
@@ -224,17 +225,17 @@ end
             if checkboxTimeAmpl.Value
                 RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(1))));
+                    'Axes', subplot(nbPlots, 1, kPlot, AxesCheckboxs2(1)));
             end
             if checkboxTimeFreq.Value
                 RidgeQtyPlot2(ridge, 'time', 'freq',...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(2))));
+                    'Axes', subplot(nbPlots, 1, kPlot, AxesCheckboxs2(2)));
             end
             if checkboxAmplFreq.Value
                 RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(3))));
+                    'Axes', subplot(nbPlots, 1, kPlot, AxesCheckboxs2(3)));
             end
         end
     end

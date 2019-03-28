@@ -4,14 +4,14 @@ clear all;
 
 
 
-mu = 0.001;
+mu = 0.01;
 omega0 = 2*pi;
 zeta0 = 0.0;
 omega1 = omega0/(1+mu);
-omega1 = omega0*1.;
-a = @(x1, v1) 0.01*2*omega1*v1;
+omega1 = omega0;
+a = @(x1, v1) 0.03*2*omega1*sign(v1)*abs(v1)^0.5;
 
-T = 200;
+T = 100;
 nbPointsPeriode = 100;
 nT = T*nbPointsPeriode*omega0/2/pi;
 
@@ -47,12 +47,14 @@ ax.XGrid = 'on';
 ax.YGrid = 'on';
 hold(ax, 'on');
 
-reponseTemp = plot(t, abs(X(:,1)), 'Parent', ax);
+% reponseTemp = [plot(t, X(:,1), 'Parent', ax), plot(t, sqrt(mu)*X(:,2), 'Parent', ax)];
+reponseTemp = plot(t, X(:,1), 'Parent', ax);
 
 tic;
-hilb = hilbert(X(:,1));
+hilb = hilbert([X(:,1); zeros(length(X(:,1)), 1)]);
+hilb = hilb(1:length(X(:,1)));
 toc
-plot(t, abs(hilb), 'Parent', ax);
+plot(t, -abs(hilb), 'Parent', ax);
 
 
 %%
@@ -79,7 +81,8 @@ toc
 
 phi = Phi(:,1);
 Xphi = abs(exp(1i*phi));
-plot(t, Xphi, 'Parent', ax);
+
+plot(t, -Xphi, 'Parent', ax);
 
 
 hold(ax, 'off');

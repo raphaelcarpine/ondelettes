@@ -84,7 +84,7 @@ X = interp1(t, x, T);
 WaveletMenu(fmin,fmax,NbFreq, T, X);
 
 %%
-mr = TMDmasseressort(1, 1, @(x,v) 0.1*sign(v)*abs(v)^2);
+mr = TMDmasseressort(1, 1, @(x,v) 0.001*sign(v));
 [t, x] = mr.reponseLibre(0, 1, 1000);
 
 Q = 2;
