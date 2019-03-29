@@ -9,7 +9,7 @@ p = inputParser;
 
 defaultSolver = @ode45;
 defaultOutput = 'x';
-validOutputs = {'x', 'v', 'a'};
+validOutputs = {'x', 'v', 'a', 'raw'};
 checkOutput = @(x) ismember(x,validOutputs);
 defaultRelTol = 1e-10;
 defaultMaxStep = 0.01*T;
@@ -49,7 +49,7 @@ end
 %%
 
 [t, X] = solver(f, [0 T], x0, odeset('RelTol',RelTol,'Stats',stats,'MaxStep',MaxStep)); %,'OutputFcn',@odeplot
-n = size(X,2)/2;
+n = floor(size(X,2)/2);
 x = X(:, 1:n);
 v = X(:, n+1:2*n);
 va = zeros(size(X));
@@ -66,6 +66,8 @@ if visible
             multiplePlot(t, v, "v");
         case 'a'
             multiplePlot(t, a, "a");
+        case 'raw'
+            multiplePlot(t, a, "raw");
     end
 end
 
@@ -76,6 +78,8 @@ switch output
         xout = v;
     case 'a'
         xout = a;
+    case 'raw'
+        xout = X;
 end
 
 

@@ -10,6 +10,9 @@ defaultScaleY = 'linear';
 defaultEvaluationFunctionX = '';
 defaultEvaluationFunctionY = '';
 defaultShowEdge = true;
+defaultXLim = nan;
+defaultYLim = nan;
+defaultGrid = 'on'; % 'auto' pour ne pas changer
 
 validQty = {'time', 'val', 'freq', 'diff', 'amor', 'freq2', 'pha'};
 checkQty = @(str) ismember(str, validQty);
@@ -27,6 +30,9 @@ addParameter(p,'ScaleY', defaultScaleY);
 addParameter(p,'EvaluationFunctionX', defaultEvaluationFunctionX, checkEvaluationFunction);
 addParameter(p,'EvaluationFunctionY', defaultEvaluationFunctionY, checkEvaluationFunction);
 addParameter(p,'showEdge', defaultShowEdge);
+addParameter(p,'XLim', defaultXLim);
+addParameter(p,'YLim', defaultYLim);
+addParameter(p,'Grid', defaultGrid);
 
 parse(p, ridge, QtyX, QtyY, varargin{:})
 
@@ -44,6 +50,9 @@ ScaleX = p.Results.ScaleX;
 ScaleY = p.Results.ScaleY;
 
 showEdge = p.Results.showEdge;
+XLim = p.Results.XLim;
+YLim = p.Results.YLim;
+Grid = p.Results.Grid;
 
 ax = p.Results.Axes;
 if isequal(ax, 0)
@@ -70,9 +79,18 @@ xlabel(ax ,NameX);
 ylabel(ax, NameY);
 ax.XScale = ScaleX;
 ax.YScale = ScaleY;
-ax.XGrid = 'on';
-ax.YGrid = 'on';
-ax.XLim = [ridge.time(1), ridge.time(end)];
+
+if ~isequal(Grid, 'auto')
+    ax.XGrid = Grid;
+    ax.YGrid = Grid;
+end
+
+if ~all(isnan(XLim))
+    ax.XLim = XLim;
+end
+if ~all(isnan(YLim))
+    ax.YLim = YLim;
+end
 
 hold(ax, 'off');
 end

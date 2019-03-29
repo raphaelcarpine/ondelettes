@@ -41,6 +41,8 @@ PlotScale = p.Results.PlotScale;
 FreqScale = p.Results.FreqScale;
 Title = p.Results.Title;
 Visible = p.Results.Visible;
+
+
 %% Creation de la figure (avec ou sans titre)
 if isempty(Title)
     figure('Visible',Visible)

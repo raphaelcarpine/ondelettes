@@ -55,6 +55,9 @@ else
     getX = @() cellmat2mat (get(p.Results.WaveletPlot, 'XData'));
     getY = @() cellmat2mat (get(p.Results.WaveletPlot, 'YData'));
     plotAxes = cellmat2mat (get(p.Results.WaveletPlot, 'Parent'));
+    
+    figPlot = p.Results.WaveletPlot.Parent.Parent;
+    figPlot.CloseRequestFcn = @(~,~) delete([figPlot, fig]);
 end
 nbPlots = size(getX(), 1);
 
@@ -64,6 +67,7 @@ fmax0 = p.Results.fmax;
 NbFreq0 = p.Results.NbFreq;
 Q0 = p.Results.Q;
 MaxParallelRidges = p.Results.MaxParallelRidges;
+
 
 %% bouton ondelettes et panneaux param et sorties
 buttonWavelet = uicontrol('Parent',fig, 'Units', 'normalized','Style','pushbutton',...
@@ -217,19 +221,21 @@ end
             
             if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value
                 newTimeAmplPlots = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
-                    'Axes', plotAxes(kPlot));
+                    'Axes', plotAxes(kPlot), 'Grid', 'auto');
                 timeAmplPlots = [timeAmplPlots, newTimeAmplPlots];
             end
             
             if checkboxTimeAmpl.Value
                 RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(1))));
+                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(1))),...
+                    'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxTimeFreq.Value
                 RidgeQtyPlot2(ridge, 'time', 'freq',...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(2))));
+                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(2))),...
+                    'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplFreq.Value
                 RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
