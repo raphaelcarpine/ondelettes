@@ -56,8 +56,13 @@ else
     getY = @() cellmat2mat (get(p.Results.WaveletPlot, 'YData'));
     plotAxes = cellmat2mat (get(p.Results.WaveletPlot, 'Parent'));
     
-    figPlot = p.Results.WaveletPlot.Parent.Parent;
-    figPlot.CloseRequestFcn = @(~,~) delete([figPlot, fig]);
+    for waveplt = p.Results.WaveletPlot
+        parent = waveplt;
+        while ~isa(parent, 'matlab.ui.Figure')
+            parent = get(parent, 'Parent');
+        end
+        parent.CloseRequestFcn = @(~,~) delete([parent, fig]);
+    end
 end
 nbPlots = size(getX(), 1);
 
