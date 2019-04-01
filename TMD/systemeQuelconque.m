@@ -158,7 +158,7 @@ for kparam=1:nparam
         'Style','text', 'String', param{kparam},...
         'Position', [marge, H-2.5*kparam+marge, 10-3/2*marge, 2-2*marge]);
     paramEdits.(param{kparam}) = uicontrol('Parent',paramPan, 'Units', 'character',...
-        'Style','edit', 'String', num2str(valparam(kparam)), ...
+        'Style','edit', 'String', num2str(valparam{kparam}), ...
         'Position', [marge+10, H-2.5*kparam+marge, 10-3/2*marge, 2-2*marge]);
     paramStr.Units = 'normalized';
     paramEdits.(param{kparam}).Units = 'normalized';
@@ -250,7 +250,7 @@ xlabel(axesPlots(ddl1), 't');
             set(plots(kv), 'YData', Xplot(kv,:));
             plots(kv).Color(4) = 1;
         end
-        linkaxes(axesPlots,'x');
+        %linkaxes(axesPlots,'x');
     end
 
 %%

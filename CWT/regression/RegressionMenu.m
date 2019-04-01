@@ -6,6 +6,7 @@ p = inputParser;
 defaultEq = 'a*x+b';
 defaultParam = 'a b';
 defaultParam0 = '1 1';
+defaultFit = 'y';
 
 paramPrecision = 1e-6;
 maxIter = 1e6;
@@ -13,18 +14,20 @@ maxIter = 1e6;
 addOptional(p, 'Equation', defaultEq);
 addOptional(p, 'Param', defaultParam);
 addOptional(p, 'Param0', defaultParam0);
+addOptional(p, 'Fit', defaultFit);
 
 parse(p, varargin{:});
 
 eq = p.Results.Equation;
 param = p.Results.Param;
 param0 = p.Results.Param0;
+fit = p.Results.Fit;
 %%
 
 fig = figure;
 fig.Units = 'characters';
 fig.Position(3) = 65;
-fig.Position(4) = 15;
+fig.Position(4) = 18;
 fig.MenuBar = 'none';
 
 
@@ -36,8 +39,8 @@ optionsPan = uipanel('Parent',fig, 'Units', 'normalized');
 eqPan = uipanel('Parent',fig, 'Units', 'normalized');
 
 buttonReg.Position = [0.02 0.02 0.96 0.15];
-optionsPan.Position = [0.02 0.19 0.96 0.33];
-eqPan.Position = [0.02 0.54 0.96 0.42];
+optionsPan.Position = [0.02 0.19 0.96 0.25];
+eqPan.Position = [0.02 0.46 0.96 0.5];
 
 %% equation
 
@@ -47,13 +50,21 @@ paramStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'Str
 paramEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param);
 param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params0 :');
 param0Edit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param0);
+fitStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'fit :');
+fitEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', fit);
 
-eqStr.Position = [0.01, 0.67, 0.2, 0.32];
-eqEdit.Position = [0.22, 0.67, 0.77, 0.32];
-paramStr.Position = [0.01, 0.34, 0.2, 0.32];
-paramEdit.Position = [0.22, 0.34, 0.77, 0.32];
-param0Str.Position = [0.01, 0.01, 0.2, 0.32];
-param0Edit.Position = [0.22, 0.01, 0.77, 0.32];
+nLign = 4;
+marge = 0.02;
+h = (1-(nLign+1)*marge)/nLign;
+H = h+marge;
+eqStr.Position = [0.01, 1-H, 0.2, h];
+eqEdit.Position = [0.22, 1-H, 0.77, h];
+paramStr.Position = [0.01, 1-2*H, 0.2, h];
+paramEdit.Position = [0.22, 1-2*H, 0.77, h];
+param0Str.Position = [0.01, 1-3*H, 0.2, h];
+param0Edit.Position = [0.22, 1-3*H, 0.77, h];
+fitStr.Position = [0.01, 1-4*H, 0.2, h];
+fitEdit.Position = [0.22, 1-4*H, 0.77, h];
 
 
 %% options
@@ -100,6 +111,12 @@ ax = 0;
             line = line(1);
             X = get(line, 'XData');
             Y = get(line, 'YData');
+            
+            X = X(~isnan(Y)); % on enlève les valeurs inappropriées
+            Y = Y(~isnan(Y));
+            X = X(~isnan(X));
+            Y = Y(~isnan(X));
+            
             ax = get(line, 'Parent');
             ok = true;
         end
@@ -149,6 +166,9 @@ ax = 0;
         Param = strsplit(Param);
         Param0 = str2double(strsplit(Param0));
         
+        set(param0Edit, 'ForegroundColor', [0.5 0.5 0.5]);
+        drawnow;
+        
         Fstring = Eq;
         for ip = 1:length(Param)
             Fstring = varNameRep(Fstring, Param{ip}, ['P(' num2str(ip) ')']);
@@ -160,15 +180,26 @@ ax = 0;
         F = @(P) 0;        
         eval(['F = @(P, x) ' Fstring ';']); 
         
-        S = @(P) F(P, X)-Y;
+        fitFunction = @(y) y;
+        eval(['fitFunction = @(y)' get(fitEdit, 'String') ';']);
+        
+        S = @(P) fitFunction(F(P, X)) - fitFunction(Y);
         
         lb = ones(size(Param0))*(-inf);
         ub = ones(size(Param0))*inf;
         optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', maxIter,...
-            'StepTolerance', paramPrecision, 'MaxFunctionEvaluations', inf);
-        Param1 = lsqnonlin(S, Param0, lb, ub, optionsReg);
+            'StepTolerance', paramPrecision, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
+        
+        try
+            Param1 = lsqnonlin(S, Param0, lb, ub, optionsReg);
+        catch
+            warning('did not fit');
+            set(param0Edit, 'ForegroundColor', [0 0 0]);
+            return
+        end
         
         set(param0Edit, 'String', num2str(Param1));
+        set(param0Edit, 'ForegroundColor', [0 0 0]);
         
         if optBut.plot.Value
             if length(X) < 1000
@@ -180,7 +211,7 @@ ax = 0;
             if optBut.onaxes.Value
                 plotAxes = ax;
                 hold(plotAxes, 'on');
-                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot), '--')];
+                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot), 'r--')];
                 hold(plotAxes, 'off');
             else
                 plotAxes = axes(figure);
