@@ -98,12 +98,7 @@ lineSelect.Callback = @(~,~) selectFunction(lineSelect.Value);
 prevBut.Callback = @(~,~) nextprev(-1);
 nextBut.Callback = @(~,~) nextprev(1);
 
-    function closeReg()
-        selectFunction(false);
-        delete(fig);
-    end
-
-fig.CloseRequestFcn = @(~,~) closeReg();
+fig.CloseRequestFcn = @(~,~) delete(fig);
 
 %% equation
 
