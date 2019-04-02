@@ -1,4 +1,4 @@
-function systemeQuelconque(variables, equations, parametres, valeurParametres, X0, V0, varargin)
+function systemeQuelconque(variables, equations, parametres, valeurParametres, X0, V0, lineaire, varargin)
 %SYSTEMEQELCONQUE Summary of this function goes here
 %   Detailed explanation goes here
 p = inputParser;
@@ -14,12 +14,13 @@ addRequired(p, 'parametres');
 addRequired(p, 'valeurParametres');
 addRequired(p, 'X0');
 addRequired(p, 'V0');
+addRequired(p, 'lineaire');
 addParameter(p, 'variablesNonInertielles', defaultVariablesNonInertielles);
 addParameter(p, 'equationsNonInertielles', defaultEquationsNonInertielles);
 addParameter(p, 'X0NonInertiel', defaultX0NonInertiel);
 addParameter(p, 'T', defaultT);
 
-parse(p,variables, equations, parametres, valeurParametres, X0, V0, varargin{:})
+parse(p,variables, equations, parametres, valeurParametres, X0, V0, lineaire, varargin{:})
 
 vars = variables;
 eqs = equations;
@@ -38,10 +39,11 @@ eqsNonI = p.Results.variablesNonInertielles;
 X0nonI = p.Results.X0NonInertiel;
 ddl2 = length(varsNonI);
 
-
+%%
 %integration
 T = p.Results.T;
-nT = T * 200;
+nT = 200;
+solver = @ode45;
 
 
 %ondelette
@@ -53,7 +55,7 @@ NbFreq = 100;
 
 %% construction de la fonction d'intégration
 
-    function str = varNameRep(str, old, new)
+    function str = varNameRep(str, old, new) % fonction de remplacement de nom de variable
         n = length(str);
         k = length(old);
         position = strfind(str, old);
@@ -77,51 +79,81 @@ NbFreq = 100;
     end
 
 
-% passage de variable symbolique à vecteur
-eqs2 = eqs;
-for keqs = 1:ddl1
-    for kvar = 1:ddl1
-        eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
-        eqs2{keqs} = varNameRep(eqs2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
-    end
-    for kvar2 = 1:ddl2
-        eqs2{keqs} = varNameRep(eqs2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
-    end
-    for kparam = 1:nparam
-        eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-    end
-end
-eqsNonI2 = eqsNonI;
-for keqs = 1:ddl2
-    for kvar = 1:ddl1
-        eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
-        eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
-    end
-    for kvar2 = 1:dd2
-        eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
-    end
-    for kparam = 1:nparam
-        eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-    end
-end
 
 
 
-Dstring = 'D = @(t, Y) ['; %string qui va permettre de construire la fonction
-for keqs = 1:ddl1
-    Dstring = [Dstring 'Y(' num2str(ddl1+keqs) '); '];
-end
-for keqs = 1:ddl1
-    Dstring = [Dstring eqs2{keqs} '; '];
-end
-for keqs = 1:ddl2
-    Dstring = [Dstring eqsNonI2{keqs} '; '];
-end
-Dstring = Dstring(1:end-2);
-Dstring = [Dstring '];'];
+if lineaire % systeme lineaire
+    eqs2 = eqs;
+    
+    % remplacement des parametres de des derivations
+    for keqs = 1:ddl1
+        for kvar = 1:ddl1
+            eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['d*' vars{kvar}]);
+        end
+        for kparam = 1:nparam
+            eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
+        end
+        eqs2{keqs} = [eqs2{keqs}, '-d^2*', vars{keqs}];
+    end
+    eqsNonI2 = eqsNonI;
+    for keqs = 1:ddl2
+        for kvar = 1:ddl1
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, ['d' vars{kvar}], ['d*' vars{kvar}]);
+        end
+        for kparam = 1:nparam
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
+        end
+        eqsNonI2{keqs} = [eqsNonI2{keqs}, '-d^2*', vars{keqs}];
+    end
 
+else % systeme non lineaire
+    % passage de variable symbolique à vecteur
+    eqs2 = eqs;
+    
+    for keqs = 1:ddl1
+        for kvar = 1:ddl1
+            eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
+            eqs2{keqs} = varNameRep(eqs2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
+        end
+        for kvar2 = 1:ddl2
+            eqs2{keqs} = varNameRep(eqs2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
+        end
+        for kparam = 1:nparam
+            eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
+        end
+    end
+    eqsNonI2 = eqsNonI;
+    for keqs = 1:ddl2
+        for kvar = 1:ddl1
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
+        end
+        for kvar2 = 1:dd2
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
+        end
+        for kparam = 1:nparam
+            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
+        end
+    end
 
-D = @(Y) Y; % eval ne peut pas déclarer de nouvelle variable
+    
+    Dstring = 'D = @(t, Y) ['; %string qui va permettre de construire la fonction
+    for keqs = 1:ddl1
+        Dstring = [Dstring 'Y(' num2str(ddl1+keqs) '); '];
+    end
+    for keqs = 1:ddl1
+        Dstring = [Dstring eqs2{keqs} '; '];
+    end
+    for keqs = 1:ddl2
+        Dstring = [Dstring eqsNonI2{keqs} '; '];
+    end
+    Dstring = Dstring(1:end-2);
+    Dstring = [Dstring '];'];
+    
+    
+    D = @(Y) Y; % eval ne peut pas déclarer de nouvelle variable
+    
+end
 
 %% construction du gui
 fig = figure;
@@ -229,8 +261,10 @@ xlabel(axesPlots(ddl1), 't');
         
         % evaluation de la solution
         eval(Dstring); % on construit la fonction d'intégration
-        t = linspace(0, T, nT);
-        [tout, Xout] = differentialEq([X0; V0; X0nonI], D, T, false, 'output', 'raw');
+        t = linspace(0, T, T*nT);
+        %[tout, Xout] = differentialEq([X0; V0; X0nonI], D, T, false, 'output', 'raw');
+        [tout, Xout] = solver(D, [0 T], [X0; V0; X0nonI],...
+            odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/nT));
         X = interp1(tout, Xout, t);
         if plotValue == 'x'
             Xplot = X(:,1:ddl1)';
