@@ -1,4 +1,4 @@
-function systemeQuelconque(variables, equations, parametres, valeurParametres, X0, V0, lineaire, varargin)
+function plots = systemeQuelconque(variables, equations, parametres, valeurParametres, X0, V0, fractionnaire, varargin)
 %SYSTEMEQELCONQUE Summary of this function goes here
 %   Detailed explanation goes here
 p = inputParser;
@@ -7,6 +7,8 @@ defaultVariablesNonInertielles = {};
 defaultEquationsNonInertielles = {};
 defaultX0NonInertiel = [];
 defaultT = 100;
+defaultnT = 100;
+defaultdT = 1e-4;
 
 addRequired(p, 'variables');
 addRequired(p, 'equations');
@@ -19,8 +21,10 @@ addParameter(p, 'variablesNonInertielles', defaultVariablesNonInertielles);
 addParameter(p, 'equationsNonInertielles', defaultEquationsNonInertielles);
 addParameter(p, 'X0NonInertiel', defaultX0NonInertiel);
 addParameter(p, 'T', defaultT);
+addParameter(p, 'nT', defaultnT);
+addParameter(p, 'dT', defaultdT);
 
-parse(p,variables, equations, parametres, valeurParametres, X0, V0, lineaire, varargin{:})
+parse(p,variables, equations, parametres, valeurParametres, X0, V0, fractionnaire, varargin{:})
 
 vars = variables;
 eqs = equations;
@@ -29,131 +33,18 @@ ddl1 = length(vars);
 param = parametres;
 valparam = valeurParametres;
 nparam = length(param);
-paramStruct = struct;
-for kparam = 1:nparam
-    paramStruct.(param{kparam}) = valparam(kparam);
-end
 
 varsNonI = p.Results.variablesNonInertielles; % variables avec equa diff 1er ordre seulement
-eqsNonI = p.Results.variablesNonInertielles;
-X0nonI = p.Results.X0NonInertiel;
-ddl2 = length(varsNonI);
+eqsNonI = p.Results.equationsNonInertielles;
+X0NonI = p.Results.X0NonInertiel;
 
 %%
 %integration
 T = p.Results.T;
-nT = 200;
-solver = @ode45;
+nT = p.Results.nT;
 
+dt_fractionnaire = p.Results.dT;
 
-%ondelette
-Q = 1;
-MaxParallelRidges = 1;
-fmin = 0.9;
-fmax = 1.1;
-NbFreq = 100;
-
-%% construction de la fonction d'intégration
-
-    function str = varNameRep(str, old, new) % fonction de remplacement de nom de variable
-        n = length(str);
-        k = length(old);
-        position = strfind(str, old);
-        hashold = char(35*ones(1, k));
-        for pos = position
-            if pos>1
-                l = str(pos-1);
-                if l>='a' && l<='z' || l>='A' && l<='Z' || l>='0' && l<='9'
-                    continue;
-                end
-            end
-            if pos+k<=n
-                l = str(pos+k);
-                if l>='a' && l<='z' || l>='A' && l<='Z' || l>='0' && l<='9'
-                    continue;
-                end
-            end
-            str(pos:pos+k-1) = hashold;
-        end
-        str = strrep(str, hashold, new);
-    end
-
-
-
-
-
-if lineaire % systeme lineaire
-    eqs2 = eqs;
-    
-    % remplacement des parametres de des derivations
-    for keqs = 1:ddl1
-        for kvar = 1:ddl1
-            eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['d*' vars{kvar}]);
-        end
-        for kparam = 1:nparam
-            eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-        end
-        eqs2{keqs} = [eqs2{keqs}, '-d^2*', vars{keqs}];
-    end
-    eqsNonI2 = eqsNonI;
-    for keqs = 1:ddl2
-        for kvar = 1:ddl1
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, ['d' vars{kvar}], ['d*' vars{kvar}]);
-        end
-        for kparam = 1:nparam
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-        end
-        eqsNonI2{keqs} = [eqsNonI2{keqs}, '-d^2*', vars{keqs}];
-    end
-
-else % systeme non lineaire
-    % passage de variable symbolique à vecteur
-    eqs2 = eqs;
-    
-    for keqs = 1:ddl1
-        for kvar = 1:ddl1
-            eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
-            eqs2{keqs} = varNameRep(eqs2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
-        end
-        for kvar2 = 1:ddl2
-            eqs2{keqs} = varNameRep(eqs2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
-        end
-        for kparam = 1:nparam
-            eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-        end
-    end
-    eqsNonI2 = eqsNonI;
-    for keqs = 1:ddl2
-        for kvar = 1:ddl1
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
-        end
-        for kvar2 = 1:dd2
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
-        end
-        for kparam = 1:nparam
-            eqsNonI2{keqs} = varNameRep(eqsNonI2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
-        end
-    end
-
-    
-    Dstring = 'D = @(t, Y) ['; %string qui va permettre de construire la fonction
-    for keqs = 1:ddl1
-        Dstring = [Dstring 'Y(' num2str(ddl1+keqs) '); '];
-    end
-    for keqs = 1:ddl1
-        Dstring = [Dstring eqs2{keqs} '; '];
-    end
-    for keqs = 1:ddl2
-        Dstring = [Dstring eqsNonI2{keqs} '; '];
-    end
-    Dstring = Dstring(1:end-2);
-    Dstring = [Dstring '];'];
-    
-    
-    D = @(Y) Y; % eval ne peut pas déclarer de nouvelle variable
-    
-end
 
 %% construction du gui
 fig = figure;
@@ -163,7 +54,7 @@ plotPan = uipanel('Parent',fig, 'Units', 'normalized');
 plotParamPan = uipanel('Parent',fig, 'Units', 'normalized');
 
 largeur1 = 0.2;
-hauteur1 = 0.1;
+hauteur1 = 0.07;
 marge = 0.01;
 paramPan.Position = [marge, marge, largeur1, 1-2*marge];
 plotPan.Position = [largeur1+2*marge, hauteur1+2*marge, 1-largeur1-3*marge, 1-hauteur1-3*marge];
@@ -206,6 +97,10 @@ end
 
 plotParam = {'plot', 'T'};
 valplotParam = {'x', num2str(T)};
+if fractionnaire
+    plotParam{end+1} = 'dt';
+    valplotParam{end+1} = num2str(dt_fractionnaire);
+end
 nplotParam = length(plotParam);
 
 plotParamEdits = struct;
@@ -223,6 +118,11 @@ plotParamEdits.plot.Position = [0.1+2*marge, marge, 0.1, 1-2*marge];
 
 plotParamStrings.T.Position = [0.8-2*marge, marge, 0.1, 1-2*marge];
 plotParamEdits.T.Position = [0.9-marge, marge, 0.1, 1-2*marge];
+
+if fractionnaire
+    plotParamStrings.dt.Position = [0.4-1/2*marge, marge, 0.1, 1-2*marge];
+    plotParamEdits.dt.Position = [0.5+1/2*marge, marge, 0.1, 1-2*marge];
+end
 
 
 for kplotParam = 1:nplotParam
@@ -254,28 +154,27 @@ xlabel(axesPlots(ddl1), 't');
         
         % mise à jour des parametres
         for kp=1:nparam
-            paramStruct.(param{kp}) = eval(get(paramEdits.(param{kp}), 'String'));
+            valparam{kp} = eval(get(paramEdits.(param{kp}), 'String'));
         end
         T = eval(get(plotParamEdits.T, 'String'));
         plotValue = get(plotParamEdits.plot, 'String');
         
         % evaluation de la solution
-        eval(Dstring); % on construit la fonction d'intégration
-        t = linspace(0, T, T*nT);
-        %[tout, Xout] = differentialEq([X0; V0; X0nonI], D, T, false, 'output', 'raw');
-        [tout, Xout] = solver(D, [0 T], [X0; V0; X0nonI],...
-            odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/nT));
-        X = interp1(tout, Xout, t);
+        if fractionnaire
+            dt_fractionnaire = eval(get(plotParamEdits.dt, 'String'));
+            [t, X, V, A] = systemeNonLinFractionnaire(vars, eqs, varsNonI, eqsNonI,...
+                param, valparam, X0, V0, X0NonI, T, nT, dt_fractionnaire);
+        else
+            [t, X, V, A] = systemeNonLin(vars, eqs, varsNonI, eqsNonI,...
+                param, valparam, X0, V0, X0NonI, T, nT);
+        end
+        
         if plotValue == 'x'
-            Xplot = X(:,1:ddl1)';
+            Xplot = X;
         elseif plotValue == 'v'
-            Xplot = X(:,ddl1+1:2*ddl1)';
+            Xplot = V;
         elseif plotValue == 'a'
-            dX = zeros(size(X'));
-            for it = 1:length(t)
-                dX(:,it) = D(t(it), X(it,:));
-            end
-            Xplot = dX(ddl1+1:2*ddl1,:);
+            Xplot = A;
         end
         
         %affichage
@@ -289,9 +188,6 @@ xlabel(axesPlots(ddl1), 't');
 
 %%
 update();
-
-WaveletMenu('WaveletPlot', plots, 'fmin', fmin, 'fmax', fmax,...
-    'NbFreq', NbFreq, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges);
 
 end
 

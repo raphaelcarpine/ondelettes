@@ -71,7 +71,7 @@ nextBut.Position = [0.75, 0.1, 0.15, 0.8];
         set(highlighted, 'LineWidth', lineWidth);
         lineWidth = get(line, 'LineWidth');
         highlighted = line;
-        set(highlighted, 'LineWidth', lineWidth+2);
+        set(highlighted, 'LineWidth', 2.5*lineWidth);
     end
 
     function selectFunction(selecting)
@@ -217,7 +217,7 @@ ax = 0;
 %%
 
 
-    function show()
+    function computeReg()
         if ~updateXYAxes()
             warning('no line selected');
             return;
@@ -284,11 +284,14 @@ ax = 0;
                 hold(plotAxes, 'off');
             end
         end
+        
+        lineSelect.Value = false;
+        selectFunction(lineSelect.Value);
     end
 
 
 
-buttonReg.Callback = @(~,~) show();
+buttonReg.Callback = @(~,~) computeReg();
 
 
 end
