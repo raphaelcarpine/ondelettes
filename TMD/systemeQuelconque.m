@@ -8,7 +8,7 @@ defaultEquationsNonInertielles = {};
 defaultX0NonInertiel = [];
 defaultT = 100;
 defaultnT = 100;
-defaultdT = 1e-4;
+defaultdT = 1e-3;
 
 addRequired(p, 'variables');
 addRequired(p, 'equations');

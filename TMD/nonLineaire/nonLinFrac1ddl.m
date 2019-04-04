@@ -1,9 +1,8 @@
 omega0 = '2*pi';
 epsilon = 0.1;
-n = 1;
-delta = 0.05;
+alpha = 1;
 
-d2x = '-omega0^2*x-(abs(x)<=delta)*epsilon*sign(dx)*abs(dx)^n';
+d2x = '-omega0^2*x-epsilon*d(alpha)x';
 
 T = 100;
 nT = 200;
@@ -12,8 +11,8 @@ x0 = 0;
 v0 = 1;
 
 
-waveletplots = systemeQuelconque({'x'}, {d2x}, {'omega0', 'epsilon', 'n', 'delta'}, {omega0, epsilon, n, delta},...
-    x0, v0, false, 'T', T, 'nT', nT);
+waveletplots = systemeQuelconque({'x'}, {d2x}, {'omega0', 'epsilon', 'alpha'}, {omega0, epsilon, alpha},...
+    x0, v0, true, 'T', T, 'nT', nT);
 
 
 %ondelette

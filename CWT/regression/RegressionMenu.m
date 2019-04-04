@@ -68,10 +68,13 @@ nextBut.Position = [0.75, 0.1, 0.15, 0.8];
 
 
     function highlightLine()
-        set(highlighted, 'LineWidth', lineWidth);
-        lineWidth = get(line, 'LineWidth');
-        highlighted = line;
-        set(highlighted, 'LineWidth', 2.5*lineWidth);
+        try
+            set(highlighted, 'LineWidth', lineWidth);
+            lineWidth = get(line, 'LineWidth');
+            highlighted = line;
+            set(highlighted, 'LineWidth', 3*lineWidth);
+        catch
+        end
     end
 
     function selectFunction(selecting)
@@ -99,7 +102,10 @@ prevBut.Callback = @(~,~) nextprev(-1);
 nextBut.Callback = @(~,~) nextprev(1);
 
     function closeReg()
-        selectFunction(false);
+        try
+            selectFunction(false);
+        catch
+        end
         delete(fig);
     end
 
@@ -274,13 +280,13 @@ ax = 0;
             if optBut.onaxes.Value
                 plotAxes = ax;
                 hold(plotAxes, 'on');
-                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot), 'r--')];
+                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)), 'r--')];
                 hold(plotAxes, 'off');
             else
                 plotAxes = axes(figure);
                 hold(plotAxes, 'on');
                 plot(plotAxes, X, Y, '*');
-                plot(plotAxes, Xplot, F(Param1, Xplot));
+                plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)));
                 hold(plotAxes, 'off');
             end
         end

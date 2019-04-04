@@ -12,7 +12,7 @@ valparam = valeurParametres;
 nparam = length(param);
 paramStruct = struct;
 for kparam = 1:nparam
-    paramStruct.(param{kparam}) = valparam(kparam);
+    paramStruct.(param{kparam}) = valparam{kparam};
 end
 
 varsNonI = variablesNonInertielles; % variables avec equa diff 1er ordre seulement
@@ -81,42 +81,59 @@ ddl2 = length(varsNonI);
             end
             
             alphas{end+1} = alpha;
+            Alphas{end+1} = alpha;
         end
         
         for kalpha = 1:length(alphas)
             alpha = alphas{kalpha};
-            str = strrep(str, ['d(' alpha ')' hashold], func(alpha));
+            kAlpha = length(Alphas) - length(alphas) + kalpha;
+            str = strrep(str, ['d(' alpha ')' hashold], func(alpha, kAlpha));
         end
     end
 
 
-    function str = getFracDeriv(alpha, kvar)
-        str = ['dt^(-' alpha ') * sum( Aalpha .* Y(' num2str(kvar) ',kt:-1:1))'];
+    function str = getFracDeriv(alpha, kAlpha, kvar)
+        str = ['dt^(-' alpha ') * sum( A{' num2str(kAlpha) '}(1:kt) .* Y(' num2str(kvar) ',kt:-1:1))'];
     end
 
+
+    function A = getA()
+        A = {};
+        for kAlphas = 1:length(Alphas)
+            A{kAlphas} = zeros(1, nt);
+            aj = 1;
+            alph = eval(Alphas{kAlphas});
+            for j = 1:nt
+                A{kAlphas}(j) = aj;
+                aj = aj * (j-alph-1)/j;
+            end
+        end
+    end
 
 
 eqs2 = [eqs eqsNonI];
-
+Alphas = {};
 for keqs = 1:length(eqs2)
-    for kvar = 1:ddl1
-        eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ')']);
-        eqs2{keqs} = varNameRep(eqs2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ')']);
-        eqs2{keqs} = fracDevRep(eqs2{keqs}, vars{kvar}, @(alpha) getFracDeriv(alpha, kvar));
-    end
-    for kvar2 = 1:ddl2
-        eqs2{keqs} = varNameRep(eqs2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ')']);
-        eqs2{keqs} = fracDevRep(eqs2{keqs}, varsNonI{kvar2}, @(alpha) getFracDeriv(alpha, kvar2));
-    end
     for kparam = 1:nparam
         eqs2{keqs} = varNameRep(eqs2{keqs}, param{kparam}, ['paramStruct.' param{kparam}]);
+    end
+    for kvar = 1:ddl1
+        eqs2{keqs} = fracDevRep(eqs2{keqs}, vars{kvar}, @(alpha, kAlpha) getFracDeriv(alpha, kAlpha, kvar));
+        eqs2{keqs} = varNameRep(eqs2{keqs}, ['d' vars{kvar}], ['Y(' num2str(kvar+ddl1) ',kt)']);
+        eqs2{keqs} = varNameRep(eqs2{keqs}, vars{kvar}, ['Y(' num2str(kvar) ',kt)']);
+    end
+    for kvar2 = 1:ddl2
+        eqs2{keqs} = fracDevRep(eqs2{keqs}, varsNonI{kvar2}, @(alpha, kAlpha) getFracDeriv(alpha, kAlpha, kvar2));
+        eqs2{keqs} = varNameRep(eqs2{keqs}, varsNonI{kvar2}, ['Y(' num2str(2*ddl1+kvar2) ',kt)']);
     end
 end
 
 
-Dstring = 'D = @() ['; %string qui va permettre de construire la fonction
+
+
+Dstring = 'D = @(kt, Y) ['; %string qui va permettre de construire la fonction
 for keqs = 1:ddl1
-    Dstring = [Dstring 'Y(' num2str(ddl1+keqs) '); '];
+    Dstring = [Dstring 'Y(' num2str(ddl1+keqs) ',kt); '];
 end
 for keqs = 1:length(eqs2)
     Dstring = [Dstring eqs2{keqs} '; '];
@@ -125,9 +142,8 @@ Dstring = Dstring(1:end-2);
 Dstring = [Dstring '];'];
 
 
-D = @() 1; % eval ne peut pas déclarer de nouvelle variable
+D = @(kt) 1; % eval ne peut pas déclarer de nouvelle variable
 
-eval(Dstring); % on construit la fonction d'intégration
 
 
 %% integration
@@ -135,26 +151,31 @@ eval(Dstring); % on construit la fonction d'intégration
 nt = round(T/dt_integration)+1;
 dt = T/(nt-1);
 Y = zeros(2*ddl1+ddl2, nt);
+dY = zeros(2*ddl1+ddl2, nt);
+Y(:,1) = [X0; V0; X0NonInertiel];
 
+A = getA(); % coefficients pour la dérivée
 
-A
+eval(Dstring); % on construit la fonction d'intégration
+
 
 for kt = 1:nt-1
-    
+    Dkt = D(kt, Y);
+    dY(:,kt) = Dkt;
+    Y(:,kt+1) = Y(:,kt) + dt*Dkt;
+    Y(:,kt+1) = Y(:,kt) + dt*(Dkt+D(kt+1, Y))/2;
 end
-
+dY(:,nt) = D(nt, Y);
 
 
 %%
 
+tout = linspace(0, T, nt);
 t = linspace(0, T, T*nT);
-Y = interp1(tout, Y, t);
-dY = zeros(size(Y'));
-for it = 1:length(t)
-    dY(:,it) = D(t(it), Y(it,:));
-end
+Y = interp1(tout, Y', t)';
+dY = interp1(tout, dY', t)';
 
-X = Y(:,1:ddl1)';
+X = Y(1:ddl1,:);
 V = Y(ddl1+1:2*ddl1,:);
 A = dY(ddl1+1:2*ddl1,:);
 

@@ -47,6 +47,14 @@ end
         end
     end
 
+    function closeParent(parent)
+        try
+            delete(fig);
+        catch
+        end
+        delete(parent);
+    end
+
 if p.Results.WaveletPlot == 0
     getX = @() p.Results.X;
     getY = @() p.Results.Y;
@@ -61,7 +69,7 @@ else
         while ~isa(parent, 'matlab.ui.Figure')
             parent = get(parent, 'Parent');
         end
-        parent.CloseRequestFcn = @(~,~) delete([parent, fig]);
+        parent.CloseRequestFcn = @(~,~) closeParent(parent);
     end
 end
 nbPlots = size(getX(), 1);
@@ -251,7 +259,10 @@ end
     end
 
     function deletePlots()
-        delete(timeAmplPlots);
+        try
+            delete(timeAmplPlots);
+        catch
+        end
         timeAmplPlots = [];
     end
 
