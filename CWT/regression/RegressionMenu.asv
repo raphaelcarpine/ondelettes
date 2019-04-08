@@ -267,7 +267,7 @@ ax = 0;
             Param1 = lsqnonlin(S, Param0, lb, ub, optionsReg);
         catch error
             warning('did not fit');
-            warning(error.message);
+            error
             set(param0Edit, 'ForegroundColor', [0 0 0]);
             return
         end

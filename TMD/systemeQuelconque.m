@@ -8,7 +8,7 @@ defaultEquationsNonInertielles = {};
 defaultX0NonInertiel = [];
 defaultT = 100;
 defaultnT = 100;
-defaultdT = 1e-3;
+defaultdt = 1e-3;
 
 addRequired(p, 'variables');
 addRequired(p, 'equations');
@@ -22,7 +22,7 @@ addParameter(p, 'equationsNonInertielles', defaultEquationsNonInertielles);
 addParameter(p, 'X0NonInertiel', defaultX0NonInertiel);
 addParameter(p, 'T', defaultT);
 addParameter(p, 'nT', defaultnT);
-addParameter(p, 'dT', defaultdT);
+addParameter(p, 'dt', defaultdt);
 
 parse(p,variables, equations, parametres, valeurParametres, X0, V0, fractionnaire, varargin{:})
 
@@ -43,7 +43,7 @@ X0NonI = p.Results.X0NonInertiel;
 T = p.Results.T;
 nT = p.Results.nT;
 
-dt_fractionnaire = p.Results.dT;
+dt_fractionnaire = p.Results.dt;
 
 
 %% construction du gui
