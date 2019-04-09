@@ -33,7 +33,7 @@ if fig == 0
     fig = figure;
     fig.Units = 'characters';
     fig.Position(3) = 65;
-    fig.Position(4) = 15;
+    fig.Position(4) = 20;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
 end
@@ -83,14 +83,29 @@ MaxParallelRidges = p.Results.MaxParallelRidges;
 
 
 %% bouton ondelettes et panneaux param et sorties
-buttonWavelet = uicontrol('Parent',fig, 'Units', 'normalized','Style','pushbutton',...
+
+%ondelette
+waveletPan = uipanel('Parent',fig, 'Units', 'normalized');
+waveletPan.Position = [0 0.2 1 0.8];
+
+buttonWavelet = uicontrol('Parent',waveletPan, 'Units', 'normalized','Style','pushbutton',...
     'String', 'wavelet');
-paramPan = uipanel('Parent',fig, 'Units', 'normalized');
-plotPan = uipanel('Parent',fig, 'Units', 'normalized');
+paramPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
+plotPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
 
 buttonWavelet.Position = [0.02 0.02 0.96 0.15];
 paramPan.Position = [0.02 0.19 0.4 0.79];
 plotPan.Position = [0.44 0.19 0.54 0.79];
+
+%autres transformees
+transformPan = uipanel('Parent',fig, 'Units', 'normalized');
+transformPan.Position = [0 0 1 0.2];
+
+buttonHilbert = uicontrol('Parent',transformPan, 'Units', 'normalized','Style','pushbutton',...
+    'String', 'hilbert');
+
+buttonHilbert.Position = [0.51, 0.01, 0.48, 0.98];
+
 
 %% paramètres
 
@@ -232,31 +247,34 @@ end
         for kPlot = 1:nbPlots
             ridge = ridges{kPlot};
             
-            if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value
+            if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
                 newTimeAmplPlots = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'Axes', plotAxes(kPlot), 'Grid', 'auto');
                 timeAmplPlots = [timeAmplPlots, newTimeAmplPlots];
             end
             
-            if checkboxTimeAmpl.Value
+            if checkboxTimeAmpl.Value % plot de l'amplitude
                 RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                     'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(1))),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
-            if checkboxTimeFreq.Value
+            if checkboxTimeFreq.Value % plot de la frequence
                 RidgeQtyPlot2(ridge, 'time', 'freq',...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                     'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(2))),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
-            if checkboxAmplFreq.Value
+            if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequance
                 RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
                     'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(3))));
             end
         end
     end
+
+
+
 
     function deletePlots()
         try
@@ -267,9 +285,38 @@ end
     end
 
 
+
+
+
+    function hilbertTransform()
+        x = getX();
+        y = getY();
+        
+        hilbertPlotAxes = plotAxes;
+        if isequal(hilbertPlotAxes, 0)
+            fhilb = figure;
+            hilbertPlotAxes = [];
+            for kPlot = 1:nbPlots
+                hilbertPlotAxes(kPlot) = subplot(nbPlots, 1, kPlot, axes(fhilb));
+            end
+        end
+        
+        for kPlot = 1:nbPlots
+            hilb = hilbert(y(kPlot,:));
+            hold(hilbertPlotAxes(kPlot), 'on');
+            newPlot = plot(x(kPlot,:), abs(hilb), 'Parent', hilbertPlotAxes(kPlot));
+            hold(hilbertPlotAxes(kPlot), 'off');
+            timeAmplPlots = [timeAmplPlots, newPlot];
+        end
+            
+    end
+
+
 buttonWavelet.Callback = @(~,~) show();
 
 deleteButton.Callback = @(~,~) deletePlots();
+
+buttonHilbert.Callback = @(~,~) hilbertTransform();
 
 
 end
