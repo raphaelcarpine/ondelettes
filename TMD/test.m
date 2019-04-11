@@ -161,7 +161,22 @@ NbFreq = 200;
 
 WaveletMenu(fmin,fmax,NbFreq, T, X);
 
+%%
+M = @(mu, alpha, X) max (real (polesSystFrac(mu, 1, X(1), 0, X(2), alpha)));
+F = @(mu, alpha) M(mu, alpha, fminsearch(@(X) M(mu, alpha, X), [1 1]));
 
+mu = 2;
+
+n = 41;
+alphas = linspace(0, 2, n);
+lambdas = zeros(1, n);
+for ka = 1:n
+    lambdas(ka) = F(mu, alphas(ka));
+end
+
+f = figure;
+ax = axes(f);
+plot(ax, alphas, lambdas);
 
 
 

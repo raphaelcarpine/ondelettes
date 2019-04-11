@@ -86,7 +86,7 @@ MaxParallelRidges = p.Results.MaxParallelRidges;
 
 %ondelette
 waveletPan = uipanel('Parent',fig, 'Units', 'normalized');
-waveletPan.Position = [0 0.2 1 0.8];
+waveletPan.Position = [0 0.15 1 0.85];
 
 buttonWavelet = uicontrol('Parent',waveletPan, 'Units', 'normalized','Style','pushbutton',...
     'String', 'wavelet');
@@ -99,12 +99,15 @@ plotPan.Position = [0.44 0.19 0.54 0.79];
 
 %autres transformees
 transformPan = uipanel('Parent',fig, 'Units', 'normalized');
-transformPan.Position = [0 0 1 0.2];
+transformPan.Position = [0 0 1 0.15];
 
+buttonFourier = uicontrol('Parent',transformPan, 'Units', 'normalized','Style','pushbutton',...
+    'String', 'fourier');
 buttonHilbert = uicontrol('Parent',transformPan, 'Units', 'normalized','Style','pushbutton',...
     'String', 'hilbert');
 
-buttonHilbert.Position = [0.51, 0.01, 0.48, 0.98];
+buttonFourier.Position = [0.02, 0.01, 0.47, 0.98];
+buttonHilbert.Position = [0.51, 0.01, 0.47, 0.98];
 
 
 %% paramètres
@@ -312,11 +315,42 @@ end
     end
 
 
+
+
+
+    function fourierTransform()
+        x = getX();
+        y = getY();
+        
+        ffourier = figure;
+        fourierPlotAxes = [];
+        for kPlot = 1:nbPlots
+            fourierPlotAxes(kPlot) = subplot(nbPlots, 1, kPlot, axes(ffourier));
+            set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'log');
+        end
+        
+        for kPlot = 1:nbPlots
+            four = fft(y(kPlot,:));
+            four = four(1:end/2);
+            freqs = linspace(0, length(four)/(x(end)-x(1)), length(four));
+            hold(fourierPlotAxes(kPlot), 'on');
+            newPlot = plot(freqs, abs(four), 'Parent', fourierPlotAxes(kPlot));
+            hold(fourierPlotAxes(kPlot), 'off');
+            xlabel(fourierPlotAxes(kPlot), 'freq');
+            ylabel(fourierPlotAxes(kPlot), 'fft');
+            timeAmplPlots = [timeAmplPlots, newPlot];
+        end
+        
+    end
+
+
 buttonWavelet.Callback = @(~,~) show();
 
 deleteButton.Callback = @(~,~) deletePlots();
 
 buttonHilbert.Callback = @(~,~) hilbertTransform();
+
+buttonFourier.Callback = @(~,~) fourierTransform();
 
 
 end

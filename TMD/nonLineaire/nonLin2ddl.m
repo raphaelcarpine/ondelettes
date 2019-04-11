@@ -5,8 +5,8 @@ zeta0 = 0;
 epsilon = 1;
 alpha = 1;
 
-d2x0 = '-omega0^2*x0 - 2*omega0*zeta0*dx0 + mu*omega1^2*(x1-x0) + mu*epsilon*(dx1-dx0)^alpha';
-d2x1 = '-omega1^2*(x1-x0)-epsilon*(dx1-dx0)^alpha';
+d2x0 = '-omega0^2*x0 - 2*omega0*zeta0*dx0 + mu*omega1^2*(x1-x0) + mu*epsilon*sign(dx1-dx0)*abs(dx1-dx0)^alpha';
+d2x1 = '-omega1^2*(x1-x0)-epsilon*sign(dx1-dx0)*abs(dx1-dx0)^alpha';
 
 T = 100;
 nT = 200;
