@@ -1,15 +1,15 @@
 function niquistFrac()
 
-clear all;
-close all;
+% clear all;
+% close all;
 
 
-mu = 0.01;
+mu = 0.03;
 omega0 = 1;
 zeta0 = 0.0;
 omega1 = omega0/(1+mu);
 alpha = 1;
-nZeta1 = 100;
+nZeta1 = 1000;
 Zeta10 = 0;
 Zeta11 = 0.3;
 Zeta1 = linspace(Zeta10, Zeta11, nZeta1);
@@ -17,10 +17,10 @@ Zeta1 = linspace(Zeta10, Zeta11, nZeta1);
 
 
 %%
-racines = nan(4, length(Zeta1));
+racines = [];
 for k = 1:length(Zeta1)
     zeta1 = Zeta1(k);
-    racines(:,k) = polesSystFrac(mu, omega0, omega1, zeta0, zeta1, alpha);
+    racines = [racines; polesSystFrac(mu, omega0, omega1, zeta0, zeta1, alpha)];
 end
 racines = racines(~isnan(racines));
 racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage
@@ -134,10 +134,10 @@ balpha.Callback = @(~,~) updateAll();
         
         set(b, 'min', Zeta10, 'max', Zeta11);
         
-        racines = nan(4, nZeta1);
+        racines = [];
         for k = 1:nZeta1
             zeta = Zeta1(k);
-            racines(:,k) = polesSystFrac(mu, omega0, omega1, zeta0, zeta, alpha);
+            racines = [racines; polesSystFrac(mu, omega0, omega1, zeta0, zeta, alpha)];
         end
         racines = racines(~isnan(racines));
         racines = racines(imag(racines) >= 0); %on garde seulement les poles à partie imaginaire positive pour l'affichage

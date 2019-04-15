@@ -7,8 +7,8 @@ if nargin == 6
 end
 
 
-
 maxQ = 100; % denominateur max
+epsilon = 1e-10; % précision relative pour considérer qu'une racine est bien un racine
 
 %% détermination de p,q tq alpha ~ p/q avec q<=maxQ
 
@@ -38,6 +38,16 @@ omega0^2*omega1^2 + ...
 4*lambda0*lambda1 * z.^(alpha+1) + ...
 2*lambda1*omega0^2 * z.^alpha;
 
+Detpq = @(z)...
+1 * z.^4 + ...
+2*lambda0 * z.^3 + ...
+(omega0^2 + (1+mu)*omega1^2) * z.^2 + ...
+2*lambda0*omega1^2 * z + ...
+omega0^2*omega1^2 + ...
+2*lambda1*(1+mu) * z.^(p/q+2) + ...
+4*lambda0*lambda1 * z.^(p/q+1) + ...
+2*lambda1*omega0^2 * z.^(p/q);
+
 
 n = max(4*q, 2*p) + 1;
 DetPol = zeros(1, n);
@@ -54,18 +64,28 @@ DetPol(n-0*q-p) = DetPol(n-0*q-p) + 2*lambda1*omega0^2;
 r = roots(DetPol);
 R = r.^q;
 
-sortMat = [abs(Det(R)), R];
-sortMat = sortrows(sortMat);
+% residus = abs(Detpq(R));
+% eps = max(residus)*epsilon;
+% poles = [];
+% for kr = 1:length(R)
+%     if q == 1 || residus(kr)<eps
+%         poles = [poles; R(kr)];
+%     end
+% end
 
-R = sortMat(:,2);
+% poles = R(end-3:end);
+
+r = r(angle(r) > -pi/q);
+r = r(angle(r) <= pi/q);
+
+poles = r.^q;
 
 if precis
     for k = 1:4
-        R(k) = fminsearch(@(z) abs(Det(z)), R(k));
+        poles(k) = fminsearch(@(z) abs(Det(z)), poles(k));
     end
 end
 
-poles = R(1:4);
 
 end
 
