@@ -13,6 +13,7 @@ defaultShowEdge = true;
 defaultXLim = nan;
 defaultYLim = nan;
 defaultGrid = 'on'; % 'auto' pour ne pas changer
+defaultRenameAxes = true;
 
 validQty = {'time', 'val', 'freq', 'diff', 'amor', 'freq2', 'pha'};
 checkQty = @(str) ismember(str, validQty);
@@ -33,6 +34,7 @@ addParameter(p,'showEdge', defaultShowEdge);
 addParameter(p,'XLim', defaultXLim);
 addParameter(p,'YLim', defaultYLim);
 addParameter(p,'Grid', defaultGrid);
+addParameter(p,'RenameAxes', defaultRenameAxes);
 
 parse(p, ridge, QtyX, QtyY, varargin{:})
 
@@ -60,6 +62,8 @@ if isequal(ax, 0)
     ax = axes(fig);
 end
 
+RenameAxes = p.Results.RenameAxes;
+
 %% 
 
 hold(ax, 'on');
@@ -75,8 +79,10 @@ for k_ridge = 1:length(ridge.freq)
 end
 
 %legend('show','location','best')
-xlabel(ax ,NameX);
-ylabel(ax, NameY);
+if RenameAxes
+    xlabel(ax ,NameX);
+    ylabel(ax, NameY);
+end
 ax.XScale = ScaleX;
 ax.YScale = ScaleY;
 

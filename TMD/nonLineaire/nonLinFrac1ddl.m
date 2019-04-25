@@ -6,13 +6,14 @@ d2x = '-omega0^2*x-epsilon*d(alpha)x';
 
 T = 100;
 nT = 200;
+dt = 0.01;
 
 x0 = 0;
 v0 = 1;
 
 
 waveletplots = systemeQuelconque({'x'}, {d2x}, {'omega0', 'epsilon', 'alpha'}, {omega0, epsilon, alpha},...
-    x0, v0, true, 'T', T, 'nT', nT);
+    x0, v0, true, 'T', T, 'nT', nT, 'dt', dt);
 
 
 %ondelette

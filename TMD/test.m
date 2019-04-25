@@ -179,6 +179,73 @@ ax = axes(f);
 plot(ax, alphas, lambdas);
 
 
+%%
+p = 21;
+q = 20;
+mu = 5;
+alpha = 2;
+
+theta = linspace(0, 2*q*pi, 1000000);
+
+x = sin(theta);
+y = sin(theta) + mu*sin(p/q*theta);
+X = sign(x) .* abs(x).^alpha;
+Y = sign(y) .* abs(y).^alpha;
+Cx = X .* sin(theta);
+Cy = Y .* sin(theta);
+
+f = figure;
+ax = axes(f);
+hold on
+plot(theta, X, 'Parent', ax);
+plot(theta, Y, 'Parent', ax);
+hold off
+
+
+Ix = mean(Cx(1:end-1))
+Iy = mean(Cy(1:end-1))
+
+
+%%
+
+alpha = 0;
+
+theta = linspace(0, 2*pi, 10000);
+
+f = @(lambda, theta) (1 + lambda^2 + 2*lambda*cos(theta)).^((alpha-1)/2) .* (1 + lambda*exp(1i*theta));
+I = @(lambda) sum(f(lambda, theta(1:end-1))) * (theta(2)-theta(1));
+
+f2 = @(lambda, theta) theta.^0 * (1+lambda.^2).^((alpha-1)/2) * (1 + (alpha-1)/2*lambda^2/(1+lambda^2)) ;
+I2 = @(lambda) sum(f2(lambda, theta(1:end-1))) * (theta(2)-theta(1));
+
+Lambda = logspace(-3, 1, 1000);
+
+LI = nan(1, length(Lambda));
+LI2 = nan(1, length(Lambda));
+for k = 1:length(Lambda)
+    LI(k) = I(Lambda(k));
+    LI2(k) = I2(Lambda(k));
+end
+
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(Lambda, LI, 'Parent', ax);
+plot(Lambda, LI2, '--', 'Parent', ax);
+hold off
+
+max(abs(LI-LI2)./LI)
+
+
+
+
+
+
+
+
+
+
 
 
 

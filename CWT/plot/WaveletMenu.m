@@ -152,7 +152,7 @@ end
 checkboxGeneral = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'general plot', 'Value', false);
 
-Checkboxs1 = [checkboxGeneral];
+Checkboxs1 = checkboxGeneral;
 
 if ~isequal(plotAxes, 0)
     checkboxTimeAmplPlot = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
@@ -221,6 +221,7 @@ end
 
 
 %%
+
     function show()
         fmin = eval(get(editfmin, 'String'));
         fmax = eval(get(editfmax, 'String'));
@@ -252,7 +253,7 @@ end
             
             if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
                 newTimeAmplPlots = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
-                    'Axes', plotAxes(kPlot), 'Grid', 'auto');
+                    'Axes', plotAxes(kPlot), 'Grid', 'auto', 'RenameAxes', false);
                 timeAmplPlots = [timeAmplPlots, newTimeAmplPlots];
             end
             
@@ -326,7 +327,7 @@ end
         fourierPlotAxes = [];
         for kPlot = 1:nbPlots
             fourierPlotAxes(kPlot) = subplot(nbPlots, 1, kPlot, axes(ffourier));
-            set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'log');
+            set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
         end
         
         for kPlot = 1:nbPlots
@@ -334,11 +335,10 @@ end
             four = four(1:end/2);
             freqs = linspace(0, length(four)/(x(end)-x(1)), length(four));
             hold(fourierPlotAxes(kPlot), 'on');
-            newPlot = plot(freqs, abs(four), 'Parent', fourierPlotAxes(kPlot));
+            plot(freqs, abs(four), 'Parent', fourierPlotAxes(kPlot));
             hold(fourierPlotAxes(kPlot), 'off');
             xlabel(fourierPlotAxes(kPlot), 'freq');
             ylabel(fourierPlotAxes(kPlot), 'fft');
-            timeAmplPlots = [timeAmplPlots, newPlot];
         end
         
     end
