@@ -10,7 +10,7 @@ epsilon = 0.4;
 alpha = 0;
 
 T = 100;
-nT = 200;
+nT = 2000;
 
 x0 = [0; 0];
 v0 = [1; 0];
@@ -26,37 +26,16 @@ wa = sqrt(wa2);
 wb = sqrt(wb2);
 deformA0 = -wa2/(wa2+w1^2);
 deformB0 = -wb2/(wb2+w1^2);
+deformA0 = -(w0^2+(1+mu)*wa2)/(mu*wa2);
+deformB0 = -(w0^2+(1+mu)*wb2)/(mu*wb2);
 
 
-phi0 = log((deformB0*v0(1)+v0(2))/(wa*(deformA0-deformB0)));
-psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformB0-deformA0)));
+phi0 = log((deformB0*v0(1)+v0(2))/(wa*(deformA0-deformB0)) * 1i);
+psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformA0-deformB0)) * 1i);
 
+dphi = wa;
+dpsi = wb;
 
-% deformA = deformA0;
-% deformB = deformB0;
-
-%     function dphidpsi = dPhidPsi(t, PhiPsi)
-%         phi = PhiPsi(1);
-%         psi = PhiPsi(2);
-%         
-%         dphi2 = -1/(1+deformA) * (w1^2*deformA + epsilon*2*1i/pi^2*exp(-real(phi))*deformA/abs(deformA)*I0(abs(exp(psi-phi)*deformB/deformA)) );
-%         dpsi2 = -1/(1+deformB) * (w1^2*deformB + epsilon*2*1i/pi^2*exp(-real(psi))*deformB/abs(deformB)*I0(abs(exp(phi-psi)*deformA/deformB)) );
-%         
-%         dphi = - sqrt(dphi2);
-%         dpsi = - sqrt(dpsi2);
-%         dphi = (2*(real(dphi)<=0)-1) * dphi;
-%         dpsi = (2*(real(dpsi)<=0)-1) * dpsi;
-% %         dphi = (2*(imag(dphi)>=0)-1) * dphi;
-% %         dpsi = (2*(imag(dpsi)>=0)-1) * dpsi;
-%         
-% %         t
-% %         dphi
-% %         dpsi
-%         deformA = - (w0^2+(1+mu)*dphi2)/(mu*dphi2);
-%         deformB = - (w0^2+(1+mu)*dpsi2)/(mu*dpsi2);
-%         
-%         dphidpsi = [dphi; dpsi];
-%     end
 
     function dphidpsi = dPhidPsi(PhiPsi, Deforms)
         phi = PhiPsi(1);
@@ -64,8 +43,14 @@ psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformB0-deformA0)));
         deformA = Deforms(1);
         deformB = Deforms(2);
         
-        dphi2 = -1/(1+deformA) * (w1^2*deformA + epsilon*2*1i/pi^2*exp(-real(phi))*deformA/abs(deformA)*I0(abs(exp(psi-phi)*deformB/deformA)) );
-        dpsi2 = -1/(1+deformB) * (w1^2*deformB + epsilon*2*1i/pi^2*exp(-real(psi))*deformB/abs(deformB)*I0(abs(exp(phi-psi)*deformA/deformB)) );
+        Ca = epsilon*2*1i/pi^2*exp(-real(phi))*deformA/abs(deformA)...
+            * I0(abs(imag(dpsi)/imag(dphi)*exp(psi-phi)*deformB/deformA));
+        Cb = epsilon*2*1i/pi^2*exp(-real(psi))*deformB/abs(deformB)...
+            * I0(abs(imag(dphi)/imag(dpsi)*exp(phi-psi)*deformA/deformB));
+        
+        dphi2 = -(w0^2+(1+mu)*w1^2-mu*Ca)/2 - 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Ca)^2-4*w0^2*w1^2);
+        dpsi2 = -(w0^2+(1+mu)*w1^2-mu*Cb)/2 + 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Cb)^2-4*w0^2*w1^2);
+        
         
         dphi = - sqrt(dphi2);
         dpsi = - sqrt(dpsi2);
@@ -82,12 +67,23 @@ psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformB0-deformA0)));
 
 
     function I = I0(lambda)
-        theta = linspace(0, 2*pi, 1000);
-        theta = theta(1:end-1);
-        I = (1 + lambda^2 + 2*lambda*cos(theta)).^(-1/2) .* (1 + lambda*cos(theta));
-        I = sum(I)*(theta(2)-theta(1));
+        k2 = 4*lambda/(lambda+1)^2;
+        if k2 >= 1
+            I = 4;
+            return
+        end
+        [K,E] = ellipke(k2);
+        I = 2*(lambda+1)*E - 2*(lambda-1)*K;
+        
+%         theta = linspace(0, 2*pi, 1000);
+%         theta = theta(1:end-1);
+%         I = (1 + lambda^2 + 2*lambda*cos(theta)).^(-1/2) .* (1 + lambda*cos(theta));
+%         I = sum(I)*(theta(2)-theta(1));
+
 %         I = 2*pi * (1+lambda^2).^(-1/2) * (1 + -1/2*lambda^2/(1+lambda^2));
+
 %         I = 4;
+
 %         I = 0;
     end
 
@@ -139,6 +135,11 @@ fig = figure;
 ax = axes(fig);
 plot(tout, abs(Deforms), 'Parent', ax);
 
+coefficient = (1 + Deforms - w1^2/w0^2*Deforms*(1+mu) - w1^2/w0^2*mu*Deforms.^2) .* dAnglesout.^2 ./ (1i*Deforms);
+
+fig = figure;
+ax = axes(fig);
+plot(tout, coefficient, 'Parent', ax);
 
 
 
