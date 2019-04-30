@@ -1,4 +1,4 @@
-function polesNonLin()
+function polesNonLin0()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,7 +7,7 @@ omega0 = '2*pi';
 omega1 = '2*pi';
 zeta0 = 0;
 epsilon = 0.4;
-alpha = 0.5;
+alpha = 0;
 
 T = 100;
 nT = 2000;
@@ -45,12 +45,10 @@ psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformA0-deformB0)) * 1i);
         deformA = deforms(1);
         deformB = deforms(2);
         
-        Ca = epsilon*1i/pi*exp(real(phi)*(alpha-1))*imag(dphi)^alpha*deformA*abs(deformA)^(alpha-1)...
-            * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
-            * Ialpha(abs(imag(dpsi)/imag(dphi)*exp(psi-phi)*deformB/deformA));
-        Cb = epsilon*1i/pi*exp(real(psi)*(alpha-1))*imag(dpsi)^alpha*deformB*abs(deformB)^(alpha-1)...
-            * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
-            * Ialpha(abs(imag(dphi)/imag(dpsi)*exp(phi-psi)*deformA/deformB));
+        Ca = epsilon*2*1i/pi^2*exp(-real(phi))*deformA/abs(deformA)...
+            * I0(abs(imag(dpsi)/imag(dphi)*exp(psi-phi)*deformB/deformA));
+        Cb = epsilon*2*1i/pi^2*exp(-real(psi))*deformB/abs(deformB)...
+            * I0(abs(imag(dphi)/imag(dpsi)*exp(phi-psi)*deformA/deformB));
         
         dphi2 = -(w0^2+(1+mu)*w1^2-mu*Ca)/2 - 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Ca)^2-4*w0^2*w1^2);
         dpsi2 = -(w0^2+(1+mu)*w1^2-mu*Cb)/2 + 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Cb)^2-4*w0^2*w1^2);
@@ -70,13 +68,25 @@ psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformA0-deformB0)) * 1i);
     end
 
 
-    function I = Ialpha(lambda)        
-        theta = linspace(0, 2*pi, 1000);
-        theta = theta(1:end-1);
-        I = (1 + lambda^2 + 2*lambda*cos(theta)).^(alpha/2-1/2) .* (1 + lambda*cos(theta));
-        I = sum(I)*(theta(2)-theta(1));
+    function I = I0(lambda)
+        k2 = 4*lambda/(lambda+1)^2;
+        if k2 >= 1
+            I = 4;
+            return
+        end
+        [K,E] = ellipke(k2);
+        I = 2*(lambda+1)*E - 2*(lambda-1)*K;
+        
+%         theta = linspace(0, 2*pi, 1000);
+%         theta = theta(1:end-1);
+%         I = (1 + lambda^2 + 2*lambda*cos(theta)).^(-1/2) .* (1 + lambda*cos(theta));
+%         I = sum(I)*(theta(2)-theta(1));
 
 %         I = 2*pi * (1+lambda^2).^(-1/2) * (1 + -1/2*lambda^2/(1+lambda^2));
+
+%         I = 4;
+
+%         I = 0;
     end
 
 
@@ -120,19 +130,19 @@ fig = figure;
 ax = axes(fig);
 plot(tout, exp(real(Anglesout)), 'Parent', ax);
 
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, angle(Deforms), 'Parent', ax);
-% 
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, abs(Deforms), 'Parent', ax);
+fig = figure;
+ax = axes(fig);
+plot(tout, angle(Deforms), 'Parent', ax);
 
-% coefficient = (1 + Deforms - w1^2/w0^2*Deforms*(1+mu) - w1^2/w0^2*mu*Deforms.^2) .* dAnglesout.^2 ./ (1i*Deforms);
-% 
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, coefficient, 'Parent', ax);
+fig = figure;
+ax = axes(fig);
+plot(tout, abs(Deforms), 'Parent', ax);
+
+coefficient = (1 + Deforms - w1^2/w0^2*Deforms*(1+mu) - w1^2/w0^2*mu*Deforms.^2) .* dAnglesout.^2 ./ (1i*Deforms);
+
+fig = figure;
+ax = axes(fig);
+plot(tout, coefficient, 'Parent', ax);
 
 
 
