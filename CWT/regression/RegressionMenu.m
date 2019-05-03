@@ -276,7 +276,12 @@ ax = 0;
         set(param0Edit, 'ForegroundColor', [0 0 0]);
         
         if optBut.plot.Value
-            if length(X) < 1000
+            if optBut.onaxes.Value
+                Xminmax = get(ax, 'XLim');
+                Xmin = Xminmax(1);
+                Xmax = Xminmax(2);
+                Xplot = linspace(Xmin, Xmax, 1000);
+            elseif length(X) < 1000
                 Xplot = linspace(X(1), X(end), 1000);
             else
                 Xplot = X;

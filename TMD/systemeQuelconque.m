@@ -133,8 +133,7 @@ end
 
 for kvar = 1:ddl1
     axesPlots(kvar) = subplot(ddl1, 1, kvar, axes('Parent', plotPan));
-    axesPlots(kvar).XGrid = 'on';
-    axesPlots(kvar).YGrid = 'on';
+    grid(axesPlots(kvar), 'on');
     plots(kvar) = plot(nan, 'Parent', axesPlots(kvar));
     ylabel(axesPlots(kvar), vars{kvar});
 end

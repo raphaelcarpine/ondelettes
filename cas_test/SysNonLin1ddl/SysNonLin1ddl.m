@@ -20,6 +20,7 @@ temps = (0:0.0001:3); % Vecteur temps, en secondes
 AccImpo = zeros(size(temps)); % AccImpo = Fext/m ; c'est la sollicitation, nulle par défaut.
 
 Chi = [0,.5,1];% Vecteur d'éléments compris entre 0 et 1 inclus.
+Chi = 0.5;
 % Chaque élément est un ratio de transmission de la force elastoplatique
 % si 1, système 100% elastoplastique ; si 0, système 100% endommageant ; mixte sinon
 % Chaque element du vecteur correspond à un système indépendant étudié :
@@ -79,6 +80,8 @@ for CChi = 1:nChi % CChi est l'indice du système étudié
     subplot(2,2,4),plot(u{CChi},fint{CChi})
     xlabel('dep. [m]')
     ylabel('force [N]')
+    %%test
+    WvltPlot(temps,v{CChi}, linspace(10, 20, 200), 5);
     %% Extraction du ridge
     ridge{CChi} = RidgeExtract(temps,eval([SortieIdent,'{CChi}']),Q,f_min,f_max,nb_freq,'ctLeft',4,'ctRight',4);
     %% Tracés temporels des données des ridges

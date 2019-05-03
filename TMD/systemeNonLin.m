@@ -89,8 +89,11 @@ eval(Dstring); % on construit la fonction d'intégration
 
 %% integration
 
-[tout, Xout] = solver(D, [0 T], [X0; V0; X0nonI],...
-    odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/nT));
+
+
+options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/nT);
+
+[tout, Xout] = solver(D, [0 T], [X0; V0; X0nonI], options);
 
 
 t = linspace(0, T, T*nT);
