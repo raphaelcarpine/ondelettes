@@ -6,7 +6,7 @@ mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi;
 epsilon = 0.4;
-alpha = 0.;
+alpha = 0.5;
 
 T = 100;
 dt = 1e-2;
@@ -78,15 +78,16 @@ end
         deformA = deforms(1);
         deformB = deforms(2);
         
-        Ca = epsilon*1i/pi*exp(real(phi)*(alpha-1))*imag(dphi)^alpha*deformA*abs(deformA)^(alpha-1)...
+        Ca = epsilon*1i/pi*exp(real(phi)*(alpha-1))*imag(dphi)^alpha*abs(deformA)^(alpha-1)...
             * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
             * Ialpha(abs(imag(dpsi)/imag(dphi)*exp(psi-phi)*deformB/deformA));
-        Cb = epsilon*1i/pi*exp(real(psi)*(alpha-1))*imag(dpsi)^alpha*deformB*abs(deformB)^(alpha-1)...
+        Cb = epsilon*1i/pi*exp(real(psi)*(alpha-1))*imag(dpsi)^alpha*abs(deformB)^(alpha-1)...
             * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
             * Ialpha(abs(imag(dphi)/imag(dpsi)*exp(phi-psi)*deformA/deformB));
         
-        dphi2 = -(w0^2+(1+mu)*w1^2-mu*Ca)/2 - 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Ca)^2-4*w0^2*w1^2);
-        dpsi2 = -(w0^2+(1+mu)*w1^2-mu*Cb)/2 + 1/2*sqrt((w0^2+(1+mu)*w1^2-mu*Cb)^2-4*w0^2*w1^2);
+        
+        dphi2 = -(w0^2+(1+mu)*w1^2+(1+mu)*Ca)/2 - 1/2*sqrt((w0^2+(1+mu)*w1^2+(1+mu)*Ca)^2-4*w0^2*(w1^2+Ca));
+        dpsi2 = -(w0^2+(1+mu)*w1^2+(1+mu)*Cb)/2 + 1/2*sqrt((w0^2+(1+mu)*w1^2+(1+mu)*Cb)^2-4*w0^2*(w1^2+Cb));
         
         
         dphi = - sqrt(dphi2);
@@ -179,30 +180,31 @@ X = Y(:,1);
 
 
 %% integration temporelle 2
-nT = 10000;
-
-
-delta = 0.01;
-lambda = epsilon/delta/w0*beta(1/2, alpha/2+1);
-
-D2 = @(t, Y) [
-    Y(3);
-    Y(4);
-    -w0^2*Y(1) + mu*w1^2*(Y(2)-Y(1)) + mu*lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3));
-    -w1^2*(Y(2)-Y(1))-lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3))
-    ];
-
-
-waitbar(0, wait, 'integration 2/2 (0%)');
-
-tnext = 0;
-options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait);
-
-[t2, Y2] = ode45(D2, [0 T], [X0; V0], options);
+% nT = 1000;
+% 
+% 
+% delta = 0.01;
+% lambda = epsilon/delta/w0*beta(1/2, alpha/2+1)/2;
+% 
+% D2 = @(t, Y) [
+%     Y(3);
+%     Y(4);
+%     -w0^2*Y(1) + mu*w1^2*(Y(2)-Y(1)) + mu*lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3));
+%     -w1^2*(Y(2)-Y(1))-lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3))
+%     ];
+% 
+% 
+% waitbar(0, wait, 'integration 2/2 (0%)');
+% 
+% tnext = 0;
+% options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait);
+% 
+% [t2, Y2] = ode45(D2, [0 T], [X0; V0], options);
+% 
+% 
+% X2 = Y2(:,1);
 
 close(wait);
-
-X2 = Y2(:,1);
 
 
 
@@ -212,8 +214,8 @@ fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
 plot(t, X, 'Parent', ax);
-plot(t2, X2, 'Parent', ax);
-% plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
+% plot(t2, X2, 'Parent', ax);
+plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
 ylabel(ax, 'x0');
