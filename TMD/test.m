@@ -206,7 +206,7 @@ Ix = mean(Cx(1:end-1))
 Iy = mean(Cy(1:end-1))
 
 
-%%
+%% test integrale Ialpha
 
 alpha = 0;
 
@@ -237,7 +237,71 @@ hold off
 
 max(abs(LI-LI2)./LI)
 
+%% courbes ondelette cauchy
 
+n= 20;
+
+t = linspace(-1, 1, 10000);
+w = linspace(0, 40, 10000);
+psi = (1i./(t+1i)).^(n+1);
+psiF = 2*pi*w.^n.*exp(-w)/gamma(n+1).*(w>=0);
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(t, real(psi), 'Parent', ax);
+plot(t, imag(psi), 'Parent', ax);
+xlabel(ax, 't');
+ylabel(ax, '\psi');
+legend('\Re \psi', '\Im \psi');
+hold off
+
+fig = figure;
+ax = axes(fig);
+plot(w, psiF, 'Parent', ax);
+xlabel(ax, '\omega');
+ylabel(ax, '\psi');
+
+%% courbes ondelette morlet
+
+delta = 10;
+
+t = linspace(-20, 20, 10000);
+w = linspace(0, 2, 10000);
+
+psi = exp(-t.^2/(2*delta^2)).*exp(1i*t);
+psiF = delta*sqrt(2*pi)*exp(-(w-1).^2*delta^2/2);
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(t, real(psi), 'Parent', ax);
+plot(t, imag(psi), 'Parent', ax);
+xlabel(ax, 't');
+ylabel(ax, '\psi');
+legend('\Re \psi', '\Im \psi');
+hold off
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(w, psiF, 'Parent', ax);
+xlabel(ax, '\omega');
+ylabel(ax, 'F[\psi]');
+hold off
+
+%% courbes ondelette
+
+t = linspace(0, 100, 10000);
+x = cos(2*pi*t + cos(2*pi*t/20)) + cos(4*pi*t + t.^2/200);
+
+fig = figure;
+ax = axes(fig);
+h = plot(t, x, 'Parent', ax);
+
+
+WaveletMenu('WaveletPlot', h, 'fmin', 0.5, 'fmax', 3,...
+    'NbFreq', 100, 'Q', 10, 'MaxParallelRidges', 2);
 
 
 

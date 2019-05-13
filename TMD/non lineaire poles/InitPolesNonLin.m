@@ -3,8 +3,8 @@ function WaWb = InitPolesNonLin(mu, w0, w1, epsilon, alpha, x0, v0)
 %   Detailed explanation goes here
 
 nIalpha = 1000;
-Nmax = 100;
-omegaConvergenceTol = 1e-3;
+Nmax = 1000;
+omegaConvergenceTol = 1e-4;
 
 
 %% conditions initiales

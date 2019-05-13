@@ -1,4 +1,4 @@
-mu = 0.1;
+mu = 0.01;
 
 
 n = 80;
@@ -6,6 +6,8 @@ n = 80;
 n = n-1;
 alphas = linspace(0, 2, n+2);
 alphas = alphas(2:end-1);
+n = 1;
+alphas = 1;
 lambdas = nan(1, n);
 omegas = nan(1, n);
 zetas = nan(1, n);

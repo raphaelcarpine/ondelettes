@@ -2,11 +2,24 @@ function polesNonLin()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
+precisionNumerique = 18;
+printReponseTemp = true;
+
+nIalpha = 1000;
+
+%%
+
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi;
-epsilon = 0.4;
+epsilon = 10;
 alpha = 0.5;
+
+mu = 1;
+w1 = 0.7*2*pi;
+epsilon = 0.1;
+alpha = 2.;
+
 
 T = 100;
 dt = 1e-2;
@@ -17,34 +30,14 @@ v0 = [1; -1];
 
 %% conditions initiales
 
-wa2 = -(w0^2+(1+mu)*w1^2)/2 - 1/2*sqrt(w0^4+(1+mu)^2*w1^4+2*(1+mu)*w0^2*w1^2-4*w0^2*w1^2);
-wb2 = -(w0^2+(1+mu)*w1^2)/2 + 1/2*sqrt(w0^4+(1+mu)^2*w1^4+2*(1+mu)*w0^2*w1^2-4*w0^2*w1^2);
-wa = sqrt(wa2);
-wb = sqrt(wb2);
-% deformA0 = -wa2/(wa2+w1^2);
-% deformB0 = -wb2/(wb2+w1^2);
-deformA0 = -(w0^2+(1+mu)*wa2)/(mu*wa2);
-deformB0 = -(w0^2+(1+mu)*wb2)/(mu*wb2);
+WaWb = InitPolesNonLin(mu, w0, w1, epsilon, alpha, x0, v0);
+wa = WaWb(1);
+wb = WaWb(2);
 
-phi0 = log((deformB0*v0(1)+v0(2))/(wa*(deformA0-deformB0)));
-psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformA0-deformB0)));
+deformA0 = -(w0^2+(1+mu)*wa^2)/(mu*wa^2);
+deformB0 = -(w0^2+(1+mu)*wb^2)/(mu*wb^2);
 
-    function [phi0, psi0] = Phi0Psi0_bis(wa, wb, Da, Db, phi0, psi0)
-        f = @(expphipsi)...
-            [real(expphipsi(1)+expphipsi(2)) - x0(1),...
-            (real(expphipsi(1)*Da+expphipsi(2)*Db) - x0(2)) / abs(Da),...
-            (real(wa*expphipsi(1)+wb*expphipsi(2)) - v0(1)) / abs(wa),...
-            (real(wa*expphipsi(1)*Da+wb*expphipsi(2)*Db) - v0(2)) / abs(wa*Da)];
-        lb = ones(1, 2)*(-inf);
-        ub = ones(1, 2)*inf;
-        optionsReg = optimoptions(@lsqnonlin, 'Display', 'off', 'OptimalityTolerance', 0,...
-            'StepTolerance', 0*1e-6, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 1e-6);
-        expphi0psi0 = lsqnonlin(f, [exp(phi0), exp(psi0)], lb, ub, optionsReg);
-        phi0 = log(expphi0psi0(1));
-        psi0 = log(expphi0psi0(2));
-    end
-
-    function [phi0, psi0] = Phi0Psi0(wa, wb, Da, Db, phi0, psi0)
+    function [phi0, psi0] = Phi0Psi0(wa, wb, Da, Db)
         M = [
             1, 0, 1, 0;
             real(Da), -imag(Da), real(Db), -imag(Db);
@@ -56,16 +49,16 @@ psi0 = log((deformA0*v0(1)+v0(2))/(wb*(deformA0-deformB0)));
         psi0 = log(expphi0psi0(3) + 1i*expphi0psi0(4));
     end
 
-[phi0, psi0] = Phi0Psi0(wa, wb, deformA0, deformB0, phi0, psi0);
+[phi0, psi0] = Phi0Psi0(wa, wb, deformA0, deformB0);
 
-for iterations = 1:1000 % initialisation des CI (on part des valeurs non amorties puis on itere avec l'amortissement)
-    dphidpsi = dPhidPsi([phi0, psi0], [wa, wb], [deformA0, deformB0]);
-    wa = dphidpsi(1);
-    wb = dphidpsi(2);
-    deformA0 = -(w0^2+(1+mu)*wa^2)/(mu*wa^2);
-    deformB0 = -(w0^2+(1+mu)*wb^2)/(mu*wb^2);
-    [phi0, psi0] = Phi0Psi0(wa, wb, deformA0, deformB0, phi0, psi0);
-end
+% for iterations = 1:1000 % initialisation des CI (on part des valeurs non amorties puis on itere avec l'amortissement)
+%     dphidpsi = dPhidPsi([phi0, psi0], [wa, wb], [deformA0, deformB0]);
+%     wa = dphidpsi(1);
+%     wb = dphidpsi(2);
+%     deformA0 = -(w0^2+(1+mu)*wa^2)/(mu*wa^2);
+%     deformB0 = -(w0^2+(1+mu)*wb^2)/(mu*wb^2);
+%     [phi0, psi0] = Phi0Psi0(wa, wb, deformA0, deformB0);
+% end
 
 
 %%
@@ -80,10 +73,16 @@ end
         
         Ca = epsilon*1i/pi*exp(real(phi)*(alpha-1))*imag(dphi)^alpha*abs(deformA)^(alpha-1)...
             * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
-            * Ialpha(abs(imag(dpsi)/imag(dphi)*exp(psi-phi)*deformB/deformA));
+            * Ialpha(abs(imag(dpsi)/imag(dphi))*exp(real(psi-phi))*abs(deformB/deformA));
         Cb = epsilon*1i/pi*exp(real(psi)*(alpha-1))*imag(dpsi)^alpha*abs(deformB)^(alpha-1)...
             * gamma(alpha/2+1)/(sqrt(pi)*gamma(alpha/2+3/2))...
-            * Ialpha(abs(imag(dphi)/imag(dpsi)*exp(phi-psi)*deformA/deformB));
+            * Ialpha(abs(imag(dphi)/imag(dpsi))*exp(real(phi-psi))*abs(deformA/deformB));
+        if isnan(Ca)
+            Ca = 0;
+        end
+        if isnan(Cb)
+            Cb = 0;
+        end
         
         
         dphi2 = -(w0^2+(1+mu)*w1^2+(1+mu)*Ca)/2 - 1/2*sqrt((w0^2+(1+mu)*w1^2+(1+mu)*Ca)^2-4*w0^2*(w1^2+Ca));
@@ -104,13 +103,19 @@ end
     end
 
 
-    function I = Ialpha(lambda)        
-        theta = linspace(0, 2*pi, 1000);
+    function I = Ialpha(lambda)
+        if alpha<1 && abs(lambda) == inf
+            I = 0;
+            return
+        end
+        theta = linspace(0, 2*pi, nIalpha);
         theta = theta(1:end-1);
         I = (1 + lambda^2 + 2*lambda*cos(theta)).^(alpha/2-1/2) .* (1 + lambda*cos(theta));
         I = sum(I)*(theta(2)-theta(1));
 
-%         I = 2*pi * (1+lambda^2).^(-1/2) * (1 + -1/2*lambda^2/(1+lambda^2));
+%         I = 2*pi * (1+lambda.^2).^((alpha-1)/2) * (1 + (alpha-1)/2*lambda^2/(1+lambda^2));
+        
+%         I = 2*pi;
     end
 
 
@@ -134,7 +139,16 @@ for k = 2:length(tout)
     
     dAnglesout(k,:) = dPhidPsi(Anglesout(k,:), dAnglesout(k-1,:), Deforms(k,:));
     Anglesout(k,:) = Anglesout(k-1,:) + dt*(dAnglesout(k-1,:)+dAnglesout(k,:))/2;
+    
+    if real(Anglesout(k,1)) < real(Anglesout(k,2)) - precisionNumerique
+        Anglesout(k,1) = -inf + 1i*imag(Anglesout(k,1));
+    end
+    if real(Anglesout(k,2)) < real(Anglesout(k,1)) - precisionNumerique
+        Anglesout(k,2) = -inf + 1i*imag(Anglesout(k,2));
+    end
+    
     Deforms(k,:) = - (w0^2 + (1+mu)*dAnglesout(k,:).^2) ./ (mu*dAnglesout(k,:).^2);
+    
     if mod(k, round(length(tout)/200)) == 0
         waitbar(k/length(tout), wait, ['integration 1/2 (' num2str(round(k/length(tout)*100)) '%)'])
     end
@@ -143,6 +157,8 @@ end
 
 
 %% integration temporelle
+
+
 nT = 200;
 
 X0 = [x0(1); x0(1)+x0(2)];
@@ -156,8 +172,6 @@ D = @(t, Y) [
     ];
 
 
-waitbar(0, wait, 'integration 2/2 (0%)');
-
 tnext = 0;
     function status = outputWait(t, ~, ~)
         status = 0;
@@ -166,15 +180,27 @@ tnext = 0;
             tnext = tnext + T/200;
         end
     end
+    
+if printReponseTemp
+    
+    waitbar(0, wait, 'integration 2/2 (0%)');
+    
+    options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait);
+    
+    [t, Y] = ode45(D, [0 T], [X0; V0], options);
+    
+    
+    X0 = Y(:,1);
+    X1 = Y(:,2);
+    
+    t2 = linspace(t(1), t(end), 10000);
+    X0 = interp1(t, X0, t2);
+    X1 = interp1(t, X1, t2);
+    t = t2;
+end
 
 
-options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait);
-
-[t, Y] = ode45(D, [0 T], [X0; V0], options);
-
-% close(wait);
-
-X = Y(:,1);
+close(wait);
 
 
 
@@ -203,8 +229,8 @@ X = Y(:,1);
 % 
 % 
 % X2 = Y2(:,1);
-
-close(wait);
+% 
+% close(wait);
 
 
 
@@ -213,7 +239,20 @@ close(wait);
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, X, 'Parent', ax);
+if printReponseTemp
+    plot(t, X1-X0, 'Parent', ax);
+end
+plot(tout, real(sum(exp(Anglesout).*Deforms, 2)), 'Parent', ax);
+hold(ax, 'off');
+grid(ax, 'on');
+ylabel(ax, 'x1');
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+if printReponseTemp
+    waveletplot = plot(t, X0, 'Parent', ax);
+end
 % plot(t2, X2, 'Parent', ax);
 plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
@@ -226,14 +265,14 @@ ax = axes(fig);
 plot(tout, imag(dAnglesout)/(2*pi), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'omega');
-ylim(ax, [0, 2]);
+% ylim(ax, [0, 2]);
 
 fig = figure;
 ax = axes(fig);
-plot(tout, real(dAnglesout), 'Parent', ax);
+plot(tout, -real(dAnglesout), 'Parent', ax);
 grid(ax, 'on');
-ylabel(ax, '-\lambda');
-ylim(ax, [-1, 1]);
+ylabel(ax, '\lambda');
+% ylim(ax, [-1, 1]);
 
 fig = figure;
 ax = axes(fig);
@@ -241,22 +280,24 @@ plot(tout, exp(real(Anglesout)), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'abs ridges');
 
-fig = figure;
-ax = axes(fig);
-plot(tout, angle(Deforms), 'Parent', ax);
-grid(ax, 'on');
-ylabel(ax, 'Im(\delta)');
-
-fig = figure;
-ax = axes(fig);
-plot(tout, abs(Deforms), 'Parent', ax);
-grid(ax, 'on');
-ylabel(ax, '|e^{\delta}|');
+% fig = figure;
+% ax = axes(fig);
+% plot(tout, angle(Deforms), 'Parent', ax);
+% grid(ax, 'on');
+% ylabel(ax, 'Im(\delta)');
+% 
+% fig = figure;
+% ax = axes(fig);
+% plot(tout, abs(Deforms), 'Parent', ax);
+% grid(ax, 'on');
+% ylabel(ax, '|e^{\delta}|');
 
 diffAngles = abs(imag(dAnglesout(:,1)) - imag(dAnglesout(:,2)));
-ddiff = abs([diff(diffAngles(:,1)); 0]./diffAngles(:,1));
-dDeform = abs([diff(Deforms(:,1)); 0]./Deforms(:,1));
-ddAngles = abs([diff(dAnglesout(:,1)); 0]./dAnglesout(:,1));
+ddiff = abs([diff(diffAngles); 0]./diffAngles)/dt;
+dDeforma = abs([diff(Deforms(:,1)); 0]./Deforms(:,1))/dt;
+dDeformb = abs([diff(Deforms(:,2)); 0]./Deforms(:,2))/dt;
+ddAnglesa = abs([diff(dAnglesout(:,1)); 0]./dAnglesout(:,1))/dt;
+ddAnglesb = abs([diff(dAnglesout(:,2)); 0]./dAnglesout(:,2))/dt;
 
 
 fig = figure;
@@ -264,14 +305,29 @@ ax = axes(fig);
 hold(ax, 'on');
 plot(tout, diffAngles, 'Parent', ax);
 plot(tout, ddiff, 'Parent', ax);
-plot(tout, dDeform, 'Parent', ax);
-plot(tout, ddAngles, 'Parent', ax);
+plot(tout, dDeforma, 'Parent', ax);
+plot(tout, dDeformb, 'Parent', ax);
+plot(tout, ddAnglesa, 'Parent', ax);
+plot(tout, ddAnglesb, 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
 ylabel(ax, '');
+legend('|\omega - \Omega|', "|(\omega - \Omega)'/(\omega - \Omega)|", "|\delta'|", "|\Delta'|",...
+    "|\omega'/\omega|", "|\Omega'/\Omega|");
 
 
+%% ondelette
 
+
+Q = 25;
+MaxParallelRidges = 2;
+fmin = 0.9;
+fmax = 1.1;
+NbFreq = 100;
+
+
+WaveletMenu('WaveletPlot', waveletplot, 'fmin', fmin, 'fmax', fmax,...
+    'NbFreq', NbFreq, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges);
 
 
 end

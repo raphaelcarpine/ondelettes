@@ -186,9 +186,16 @@ xscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togg
 yscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
-Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq];
-XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq];
-YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq];
+checkboxTimeBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'time, bandwidth', 'Value', false);
+xscaleTimeBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+yscaleTimeBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+
+Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeBand];
+XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeBand];
+YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeBand];
 n1 = length(Checkboxs1);
 n2 = length(Checkboxs2);
 n = n1+n2;
@@ -273,6 +280,12 @@ end
                 RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
                     'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(3))));
+            end
+            if checkboxTimeBand.Value % plot de l'amortissement
+                RidgeQtyPlot2(ridge, 'time', 'bandwidth',...
+                    'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
+                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(4))),...
+                    'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
         end
     end

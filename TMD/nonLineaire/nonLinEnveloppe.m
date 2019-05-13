@@ -9,14 +9,15 @@ omega0 = 2*pi;
 zeta0 = 0.0;
 omega1 = omega0/(1+mu);
 omega1 = omega0;
-a = @(x1, v1) 0.03*2*omega1*sign(v1)*abs(v1)^0.5;
+a = @(x1, v1) 0.03*2*omega1*sign(v1)*abs(v1)^0.;
+a = @(x1, v1) 1.6*sign(v1)*abs(v1)^0.5;
 
 T = 100;
 nbPointsPeriode = 100;
 nT = T*nbPointsPeriode*omega0/2/pi;
 
 x0 = [0; 0];
-v0 = [1; -1];
+v0 = [1; 0];
 
 %%
 w0 = omega0;

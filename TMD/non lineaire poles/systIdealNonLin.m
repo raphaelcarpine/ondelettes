@@ -2,13 +2,15 @@
 mu = 0.01;
 w0 = 2*pi;
 
-x0 = [1 0];
-v0 = [0 0];
+x0 = [0 0];
+v0 = [1 0];
 
 
 
 n = 41;
 alphas = linspace(0, 2, n);
+n = 1;
+alphas = 0.15;
 lambdas = nan(1, n);
 omegas = nan(1, n);
 epsilons = nan(1, n);
@@ -47,7 +49,7 @@ close(w);
 f = figure;
 ax = axes(f);
 hold(ax, 'on');
-plot(ax, alphas(convergence), lambdas(convergence));
+plot(ax, alphas(convergence), lambdas(convergence), '*');
 plot(ax, alphas(~convergence), lambdas(~convergence), '*r');
 hold(ax, 'off');
 xlabel(ax, '\alpha');

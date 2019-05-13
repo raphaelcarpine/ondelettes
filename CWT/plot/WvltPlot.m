@@ -19,6 +19,7 @@ addParameter(p,'ct',NaN);
 addParameter(p,'ctEdgeEffects',ctDef);
 addParameter(p,'ctZeroPadding',ctDef);
 addParameter(p,'PlotScale',PlotScaleDef);
+
 addParameter(p,'FreqScale',FreqScaleDef);
 addParameter(p,'Title',TitleDef);
 addParameter(p,'Visible',VisibleDef);
