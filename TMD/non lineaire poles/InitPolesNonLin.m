@@ -238,7 +238,7 @@ ylabel(ax, 'B');
 
 %         I = 2*pi * (1+lambda^2).^(-1/2) * (1 + -1/2*lambda^2/(1+lambda^2));
 
-        I = 2*pi;
+%         I = 2*pi;
     end
 
 

@@ -12,16 +12,19 @@ nIalpha = 1000;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi;
-epsilon = 10;
-alpha = 0.5;
+epsilon = 3;
+alpha = 1.5;
+
 
 mu = 1;
-w1 = 0.7*2*pi;
-epsilon = 0.1;
-alpha = 2.;
+w0 = 2*pi;
+w1 = 2*2*pi;
+epsilon = 0.02;
+alpha = 0.;
 
 
-T = 100;
+
+T = 1000;
 dt = 1e-2;
 
 x0 = [0; 0];
@@ -159,7 +162,7 @@ end
 %% integration temporelle
 
 
-nT = 200;
+nT = 2000;
 
 X0 = [x0(1); x0(1)+x0(2)];
 V0 = [v0(1); v0(1)+v0(2)];
@@ -193,7 +196,7 @@ if printReponseTemp
     X0 = Y(:,1);
     X1 = Y(:,2);
     
-    t2 = linspace(t(1), t(end), 10000);
+    t2 = linspace(t(1), t(end), T*nT);
     X0 = interp1(t, X0, t2);
     X1 = interp1(t, X1, t2);
     t = t2;
@@ -264,7 +267,7 @@ fig = figure;
 ax = axes(fig);
 plot(tout, imag(dAnglesout)/(2*pi), 'Parent', ax);
 grid(ax, 'on');
-ylabel(ax, 'omega');
+ylabel(ax, 'freqs');
 % ylim(ax, [0, 2]);
 
 fig = figure;
@@ -278,7 +281,13 @@ fig = figure;
 ax = axes(fig);
 plot(tout, exp(real(Anglesout)), 'Parent', ax);
 grid(ax, 'on');
-ylabel(ax, 'abs ridges');
+ylabel(ax, 'abs ridges x0');
+
+fig = figure;
+ax = axes(fig);
+plot(tout, abs(exp(Anglesout).*Deforms), 'Parent', ax);
+grid(ax, 'on');
+ylabel(ax, 'abs ridges x1');
 
 % fig = figure;
 % ax = axes(fig);

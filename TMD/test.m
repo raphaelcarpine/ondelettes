@@ -264,7 +264,7 @@ ylabel(ax, '\psi');
 
 %% courbes ondelette morlet
 
-delta = 10;
+delta = 6;
 
 t = linspace(-20, 20, 10000);
 w = linspace(0, 2, 10000);

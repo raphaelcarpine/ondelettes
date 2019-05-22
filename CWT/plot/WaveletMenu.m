@@ -11,6 +11,7 @@ defaultNbFreq = 100;
 defaultParent = 0;
 defaultWaveletPlot = 0;
 defaultQ = 1;
+defaultMaxRidges = 1;
 defaultMaxParallelRidges = 1;
 
 checkParent = @(f) isa(f, 'matlab.ui.Figure') || isa(f, 'matlab.ui.container.Panel')...
@@ -24,6 +25,7 @@ addParameter(p, 'NbFreq', defaultNbFreq);
 addParameter(p,'Parent', defaultParent, checkParent);
 addParameter(p,'WaveletPlot', defaultWaveletPlot); %si les données viennent d'une courbe directement (ou plusieurs)
 addParameter(p,'Q', defaultQ);
+addParameter(p,'MaxRidges', defaultMaxRidges);
 addParameter(p,'MaxParallelRidges', defaultMaxParallelRidges);
 
 parse(p, varargin{:})
@@ -33,7 +35,7 @@ if fig == 0
     fig = figure;
     fig.Units = 'characters';
     fig.Position(3) = 65;
-    fig.Position(4) = 20;
+    fig.Position(4) = 22;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
 end
@@ -79,6 +81,7 @@ fmin0 = p.Results.fmin;
 fmax0 = p.Results.fmax;
 NbFreq0 = p.Results.NbFreq;
 Q0 = p.Results.Q;
+MaxRidges = p.Results.MaxRidges;
 MaxParallelRidges = p.Results.MaxParallelRidges;
 
 
@@ -132,13 +135,18 @@ strQ = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
 editQ = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
     'String', num2str(Q0));
 
+strmaxR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
+    'String', 'max ridges');
+editmaxR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
+    'String', num2str(MaxRidges));
+
 strPR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
-    'String', 'max parallel ridges : ');
+    'String', 'max parallel ridges');
 editPR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
     'String', num2str(MaxParallelRidges));
 
-Strs = [strfmin, strfmax, strNbFreq, strQ, strPR];
-Edits =[editfmin, editfmax, editNbFreq, editQ, editPR];
+Strs = [strfmin, strfmax, strNbFreq, strQ, strmaxR, strPR];
+Edits =[editfmin, editfmax, editNbFreq, editQ, editmaxR, editPR];
 n = length(Strs);
 for k=1:n
     Strs(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
@@ -193,9 +201,16 @@ xscaleTimeBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togg
 yscaleTimeBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
-Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeBand];
-XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeBand];
-YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeBand];
+checkboxAmplBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'ampl, bandwidth', 'Value', false);
+xscaleAmplBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+yscaleAmplBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+
+Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeBand, checkboxAmplBand];
+XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeBand, xscaleAmplBand];
+YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeBand, yscaleAmplBand];
 n1 = length(Checkboxs1);
 n2 = length(Checkboxs2);
 n = n1+n2;
@@ -234,6 +249,7 @@ end
         fmax = eval(get(editfmax, 'String'));
         NbFreq = eval(get(editNbFreq, 'String'));
         Q = eval(get(editQ, 'String'));
+        maxR = eval(get(editmaxR, 'String')); %nombre max de ridges
         PR = eval(get(editPR, 'String')); %nombre max de ridges parallèles
         x = getX();
         y = getY();
@@ -246,7 +262,8 @@ end
         
         ridges = {};
         for kPlot = 1:nbPlots
-            ridges{end+1} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq, 'NbMaxParallelRidges', PR);
+            ridges{end+1} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
+                'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR);
         end
         
         for kCheck = 1:length(Checkboxs2)
@@ -283,9 +300,14 @@ end
             end
             if checkboxTimeBand.Value % plot de l'amortissement
                 RidgeQtyPlot2(ridge, 'time', 'bandwidth',...
-                    'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
+                    'ScaleX', get(xscaleTimeBand, 'String'), 'ScaleY', get(yscaleTimeBand, 'String'),...
                     'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(4))),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
+            end
+            if checkboxAmplBand.Value % plot de l'amortissement
+                RidgeQtyPlot2(ridge, 'val', 'bandwidth', 'EvaluationFunctionX', 'abs',...
+                    'ScaleX', get(xscaleAmplBand, 'String'), 'ScaleY', get(yscaleAmplBand, 'String'),...
+                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(5))));
             end
         end
     end
