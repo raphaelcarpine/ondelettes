@@ -13,6 +13,7 @@ NbMaxParallelRidgesDef = 1;
 MinModuDef = 0;
 LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
+WaveletDef = nan;
 
 %%
 addRequired(p,'X')
@@ -30,6 +31,7 @@ addParameter(p,'NbMaxParallelRidges',NbMaxParallelRidgesDef);
 addParameter(p,'MinModu',MinModuDef);
 addParameter(p,'LengthMinRidge',LengthMinRidgeDef);
 addParameter(p,'ReleaseTime',ReleaseTimeDef);
+addParameter(p,'Wavelet', WaveletDef);
 
 parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
 
@@ -43,6 +45,8 @@ NbMaxParallelRidges = p.Results.NbMaxParallelRidges;
 MinModu = p.Results.MinModu;
 LengthMinRidge = p.Results.LengthMinRidge;
 ReleaseTime = p.Results.ReleaseTime;
+wavelet = p.Results.Wavelet;
+
 %%
 if iscolumn(X)
     X=transpose(X);
@@ -51,8 +55,9 @@ end
 
 WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
 
-wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
-% wavelet = WvltCompTemp(X, Y, WvltFreq, length(X), Q);
+if isnan(wavelet)
+    wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
+end
 
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);
@@ -86,8 +91,14 @@ RangeRight = bsxfun(@plus,X,transpose(DeltaTimeRight))<X(end); % Zone d'effets d
 mesuEdge = mesu;
 mesuEdge(~(RangeLeft&RangeRight))=NaN; % Max locaux hors zone effets de bord seulement
 %% si Y_in = 0 au debut ou fin : zero-padding non voulu. On le retire
-IndBegin = find(Y~=0,1); % eventuel zero-padding ou apparente (succession de 0 au début du signal)
-IndEnd = find(Y~=0,1,'last');% Idem fin de signal
+if ~isnan(Y)
+    IndBegin = find(Y~=0,1); % eventuel zero-padding ou apparente (succession de 0 au début du signal)
+    IndEnd = find(Y~=0,1,'last');% Idem fin de signal
+else
+    IndBegin = 1;
+    IndEnd = length(X);
+end
+
 %%
 Fs=1/mean(X(2:end)-X(1:end-1)); %Freq echantillonnage
 LengthMin = max(3,round(LengthMinRidge*Fs)); % Nb points mini d'un ridge

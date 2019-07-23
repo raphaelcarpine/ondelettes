@@ -208,7 +208,7 @@ Iy = mean(Cy(1:end-1))
 
 %% test integrale Ialpha
 
-alpha = 0;
+alpha = 0.;
 
 theta = linspace(0, 2*pi, 10000);
 
@@ -306,8 +306,76 @@ WaveletMenu('WaveletPlot', h, 'fmin', 0.5, 'fmax', 3,...
 
 
 
+%%
+
+w1 = 2*pi;
+w2 = 2*pi+0.1;
+
+t = linspace(0, 500, 50000);
+
+x1 = exp(-0.2*t).*sin(w1*t);
+x2 = exp(-0.2*t).*sin(w2*t);
+
+f = figure;
+ax = axes(f);
+hold(ax, 'on');
+h = plot(t, x1+x2, 'parent', ax);
 
 
+WaveletMenu('WaveletPlot', h, 'fmin', 0.9, 'fmax', 1.1,...
+    'NbFreq', 300, 'Q', 100, 'MaxParallelRidges', 2);
+
+
+
+
+%%
+
+w = 2*pi;
+
+t = linspace(-100, 100, 10000);
+
+x = (1-0.2*t).*sin(w1*t);
+
+f = figure;
+ax = axes(f);
+hold(ax, 'on');
+h = plot(t, x, 'parent', ax);
+
+
+WaveletMenu('WaveletPlot', h, 'fmin', 0.9, 'fmax', 1.1,...
+    'NbFreq', 300, 'Q', 50, 'MaxParallelRidges', 2);
+
+
+
+
+%% test integrale Ialpha 2
+
+alpha = 2;
+
+theta = linspace(0, 2*pi, 10000);
+
+f = @(lambda, theta) (1 + lambda^2 + 2*lambda*cos(theta)).^((alpha-1)/2) .* (1 + lambda*exp(1i*theta));
+I = @(lambda) sum(f(lambda, theta(1:end-1))) * (theta(2)-theta(1));
+
+Lambda = logspace(-3, 1, 1000);
+
+LI = nan(1, length(Lambda));
+LI2 = nan(1, length(Lambda));
+for k = 1:length(Lambda)
+    LI(k) = I(Lambda(k));
+    LI2(k) = I(1/Lambda(k));
+end
+
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(Lambda, LI, 'Parent', ax);
+plot(Lambda, LI2, 'Parent', ax);
+plot(Lambda, LI+LI2, '--', 'Parent', ax);
+hold off
+
+max(abs(LI-LI2)./LI)
 
 
 

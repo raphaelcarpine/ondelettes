@@ -16,19 +16,19 @@ epsilon = 3;
 alpha = 1.5;
 
 
-mu = 1;
+mu = 0.01;
 w0 = 2*pi;
-w1 = 2*2*pi;
-epsilon = 0.02;
-alpha = 0.;
+w1 = 2*pi;
+epsilon = 0.05;
+alpha = 1.9;
 
 
 
-T = 1000;
+T = 100;
 dt = 1e-2;
 
 x0 = [0; 0];
-v0 = [1; -1];
+v0 = [1; -1/sqrt(mu)];
 
 
 %% conditions initiales
@@ -279,13 +279,13 @@ ylabel(ax, '\lambda');
 
 fig = figure;
 ax = axes(fig);
-plot(tout, exp(real(Anglesout)), 'Parent', ax);
+plot(tout, exp(real(Anglesout)), tout, sum(exp((1-alpha)*real(Anglesout)), 2), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'abs ridges x0');
 
 fig = figure;
 ax = axes(fig);
-plot(tout, abs(exp(Anglesout).*Deforms), 'Parent', ax);
+plot(tout, abs(exp(Anglesout).*Deforms), tout, sum(abs(exp((1-alpha)*Anglesout).*Deforms), 2), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'abs ridges x1');
 
