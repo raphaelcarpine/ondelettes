@@ -19,8 +19,8 @@ alpha = 1.5;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi;
-epsilon = 0.3;
-alpha = 0.;
+epsilon = 0.01;
+alpha = 2.;
 
 
 
@@ -32,7 +32,7 @@ v0 = [1; -1];
 
 %% approx sans les poles
 
-nT = 2000;
+nT = 5;
 
 % paramètres
 Om1 = w0;
@@ -72,19 +72,15 @@ tnext = 0; % variable d'affichage
         end
     end
 
-options = odeset('RelTol', 1e-10, 'Stats', 'off', 'OutputFcn', @outputWait); % , 'MaxStep', 1/(w0*nT)
+options = odeset('RelTol', 1e-10, 'Stats', 'off', 'OutputFcn', @outputWait, 'MaxStep', 1/(w0*nT));
 
-[t, A] = ode45(D, [0 T], A0, options);
+[tr, A] = ode45(D, [0 T], A0, options);
 
 A = transpose(A);
-t2 = linspace(t(1), t(end), T*nT);
-A1 = interp1(t, A(1,:), t2);
-A2 = interp1(t, A(2,:), t2);
-A = [A1; A2];
-t = t2;
+tr = transpose(tr);
 
-Zr = matM12\matO*A;
-Xr = Zr .* sin([om1*t+Phi0(1); om2*t+Phi0(2)]);
+Zr = A .* sin([om1*tr+Phi0(1); om2*tr+Phi0(2)]);
+Xr = matM12\matO*Zr;
 X0r = Xr(1,:);
 X1r = Xr(2,:);
 
@@ -199,10 +195,8 @@ close(wait);
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-if printReponseTemp
-    plot(t, X1-X0, 'Parent', ax);
-end
-plot(t, X1r-X0r, 'Parent', ax);
+plot(t, X1-X0, 'Parent', ax);
+plot(tr, X1r-X0r, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout).*Deforms, 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
@@ -211,10 +205,8 @@ ylabel(ax, 'x1');
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-if printReponseTemp
-    waveletplot = plot(t, X0, 'Parent', ax);
-end
-plot(t, X0r, 'Parent', ax);
+waveletplot = plot(t, X0, 'Parent', ax);
+plot(tr, X0r, 'Parent', ax);
 % plot(t2, X2, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
@@ -239,18 +231,20 @@ ylabel(ax, 'x0');
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, A(1,:), 'Parent', ax);
+plot(tr, A(1,:), 'Parent', ax);
+plot(tr, A(2,:), 'Parent', ax);
 plot(t, Atemp(1,:), 'Parent', ax);
+plot(t, Atemp(2,:), 'Parent', ax);
 grid(ax, 'on');
-ylabel(ax, 'abs ridges x0');
+ylabel(ax, 'abs ridges');
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, A(2,:), 'Parent', ax);
-plot(t, Atemp(2,:), 'Parent', ax);
+plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
+plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), 'Parent', ax);
 grid(ax, 'on');
-ylabel(ax, 'abs ridges x0');
+ylabel(ax, 'sum A^(1-alpha)');
 
 
 %% ondelette
