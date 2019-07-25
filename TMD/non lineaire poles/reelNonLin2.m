@@ -1,4 +1,4 @@
-function reelNonLin()
+function reelNonLin2()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,18 +7,23 @@ printReponseTemp = true;
 nIalpha = 1000;
 
 %%
+mu = 0.01;
+w0 = 2*pi;
+w1 = 2*pi/(1+mu);
+epsilon = 2*w0*sqrt(mu/2/(1+mu));
+alpha = 0.;
 
 
 
 mu = 0.01;
 w0 = 2*pi;
-w1 = 2*pi/(1+mu);
-epsilon = 2*w0*sqrt(mu/2/(1+mu));
-alpha = 1.;
+w1 = 2*pi;
+epsilon = 0.1;
+alpha = 0.;
 
 
 
-T = 50;
+T = 100;
 dt = 1e-2;
 
 x0 = [0; 0];
@@ -37,8 +42,8 @@ lambda1 = om1^2 / sqrt((om1^2-Om2^2)^2+mu*Om2^4);
 lambda2 = om2^2 / sqrt((om2^2-Om2^2)^2+mu*Om2^4);
 D1 = lambda1;
 D2 = lambda2;
-G1 = 1/2*D1*lambda1^alpha*om1^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
-G2 = 1/2*D2*lambda2^alpha*om2^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
+lw1 = lambda1*om1;
+lw2 = lambda2*om2;
 
 matM12 = diag([1 sqrt(mu)]);
 matO = [(Om2^2-om1^2)/sqrt((om1^2-Om2^2)^2+mu*Om2^4), (Om2^2-om2^2)/sqrt((om2^2-Om2^2)^2+mu*Om2^4);...
@@ -53,8 +58,15 @@ A0 = abs(Za0);
 Phi0 = angle(Za0);
 
 % integration
-D = @(t, A) -epsilon*mu * [G1 * Ialpha(lambda2*om2*A(2)/(lambda1*om1*A(1))) * A(1)^alpha ;...
-    G2 * Ialpha(lambda1*om1*A(1)/(lambda2*om2*A(2))) * A(2)^alpha];
+D = @(t, Aphi) - epsilon * mu...
+    * ((lw1*Aphi(1))^2+(lw2*Aphi(2))^2+2*lw1*Aphi(1)*lw2*Aphi(2)*cos((om2-om1)*t+Aphi(4)-Aphi(3)))^((alpha-1)/2)...
+    * gamma(alpha/2+1) / (sqrt(pi) * gamma(alpha/2+3/2)) * [
+    D1/om1 * (lw1*Aphi(1) + lw2*Aphi(2) * cos((om2-om1)*t+Aphi(4)-Aphi(3)));
+    D2/om2 * (lw2*Aphi(2) + lw1*Aphi(1) * cos((om2-om1)*t+Aphi(4)-Aphi(3)));
+    - D1/(om1*Aphi(1)) * lw2*Aphi(2) * sin((om2-om1)*t+Aphi(4)-Aphi(3));
+    D2/(om2*Aphi(2)) * lw1*Aphi(1) * sin((om2-om1)*t+Aphi(4)-Aphi(3))
+    ];
+
 
 wait = waitbar(0, 'integration 1/2 (0%)');
 tnext = 0; % variable d'affichage
@@ -68,12 +80,15 @@ tnext = 0; % variable d'affichage
 
 options = odeset('RelTol', 1e-10, 'Stats', 'off', 'OutputFcn', @outputWait, 'MaxStep', 1/(w0*nT));
 
-[tr, A] = ode45(D, [0 T], A0, options);
+[tr, Aphi] = ode45(D, [0 T], [A0; Phi0], options);
 
-A = transpose(A);
+Aphi = transpose(Aphi);
 tr = transpose(tr);
 
-Zr = A .* sin([om1*tr+Phi0(1); om2*tr+Phi0(2)]);
+A = Aphi(1:2,:);
+Phi = Aphi(3:4,:);
+
+Zr = A .* sin([om1*tr+Phi(1,:); om2*tr+Phi(2,:)]);
 Xr = matM12\matO*Zr;
 X0r = Xr(1,:);
 X1r = Xr(2,:);

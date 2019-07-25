@@ -18,9 +18,10 @@ alpha = 1.5;
 
 mu = 0.01;
 w0 = 2*pi;
-w1 = 2*pi;
-epsilon = 0.05;
-alpha = 1.9;
+w1 = 1.3*2*pi;
+epsilon = 0.06;
+alpha = 0.;
+
 
 
 
@@ -28,7 +29,7 @@ T = 100;
 dt = 1e-2;
 
 x0 = [0; 0];
-v0 = [1; -1/sqrt(mu)];
+v0 = [0; 1];
 
 
 %% conditions initiales

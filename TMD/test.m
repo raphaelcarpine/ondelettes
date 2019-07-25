@@ -379,6 +379,37 @@ max(abs(LI-LI2)./LI)
 
 
 
+%% test integrale Ialpha 3
+
+alpha = 0.9;
+
+theta = linspace(0, 2*pi, 10000);
+
+f = @(lambda, theta) (1 + lambda^2 + 2*lambda*cos(theta)).^((alpha-1)/2) .* (1 + lambda*exp(1i*theta));
+I = @(lambda) sum(f(lambda, theta(1:end-1))) * (theta(2)-theta(1));
+
+Lambda = logspace(-3, 1, 1000);
+
+LI = nan(1, length(Lambda));
+LI2 = nan(1, length(Lambda));
+for k = 1:length(Lambda)
+    LI(k) = I(Lambda(k));
+    LI2(k) = I(1/Lambda(k));
+end
+
+
+fig = figure;
+ax = axes(fig);
+hold on
+plot(Lambda, LI, 'Parent', ax);
+plot(Lambda, LI2, 'Parent', ax);
+plot(Lambda, LI+LI2, '--', 'Parent', ax);
+plot(Lambda, LI./Lambda + LI2.*Lambda, ':', 'Parent', ax);
+hold off
+
+
+
+
 
 
 
