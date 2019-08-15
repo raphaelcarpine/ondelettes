@@ -291,6 +291,7 @@ ax = 0;
                 plotAxes = ax;
                 hold(plotAxes, 'on');
                 onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)), 'r--')];
+                %uistack(onAxesPlots(end), 'bottom');
                 hold(plotAxes, 'off');
             else
                 plotAxes = axes(figure);

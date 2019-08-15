@@ -4,8 +4,8 @@ function [X, Y] = PlotExtract()
 
 fig = figure;
 fig.Units = 'characters';
-fig.Position(3) = 25;
-fig.Position(4) = 7;
+fig.Position(3) = 40;
+fig.Position(4) = 10;
 fig.MenuBar = 'none';
 
 
@@ -120,7 +120,7 @@ ax = 0;
             warning('no line selected');
             return;
         end
-        delete(fig);
+        closeReg();
     end
 
 

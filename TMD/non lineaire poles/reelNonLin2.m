@@ -4,30 +4,29 @@ function reelNonLin2()
 
 printReponseTemp = true;
 
-nIalpha = 1000;
 
 %%
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 2*w0*sqrt(mu/2/(1+mu));
-alpha = 0.;
+epsilon = 2*w1*sqrt(3*mu/8/(1+mu));
+alpha = 1.;
 
 
 
 mu = 0.01;
 w0 = 2*pi;
-w1 = 2*pi;
-epsilon = 0.1;
-alpha = 0.;
+w1 = 2*pi/(1+mu);
+epsilon = 10.5;
+alpha = 0.5;
 
 
 
-T = 100;
+T = 50;
 dt = 1e-2;
 
 x0 = [0; 0];
-v0 = [0; 1];
+v0 = [1; 0];
 
 %% approx sans les poles
 
@@ -44,6 +43,10 @@ D1 = lambda1;
 D2 = lambda2;
 lw1 = lambda1*om1;
 lw2 = lambda2*om2;
+
+delta10 = epsilon
+delta2 = 2*(om2-om1)/(om1+om2)
+
 
 matM12 = diag([1 sqrt(mu)]);
 matO = [(Om2^2-om1^2)/sqrt((om1^2-Om2^2)^2+mu*Om2^4), (Om2^2-om2^2)/sqrt((om2^2-Om2^2)^2+mu*Om2^4);...
@@ -63,8 +66,8 @@ D = @(t, Aphi) - epsilon * mu...
     * gamma(alpha/2+1) / (sqrt(pi) * gamma(alpha/2+3/2)) * [
     D1/om1 * (lw1*Aphi(1) + lw2*Aphi(2) * cos((om2-om1)*t+Aphi(4)-Aphi(3)));
     D2/om2 * (lw2*Aphi(2) + lw1*Aphi(1) * cos((om2-om1)*t+Aphi(4)-Aphi(3)));
-    - D1/(om1*Aphi(1)) * lw2*Aphi(2) * sin((om2-om1)*t+Aphi(4)-Aphi(3));
-    D2/(om2*Aphi(2)) * lw1*Aphi(1) * sin((om2-om1)*t+Aphi(4)-Aphi(3))
+     D1/(om1*Aphi(1)) * lw2*Aphi(2) * sin((om2-om1)*t+Aphi(4)-Aphi(3));
+    -D2/(om2*Aphi(2)) * lw1*Aphi(1) * sin((om2-om1)*t+Aphi(4)-Aphi(3))
     ];
 
 
@@ -78,7 +81,7 @@ tnext = 0; % variable d'affichage
         end
     end
 
-options = odeset('RelTol', 1e-10, 'Stats', 'off', 'OutputFcn', @outputWait, 'MaxStep', 1/(w0*nT));
+options = odeset('RelTol', 1e-10, 'OutputFcn', @outputWait, 'MaxStep', 1/(w0*nT));
 
 [tr, Aphi] = ode45(D, [0 T], [A0; Phi0], options);
 
@@ -87,6 +90,11 @@ tr = transpose(tr);
 
 A = Aphi(1:2,:);
 Phi = Aphi(3:4,:);
+dPhi = nan(size(Aphi));
+for i = 1:size(Aphi,2)
+    dPhi(:,i) = D(tr(i), Aphi(:,i));
+end
+dPhi = dPhi(3:4,:);
 
 Zr = A .* sin([om1*tr+Phi(1,:); om2*tr+Phi(2,:)]);
 Xr = matM12\matO*Zr;
@@ -94,23 +102,6 @@ X0r = Xr(1,:);
 X1r = Xr(2,:);
 
 
-
-%%
-
-    function I = Ialpha(lambda)
-        if alpha<1 && abs(lambda) == inf
-            I = 0;
-            return
-        end
-        theta = linspace(0, 2*pi, nIalpha);
-        theta = theta(1:end-1);
-        I = (1 + lambda^2 + 2*lambda*cos(theta)).^(alpha/2-1/2) .* (1 + lambda*cos(theta));
-        I = sum(I)*(theta(2)-theta(1));
-
-%         I = 2*pi * (1+lambda.^2).^((alpha-1)/2) * (1 + (alpha-1)/2*lambda^2/(1+lambda^2));
-        
-%         I = 2*pi;
-    end
 
 
 
@@ -143,7 +134,7 @@ if printReponseTemp
     
     waitbar(0, wait, 'integration /2/ (0%)');
     
-    options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait2);
+    options = odeset('RelTol', 1e-10, 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait2);
     
     [t, Y] = ode45(Dtemp, [0 T], [X0; V0], options);
     
@@ -158,44 +149,46 @@ if printReponseTemp
     X1 = interp1(t, X1, t2);
     V0 = interp1(t, V0, t2);
     V1 = interp1(t, V1, t2);
+    t = t2;
+    
+    
     Xtemp = [X0; X1];
     Vtemp = [V0; V1];
-    Atemp = abs (1i*transpose(matO)*matM12*Xtemp + diag([om1 om2])\transpose(matO)*matM12*Vtemp);
-    t = t2;
+    Ztemp = 1i*transpose(matO)*matM12*Xtemp + diag([om1 om2])\transpose(matO)*matM12*Vtemp;
+    Atemp = abs (Ztemp);
+    Phitemp = angle (Ztemp .* exp(-1i * diag([om1 om2]) * [t; t]));
+    for k = 1:size(Phitemp, 2)-1
+        for l = 1:2
+            if round((Phitemp(l,k+1)-Phitemp(l,k))/(2*pi)) ~= 0
+                Phitemp(l,k+1:end) = Phitemp(l,k+1:end) - 2*pi * round((Phitemp(l,k+1)-Phitemp(l,k))/(2*pi));
+            end
+        end
+    end
+    dPhitemp = diff(Phitemp, 1, 2);
+    dPhitemp = [dPhitemp(:,1), 1/2*(dPhitemp(:,1:end-1)+dPhitemp(:,2:end)), dPhitemp(:,end)];
+    dPhitemp = dPhitemp/(t(2)-t(1));
 end
 
 
 close(wait);
 
+%% ridge unique
+
+matZX = matM12\matO;
+
+cX0r = A .* transpose(matZX(1,:)); % composantes de X0r
+cX1r = A .* transpose(matZX(2,:));
+ridgeX0r = sqrt(cX0r(1,:).^2 + cX0r(2,:).^2 + 2*cX0r(1,:).*cX0r(2,:).*cos((om2-om1)*tr+Phi(2,:)-Phi(1,:)));
+ridgeX1r = sqrt(cX1r(1,:).^2 + cX1r(2,:).^2 + 2*cX1r(1,:).*cX1r(2,:).*cos((om2-om1)*tr+Phi(2,:)-Phi(1,:)));
+
+if printReponseTemp
+    cX0t = Atemp .* transpose(matZX(1,:)); % composantes de X0
+    cX1t = Atemp .* transpose(matZX(2,:));
+    ridgeX0t = sqrt(cX0t(1,:).^2 + cX0t(2,:).^2 + 2*cX0t(1,:).*cX0t(2,:).*cos((om2-om1)*t+Phitemp(2,:)-Phitemp(1,:)));
+    ridgeX1t = sqrt(cX1t(1,:).^2 + cX1t(2,:).^2 + 2*cX1t(1,:).*cX1t(2,:).*cos((om2-om1)*t+Phitemp(2,:)-Phitemp(1,:)));
+end
 
 
-
-%% integration temporelle 2
-% nT = 1000;
-% 
-% 
-% delta = 0.01;
-% lambda = epsilon/delta/w0*beta(1/2, alpha/2+1)/2;
-% 
-% D2 = @(t, Y) [
-%     Y(3);
-%     Y(4);
-%     -w0^2*Y(1) + mu*w1^2*(Y(2)-Y(1)) + mu*lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3));
-%     -w1^2*(Y(2)-Y(1))-lambda*(abs(Y(2)-Y(1))<=delta)*(Y(4)-Y(3))
-%     ];
-% 
-% 
-% waitbar(0, wait, 'integration 2/2 (0%)');
-% 
-% tnext = 0;
-% options = odeset('RelTol', 1e-10, 'Stats', 'off', 'MaxStep', 1/(w0*nT), 'OutputFcn', @outputWait);
-% 
-% [t2, Y2] = ode45(D2, [0 T], [X0; V0], options);
-% 
-% 
-% X2 = Y2(:,1);
-% 
-% close(wait);
 
 
 
@@ -204,8 +197,10 @@ close(wait);
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, X1-X0, 'Parent', ax);
 plot(tr, X1r-X0r, 'Parent', ax);
+if printReponseTemp
+    plot(t, X1-X0, 'Parent', ax);
+end
 %plot(tout, real(sum(exp(Anglesout).*Deforms, 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
@@ -214,8 +209,10 @@ ylabel(ax, 'x1');
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-waveletplot = plot(t, X0, 'Parent', ax);
-plot(tr, X0r, 'Parent', ax);
+waveletplot = plot(tr, X0r, 'Parent', ax);
+if printReponseTemp
+    waveletplot = plot(t, X0, 'Parent', ax);
+end
 % plot(t2, X2, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
@@ -223,37 +220,115 @@ grid(ax, 'on');
 ylabel(ax, 'x0');
 % ylim(ax, [-1, 1]);
 
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, imag(dAnglesout)/(2*pi), 'Parent', ax);
-% grid(ax, 'on');
-% ylabel(ax, 'freqs');
-% % ylim(ax, [0, 2]);
-
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, -real(dAnglesout), 'Parent', ax);
-% grid(ax, 'on');
-% ylabel(ax, '\lambda');
-% % ylim(ax, [-1, 1]);
-
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
 plot(tr, A(1,:), 'Parent', ax);
 plot(tr, A(2,:), 'Parent', ax);
-plot(t, Atemp(1,:), 'Parent', ax);
-plot(t, Atemp(2,:), 'Parent', ax);
+if printReponseTemp
+    plot(t, Atemp(1,:), 'Parent', ax);
+    plot(t, Atemp(2,:), 'Parent', ax);
+end
 grid(ax, 'on');
 ylabel(ax, 'abs ridges');
+
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
-plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), 'Parent', ax);
+plot(tr, ridgeX0r, 'Parent', ax);
+plot(tr, X0r, 'Parent', ax);
+if printReponseTemp
+    plot(t, ridgeX0t, 'Parent', ax);
+    plot(t, X0, 'Parent', ax);
+end
 grid(ax, 'on');
-ylabel(ax, 'sum A^(1-alpha)');
+ylabel(ax, 'abs ridge unique');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, lw1*A(1,:), 'Parent', ax);
+plot(tr, lw2*A(2,:), 'Parent', ax);
+plot(tr, lw2*A(2,:) - lw1*A(1,:), 'Parent', ax);
+grid(ax, 'on');
+ylabel(ax, 'a2-a1');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, Phi(1,:), 'Parent', ax);
+plot(tr, Phi(2,:), 'Parent', ax);
+plot(tr, Phi(2,:)+Phi(1,:), 'Parent', ax);
+if printReponseTemp
+    plot(t, Phitemp(1,:), 'Parent', ax);
+    plot(t, Phitemp(2,:), 'Parent', ax);
+    plot(t, Phitemp(2,:)+Phitemp(1,:), 'Parent', ax);
+end
+grid(ax, 'on');
+ylabel(ax, '\phi_1, \phi_2, \phi_1+\phi_2');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, (om2-om1)*tr + Phi(2,:) - Phi(1,:), 'Parent', ax);
+plot(tr, cos((om2-om1)*tr + Phi(2,:) - Phi(1,:)), 'Parent', ax);
+plot(tr, sin((om2-om1)*tr + Phi(2,:) - Phi(1,:)), 'Parent', ax);
+if printReponseTemp
+    plot(t, (om2-om1)*t + Phitemp(2,:) - Phitemp(1,:), 'Parent', ax);
+    plot(t, cos((om2-om1)*t + Phitemp(2,:) - Phitemp(1,:)), 'Parent', ax);
+    plot(t, sin((om2-om1)*t + Phitemp(2,:) - Phitemp(1,:)), 'Parent', ax);
+end
+grid(ax, 'on');
+ylabel(ax, '\phi, \cos\phi, \sin\phi');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, dPhi(1,:) + om1, 'Parent', ax);
+plot(tr, dPhi(2,:) + om2, 'Parent', ax);
+if printReponseTemp
+    plot(t, dPhitemp(1,:) + om1, 'Parent', ax);
+    plot(t, dPhitemp(2,:) + om2, 'Parent', ax);
+end
+grid(ax, 'on');
+ylabel(ax, 'freq instantanée');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, sum(A .* (diag([om1^2, om2^2]) * A), 1), 'Parent', ax);
+if printReponseTemp
+    plot(t, sum(Atemp .* (diag([om1^2, om2^2]) * Atemp), 1), 'Parent', ax);
+end
+grid(ax, 'on');
+ylabel(ax, 'énergie');
+
+% fig = figure;
+% ax = axes(fig);
+% hold(ax, 'on');
+% plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
+% if printReponseTemp
+%     plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), 'Parent', ax);
+% end
+% grid(ax, 'on');
+% ylabel(ax, 'sum A^(1-alpha)');
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(tr, (A(1,:)-A(2,:)).^2, 'Parent', ax);
+plot(tr, A(1,:).^2+A(2,:).^2+2*A(1,:).*A(2,:).*cos((om2-om1)*tr + Phi(2,:)-Phi(1,:)) - (A(1,:)-A(2,:)).^2, 'Parent', ax);
+plot(tr, A(1,:)-A(2,:), 'Parent', ax);
+plot(tr, A(2,:)+A(2,:).*cos((om2-om1)*tr + Phi(2,:)-Phi(1,:)), 'Parent', ax);
+grid(ax, 'on');
+legend();
+ylabel(ax, '(a_2-a_1)^2, a_1 a_2 \delta^2');
 
 
 %% ondelette

@@ -8,17 +8,23 @@ nIalpha = 1000;
 
 %%
 
-
-
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 2*w0*sqrt(mu/2/(1+mu));
+epsilon = 2*w1*sqrt(1*mu/1/(1+mu));
 alpha = 1.;
 
 
 
-T = 50;
+mu = 0.01;
+w0 = 2*pi;
+w1 = 2*pi;
+epsilon = 0.1;
+alpha = 0.5;
+
+
+
+T = 100;
 dt = 1e-2;
 
 x0 = [0; 0];
@@ -39,6 +45,9 @@ D1 = lambda1;
 D2 = lambda2;
 G1 = 1/2*D1*lambda1^alpha*om1^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
 G2 = 1/2*D2*lambda2^alpha*om2^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
+
+delta10 = epsilon * (om1+om2)/(om2-om1)/2
+delta2 = 2*(om2-om1)/(om1+om2)
 
 matM12 = diag([1 sqrt(mu)]);
 matO = [(Om2^2-om1^2)/sqrt((om1^2-Om2^2)^2+mu*Om2^4), (Om2^2-om2^2)/sqrt((om2^2-Om2^2)^2+mu*Om2^4);...
@@ -189,9 +198,8 @@ close(wait);
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, X1-X0, 'Parent', ax);
+plot(t, X1-X0, '--', 'Parent', ax);
 plot(tr, X1r-X0r, 'Parent', ax);
-%plot(tout, real(sum(exp(Anglesout).*Deforms, 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
 ylabel(ax, 'x1');
@@ -199,7 +207,7 @@ ylabel(ax, 'x1');
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-waveletplot = plot(t, X0, 'Parent', ax);
+waveletplot = plot(t, X0, '--', 'Parent', ax);
 plot(tr, X0r, 'Parent', ax);
 % plot(t2, X2, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
@@ -208,37 +216,32 @@ grid(ax, 'on');
 ylabel(ax, 'x0');
 % ylim(ax, [-1, 1]);
 
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, imag(dAnglesout)/(2*pi), 'Parent', ax);
-% grid(ax, 'on');
-% ylabel(ax, 'freqs');
-% % ylim(ax, [0, 2]);
-
-% fig = figure;
-% ax = axes(fig);
-% plot(tout, -real(dAnglesout), 'Parent', ax);
-% grid(ax, 'on');
-% ylabel(ax, '\lambda');
-% % ylim(ax, [-1, 1]);
-
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
+plot(t, Atemp(1,:), '--', 'Parent', ax);
+plot(t, Atemp(2,:), '--', 'Parent', ax);
 plot(tr, A(1,:), 'Parent', ax);
 plot(tr, A(2,:), 'Parent', ax);
-plot(t, Atemp(1,:), 'Parent', ax);
-plot(t, Atemp(2,:), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'abs ridges');
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
+plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), '--', 'Parent', ax);
 plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
-plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), 'Parent', ax);
 grid(ax, 'on');
 ylabel(ax, 'sum A^(1-alpha)');
+
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+plot(t, sum(Atemp .* (diag([om1^2, om2^2]) * Atemp), 1), '--', 'Parent', ax);
+plot(tr, sum(A .* (diag([om1^2, om2^2]) * A), 1), 'Parent', ax);
+grid(ax, 'on');
+ylabel(ax, 'énergie');
 
 
 %% ondelette

@@ -12,7 +12,7 @@ T = 100;
 nT = 200;
 
 x0 = [0; 0];
-v0 = [1; 0];
+v0 = [0; 1];
 
 
 waveletplots = systemeQuelconque({'x0', 'x1'}, {d2x0, d2x1}, {'mu', 'omega0', 'omega1', 'zeta0', 'epsilon', 'alpha'},...
