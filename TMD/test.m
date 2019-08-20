@@ -277,8 +277,8 @@ ax = axes(fig);
 hold on
 plot(t, real(psi), 'Parent', ax);
 plot(t, imag(psi), 'Parent', ax);
-xlabel(ax, 't');
-ylabel(ax, '\psi');
+xlabel(ax, '$t$');
+ylabel(ax, '$\psi$');
 legend('\Re \psi', '\Im \psi');
 hold off
 
@@ -286,8 +286,10 @@ fig = figure;
 ax = axes(fig);
 hold on
 plot(w, psiF, 'Parent', ax);
-xlabel(ax, '\omega');
-ylabel(ax, 'F[\psi]');
+plot(w, zeros(size(w)), 'Parent', ax);
+xlabel(ax, '$\omega$');
+ylabel(ax, '$\hat\psi$');
+legend('\Re \psi', '\Im \psi');
 hold off
 
 %% courbes ondelette

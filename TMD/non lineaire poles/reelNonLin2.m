@@ -9,16 +9,16 @@ printReponseTemp = true;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 2*w1*sqrt(3*mu/8/(1+mu));
+epsilon = 1*w1*sqrt(3*mu/8/(1+mu));
 alpha = 1.;
 
 
 
-mu = 0.01;
-w0 = 2*pi;
-w1 = 2*pi/(1+mu);
-epsilon = 10.5;
-alpha = 0.5;
+% mu = 0.01;
+% w0 = 2*pi;
+% w1 = 2*pi/(1+mu);
+% epsilon = 10.5;
+% alpha = 0.5;
 
 
 
@@ -194,6 +194,7 @@ end
 
 %% affichage
 
+
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
@@ -209,25 +210,27 @@ ylabel(ax, 'x1');
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-waveletplot = plot(tr, X0r, 'Parent', ax);
+waveletplot = plot(tr, X0r, 'b', 'Parent', ax);
 if printReponseTemp
-    waveletplot = plot(t, X0, 'Parent', ax);
+    waveletplot = plot(t, X0, 'r', 'Parent', ax);
+    uistack(waveletplot, 'bottom');
 end
 % plot(t2, X2, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
-ylabel(ax, 'x0');
+xlabel(ax, '$t$');
+ylabel(ax, '$x_1$');
 % ylim(ax, [-1, 1]);
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(tr, A(1,:), 'Parent', ax);
-plot(tr, A(2,:), 'Parent', ax);
+plot(tr, A(1,:), 'b', 'Parent', ax);
+plot(tr, A(2,:), 'b', 'Parent', ax);
 if printReponseTemp
-    plot(t, Atemp(1,:), 'Parent', ax);
-    plot(t, Atemp(2,:), 'Parent', ax);
+    uistack(plot(t, Atemp(1,:), 'r', 'Parent', ax), 'bottom');
+    uistack(plot(t, Atemp(2,:), 'r', 'Parent', ax), 'bottom');
 end
 grid(ax, 'on');
 ylabel(ax, 'abs ridges');

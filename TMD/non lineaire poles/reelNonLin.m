@@ -11,24 +11,24 @@ nIalpha = 1000;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 2*w1*sqrt(1*mu/1/(1+mu));
+epsilon = 1/4*w1*sqrt(3*mu/8/(1+mu));
 alpha = 1.;
 
 
 
-mu = 0.01;
-w0 = 2*pi;
-w1 = 2*pi;
-epsilon = 0.1;
-alpha = 0.5;
+% mu = 0.01;
+% w0 = 2*pi;
+% w1 = 2*pi;
+% epsilon = 0.1;
+% alpha = 0.5;
 
 
 
-T = 100;
+T = 200;
 dt = 1e-2;
 
 x0 = [0; 0];
-v0 = [0; 1];
+v0 = [1; 0];
 
 %% approx sans les poles
 
@@ -198,56 +198,61 @@ close(wait);
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, X1-X0, '--', 'Parent', ax);
-plot(tr, X1r-X0r, 'Parent', ax);
+plot(tr, X1r-X0r, 'b', 'Parent', ax);
+waveletplot = plot(t, X1-X0, 'r--', 'Parent', ax);
+uistack(waveletplot, 'bottom');
 hold(ax, 'off');
 grid(ax, 'on');
-ylabel(ax, 'x1');
+ylabel(ax, 'x2');
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-waveletplot = plot(t, X0, '--', 'Parent', ax);
-plot(tr, X0r, 'Parent', ax);
+plot(tr, X0r, 'b', 'Parent', ax);
+waveletplot = plot(t, X0, 'r', 'Parent', ax);
+uistack(waveletplot, 'bottom');
 % plot(t2, X2, 'Parent', ax);
 %plot(tout, real(sum(exp(Anglesout), 2)), 'Parent', ax);
 hold(ax, 'off');
 grid(ax, 'on');
-ylabel(ax, 'x0');
+xlabel(ax, '$t$');
+ylabel(ax, '$x_1$');
 % ylim(ax, [-1, 1]);
 
 fig = figure;
 ax = axes(fig);
 hold(ax, 'on');
-plot(t, Atemp(1,:), '--', 'Parent', ax);
-plot(t, Atemp(2,:), '--', 'Parent', ax);
-plot(tr, A(1,:), 'Parent', ax);
-plot(tr, A(2,:), 'Parent', ax);
+plot(tr, A(1,:), 'b', 'Parent', ax);
+plot(tr, A(2,:), 'b', 'Parent', ax);
+uistack(plot(t, Atemp(1,:), 'r', 'Parent', ax), 'bottom');
+uistack(plot(t, Atemp(2,:), 'r', 'Parent', ax), 'bottom');
 grid(ax, 'on');
-ylabel(ax, 'abs ridges');
+xlabel(ax, '$t$');
+ylabel(ax, '$A$');
 
-fig = figure;
-ax = axes(fig);
-hold(ax, 'on');
-plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), '--', 'Parent', ax);
-plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
-grid(ax, 'on');
-ylabel(ax, 'sum A^(1-alpha)');
+% fig = figure;
+% ax = axes(fig);
+% hold(ax, 'on');
+% plot(t, Atemp(1,:).^(1-alpha) + Atemp(2,:).^(1-alpha), '--', 'Parent', ax);
+% plot(tr, A(1,:).^(1-alpha) + A(2,:).^(1-alpha), 'Parent', ax);
+% grid(ax, 'on');
+% ylabel(ax, 'sum A^(1-alpha)');
 
 
-fig = figure;
-ax = axes(fig);
-hold(ax, 'on');
-plot(t, sum(Atemp .* (diag([om1^2, om2^2]) * Atemp), 1), '--', 'Parent', ax);
-plot(tr, sum(A .* (diag([om1^2, om2^2]) * A), 1), 'Parent', ax);
-grid(ax, 'on');
-ylabel(ax, 'énergie');
+% fig = figure;
+% ax = axes(fig);
+% hold(ax, 'on');
+% plot(t, sum(Atemp .* (diag([om1^2, om2^2]) * Atemp), 1), '--', 'Parent', ax);
+% plot(tr, sum(A .* (diag([om1^2, om2^2]) * A), 1), 'Parent', ax);
+% grid(ax, 'on');
+% ylabel(ax, 'énergie');
 
 
 %% ondelette
 
 
 Q = 25;
+MaxRidges = 2;
 MaxParallelRidges = 2;
 fmin = 0.9;
 fmax = 1.1;
@@ -255,7 +260,12 @@ NbFreq = 100;
 
 
 WaveletMenu('WaveletPlot', waveletplot, 'fmin', fmin, 'fmax', fmax,...
-    'NbFreq', NbFreq, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges);
+    'NbFreq', NbFreq, 'Q', Q, 'MaxParallelRidges', MaxParallelRidges, 'MaxRidges', MaxRidges);
+
+
+%% précision
+
+precision = max (abs (interp1(tr, X0r, t)-X0)) / max(abs(X0))
 
 
 end
