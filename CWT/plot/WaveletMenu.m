@@ -13,6 +13,7 @@ defaultWaveletPlot = 0;
 defaultQ = 1;
 defaultMaxRidges = 1;
 defaultMaxParallelRidges = 1;
+defaultMultipleAxesDisplay = false;
 
 checkParent = @(f) isa(f, 'matlab.ui.Figure') || isa(f, 'matlab.ui.container.Panel')...
     || isa(f, 'matlab.ui.container.Tab') || isa(f, 'matlab.ui.container.ButtonGroup');
@@ -27,6 +28,7 @@ addParameter(p,'WaveletPlot', defaultWaveletPlot); %si les données viennent d'un
 addParameter(p,'Q', defaultQ);
 addParameter(p,'MaxRidges', defaultMaxRidges);
 addParameter(p,'MaxParallelRidges', defaultMaxParallelRidges);
+addParameter(p,'MultipleAxesDisplay', defaultMultipleAxesDisplay);
 
 parse(p, varargin{:})
 
@@ -83,6 +85,15 @@ NbFreq0 = p.Results.NbFreq;
 Q0 = p.Results.Q;
 MaxRidges = p.Results.MaxRidges;
 MaxParallelRidges = p.Results.MaxParallelRidges;
+multipleAxesDisplay = p.Results.MultipleAxesDisplay;
+
+%% reglage affichage subpolt/simple plot
+
+if multipleAxesDisplay
+    subplot0 = @(i,j,k,ax) subplot(i,j,k,ax);
+else
+    subplot0 = @(i,j,k,ax) ax;
+end
 
 
 %% bouton ondelettes et panneaux param et sorties
@@ -270,6 +281,10 @@ end
             cb = Checkboxs2(kCheck);
             if cb.Value
                 FiguresCheckboxs2(kCheck) = figure;
+                axesFiguresCheckboxs2(kCheck) = axes(FiguresCheckboxs2(kCheck));
+                if ~multipleAxesDisplay
+                    hold(axesFiguresCheckboxs2(kCheck), 'on');
+                end
             end
         end
         for kPlot = 1:nbPlots
@@ -284,30 +299,30 @@ end
             if checkboxTimeAmpl.Value % plot de l'amplitude
                 RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(1))),...
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(1)),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxTimeFreq.Value % plot de la frequence
                 RidgeQtyPlot2(ridge, 'time', 'freq',...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(2))),...
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(2)),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequance
                 RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(3))));
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(3)));
             end
             if checkboxTimeBand.Value % plot de l'amortissement
                 RidgeQtyPlot2(ridge, 'time', 'bandwidth',...
                     'ScaleX', get(xscaleTimeBand, 'String'), 'ScaleY', get(yscaleTimeBand, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(4))),...
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(4)),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplBand.Value % plot de l'amortissement
                 RidgeQtyPlot2(ridge, 'val', 'bandwidth', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplBand, 'String'), 'ScaleY', get(yscaleAmplBand, 'String'),...
-                    'Axes', subplot(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(5))));
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(5)));
             end
         end
     end
@@ -336,7 +351,10 @@ end
             fhilb = figure;
             hilbertPlotAxes = [];
             for kPlot = 1:nbPlots
-                hilbertPlotAxes(kPlot) = subplot(nbPlots, 1, kPlot, axes(fhilb));
+                hilbertPlotAxes(kPlot) = subplot0(nbPlots, 1, kPlot, axes(fhilb));
+                if ~multipleAxesDisplay
+                    hold(axes(hilbertPlotAxes(kPlot)), 'on');
+                end
             end
         end
         
@@ -360,9 +378,18 @@ end
         
         ffourier = figure;
         fourierPlotAxes = [];
-        for kPlot = 1:nbPlots
-            fourierPlotAxes(kPlot) = subplot(nbPlots, 1, kPlot, axes(ffourier));
-            set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
+        if multipleAxesDisplay
+            for kPlot = 1:nbPlots
+                fourierPlotAxes(kPlot) = subplot0(nbPlots, 1, kPlot, axes(ffourier));
+                set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
+            end
+        else
+            axesffourier = axes(ffourier);
+            hold(axesffourier, 'on');
+            set(axesffourier, 'XScale', 'lin', 'YScale', 'lin');
+            for kPlot = 1:nbPlots
+                fourierPlotAxes(kPlot) = axesffourier;
+            end            
         end
         
         for kPlot = 1:nbPlots
