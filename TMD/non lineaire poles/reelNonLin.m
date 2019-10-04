@@ -11,9 +11,8 @@ nIalpha = 1000;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 1/4*w1*sqrt(3*mu/8/(1+mu));
-alpha = 1.;
-
+epsilon = 0.05*2*w1*sqrt(3*mu/8/(1+mu));
+alpha = 1.5;
 
 
 % mu = 0.01;
@@ -24,7 +23,7 @@ alpha = 1.;
 
 
 
-T = 200;
+T = 100;
 dt = 1e-2;
 
 x0 = [0; 0];

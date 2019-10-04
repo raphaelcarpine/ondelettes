@@ -264,7 +264,7 @@ ylabel(ax, '\psi');
 
 %% courbes ondelette morlet
 
-delta = 6;
+delta = 3;
 
 t = linspace(-20, 20, 10000);
 w = linspace(0, 2, 10000);
@@ -408,6 +408,82 @@ plot(Lambda, LI2, 'Parent', ax);
 plot(Lambda, LI+LI2, '--', 'Parent', ax);
 plot(Lambda, LI./Lambda + LI2.*Lambda, ':', 'Parent', ax);
 hold off
+
+
+%% gaussienne
+
+alpha = 16;
+lambda = 0.1;
+
+phi = @(w) alpha*sqrt(2*pi)*exp(-(w-1).^2*alpha^2/2);
+dphi = @(w) -alpha^2*(w-1) .* phi(w);
+
+
+omega = linspace(0.5, 1.5, 1000);
+Tomega0 = 1/2*phi(omega);
+Tomega1 = abs(1/2*phi(omega) + lambda*1i/2*dphi(omega)./omega);
+
+fig = figure;
+ax = axes(fig);
+plot(omega, Tomega0, 'Parent', ax);
+xlabel(ax, '$\omega$');
+ylabel(ax, '$\left|T[u]\right|$');
+
+fig = figure;
+ax = axes(fig);
+plot(omega, Tomega1, 'Parent', ax);
+xlabel(ax, '$\omega$');
+ylabel(ax, '$\left|T[u]\right|$');
+
+
+%% séparation ridges
+
+Q = 15;
+alpha = sqrt(2)*Q;
+
+phi = @(w) alpha*sqrt(2*pi)*exp(-(w-1).^2*alpha^2/2);
+
+omega = linspace(0.8, 1.2, 200);
+t = linspace(0, 100, 2);
+[T,Omega] = meshgrid(t, omega) ;
+
+Tomega1 = 1/2*phi(0.95*omega) + 1/2*phi(1.05*omega);
+Tomega2 = transpose(Tomega1) * t.^0;
+
+
+fig = figure;
+ax = axes(fig);
+plot(omega, Tomega1, 'Parent', ax);
+xlabel(ax, '$\omega$');
+ylabel(ax, '$\left|T[u]\right|$');
+
+
+fig = figure;
+ax = axes(fig);
+s = pcolor(T, Omega, Tomega2, 'Parent', ax);
+set(s, 'EdgeColor', 'none');
+xlabel(ax, '$t$');
+ylabel(ax, '$\omega$');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

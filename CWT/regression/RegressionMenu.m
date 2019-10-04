@@ -291,7 +291,7 @@ ax = 0;
                 plotAxes = ax;
                 hold(plotAxes, 'on');
                 onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)), 'r--')];
-                %uistack(onAxesPlots(end), 'bottom');
+                uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
                 hold(plotAxes, 'off');
             else
                 plotAxes = axes(figure);

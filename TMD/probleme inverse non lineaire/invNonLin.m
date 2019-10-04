@@ -6,7 +6,7 @@ nIalpha = 1000;
 mu = 0.01;
 w0 = 2*pi;
 w1 = 2*pi/(1+mu);
-epsilon = 0.25*w1*sqrt(3*mu/8/(1+mu));
+epsilon = 0.05*2*w1*sqrt(3*mu/8/(1+mu));
 alpha = 1.5;
 
 
@@ -30,21 +30,14 @@ vi = [1; 0];
         lambda1 = om1^2 / sqrt((om1^2-Om2^2)^2+mu*Om2^4);
         lambda2 = om2^2 / sqrt((om2^2-Om2^2)^2+mu*Om2^4);
         D1 = lambda1;
-        
-        
         D2 = lambda2;
+        
         G1 = 1/2*D1*lambda1^alpha*om1^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
         G2 = 1/2*D2*lambda2^alpha*om2^(alpha-1)*pi^(-3/2)*gamma(alpha/2+1)/gamma(alpha/2+3/2);
         
         
-        matM12 = diag([1 sqrt(mu)]);
-        matO = [(Om2^2-om1^2)/sqrt((om1^2-Om2^2)^2+mu*Om2^4), (Om2^2-om2^2)/sqrt((om2^2-Om2^2)^2+mu*Om2^4);...
-            sqrt(mu)*Om2^2/sqrt((om1^2-Om2^2)^2+mu*Om2^4), sqrt(mu)*Om2^2/sqrt((om2^2-Om2^2)^2+mu*Om2^4)];
-        
-        
-        % dérivation
-        D = @(A) -epsilon*mu * [G1 * Ialpha(lambda2*om2*A(2)/(lambda1*om1*A(1))) * A(1)^alpha ;...
-            G2 * Ialpha(lambda1*om1*A(1)/(lambda2*om2*A(2))) * A(2)^alpha];
+        D = @(A) -epsilon*mu * [G1 * Ialpha(lambda2*om2*A(2)/(lambda1*om1*A(1)), alpha) * A(1)^alpha ;...
+            G2 * Ialpha(lambda1*om1*A(1)/(lambda2*om2*A(2)), alpha) * A(2)^alpha];
         
         DA = nan(size(A));
         for i = 1:size(A,2)
@@ -57,7 +50,7 @@ vi = [1; 0];
 
 %%
 
-    function I = Ialpha(lambda)
+    function I = Ialpha(lambda, alpha)
         if alpha<1 && abs(lambda) == inf
             I = 0;
             return
@@ -144,6 +137,8 @@ WaveletMenu('WaveletPlot', waveletplot, 'fmin', fmin, 'fmax', fmax,...
     'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges);
 
 
+%% extraction de dA
+nReg = 100;
 
 RegressionMenu;
 
@@ -168,7 +163,7 @@ for k = 2:length(At2)
 end
 dAt2(2:end-1) = dAt2(2:end-1)/2;
 
-t0 = linspace(max(t01(1), t02(1)), min(t01(end), t02(end)), min(length(t01), length(t02)));
+t0 = linspace(max(t01(1), t02(1)), min(t01(end), t02(end)), nReg);
 
 dAt1 = interp1(t01, dAt1, t0);
 dAt2 = interp1(t02, dAt2, t0);
@@ -179,6 +174,20 @@ At1 = interp1(t01, At1, t0);
 At2 = interp1(t02, At2, t0);
 
 At = [At1; At2];
+
+%% inversion
+Om1 = w0;
+Om2 = w1;
+om1 = sqrt(1/2 * (Om1^2+(1+mu)*Om2^2 - sqrt((Om1^2+(1+mu)*Om2^2)^2-4*Om1^2*Om2^2)));
+om2 = sqrt(1/2 * (Om1^2+(1+mu)*Om2^2 + sqrt((Om1^2+(1+mu)*Om2^2)^2-4*Om1^2*Om2^2)));
+
+
+
+Mxz = abs(diag([sqrt((Om2^2-om1^2)^2+mu*Om2^4)/(Om2^2-om1^2), sqrt((Om2^2-om2^2)^2+mu*Om2^4)/(Om2^2-om2^2)]));
+At = Mxz*At;
+dAt = Mxz*dAt;
+
+
 
 %%
 
@@ -205,14 +214,43 @@ c2 = (om1t^2 + om2t^2)^2 - (om1t^2 - om2t^2)^2;
         Om1t = sqrt(c2)/2/Om2t;
         
         DA = derivAprox(mu, w0, w1, Pepsilon, Palpha, At);
-        deltax = sum(sum ((DA-DAt).^2));
+        deltax = DA-dAt;
+        deltax = deltax(:);
     end
+
+
+%--test--
+param1 = linspace(0, 0.3, 30);
+param2 = linspace(0, 2, 30);
+[param13D, param23D] = meshgrid(param1, param2);
+
+Z = nan(length(param1), length(param2));
+for ind1 = 1:length(param1)
+    for ind2 = 1:length(param2)
+        Z(ind1,ind2) = sum (S([param1(ind1), param2(ind2)]).^2);
+    end
+end
+
+figure;
+surf(param13D, param23D, log(Z));
+
+
+
+
+
+%--test--
+
 
 
 Param0 = [0.1, 2]; %epsilon, alpha
 
+lb = [0, 0];
+ub = [2, 2];
 
-Param1 = lsqnonlin(@S, Param0)
+options = optimoptions(@lsqnonlin, 'FunctionTolerance', 0, 'MaxFunctionEvaluations', 1e4,...
+    'MaxIterations', 1e4, 'FiniteDifferenceStepSize', 1e-6);
+
+Param1 = lsqnonlin(@S, Param0, lb, ub, options)
 
 
 
