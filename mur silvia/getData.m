@@ -6,6 +6,9 @@ function [t, X] = getData(P, transient)
 %   t : time, 1*n matrix
 %   X : signal data, 9*n matrix (nine sensors)
 
+if ~ismember(P, [0 6 7])
+    error('P must be in {0, 6, 7}');
+end
 P = max(P-4, 1); %0->1 ; 6->2 ; 7->3
 transient = transient + 1;
 

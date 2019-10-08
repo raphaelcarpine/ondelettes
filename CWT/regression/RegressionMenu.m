@@ -153,10 +153,10 @@ for kopt = 1:length(options)
 end
 optBut.plot.Value = true;
 
-
+% delete plots button
 onAxesPlots = [];
 deleteBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushbutton',...
-    'String', 'delete plots', 'Position', [0.6, (nopt-2)/nopt, 0.39, 1/nopt]);
+    'String', 'delete plots', 'Position', [0.7, (nopt-2)/nopt, 0.29, 1/nopt]);
 
     function deletePlots()
         delete(onAxesPlots);
@@ -164,6 +164,48 @@ deleteBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushb
     end
 
 deleteBut.Callback = @(~,~) deletePlots();
+
+% plot button
+plotBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushbutton',...
+    'String', 'plot', 'Position', [0.5, (nopt-2)/nopt, 0.19, 1/nopt]);
+
+    function plotFunc()
+        if ~updateXYAxes()
+            warning('no line selected');
+            return;
+        end
+        
+        Eq = eqEdit.String;
+        Param = paramEdit.String;
+        Param0 = param0Edit.String;
+        Param = strsplit(Param);
+        Param0 = strsplit(Param0);
+        for ip = 1:length(Param0)
+            Param0{ip} = eval(Param0{ip});
+        end
+        Param0 = [Param0{:}];
+        
+        
+        Fstring = Eq;
+        for ip = 1:length(Param)
+            Fstring = varNameRep(Fstring, Param{ip}, ['P(' num2str(ip) ')']);
+        end
+        Fstring = strrep(Fstring, '*', '.*');
+        Fstring = strrep(Fstring, '/', './');
+        Fstring = strrep(Fstring, '^', '.^');
+        
+        F = @(P) 0;
+        eval(['F = @(P, x) ' Fstring ';']);
+        
+        
+        if optBut.plot.Value
+            plotReg(F, Param0);
+        end
+    end
+
+plotBut.Callback = @(~,~) plotFunc();
+
+
 
 
 %% donnees
@@ -276,34 +318,39 @@ ax = 0;
         set(param0Edit, 'ForegroundColor', [0 0 0]);
         
         if optBut.plot.Value
-            if optBut.onaxes.Value
-                Xminmax = get(ax, 'XLim');
-                Xmin = Xminmax(1);
-                Xmax = Xminmax(2);
-                Xplot = linspace(Xmin, Xmax, 1000);
-            elseif length(X) < 1000
-                Xplot = linspace(X(1), X(end), 1000);
-            else
-                Xplot = X;
-            end
-            
-            if optBut.onaxes.Value
-                plotAxes = ax;
-                hold(plotAxes, 'on');
-                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)), 'r--')];
-                uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
-                hold(plotAxes, 'off');
-            else
-                plotAxes = axes(figure);
-                hold(plotAxes, 'on');
-                plot(plotAxes, X, Y, '*');
-                plot(plotAxes, Xplot, F(Param1, Xplot) .* ones(size(Xplot)));
-                hold(plotAxes, 'off');
-            end
+            plotReg(F, Param1);
         end
         
         lineSelect.Value = false;
         selectFunction(lineSelect.Value);
+    end
+
+
+    function plotReg(F, Param)
+        if optBut.onaxes.Value
+            Xminmax = get(ax, 'XLim');
+            Xmin = Xminmax(1);
+            Xmax = Xminmax(2);
+            Xplot = linspace(Xmin, Xmax, 1000);
+        elseif length(X) < 1000
+            Xplot = linspace(X(1), X(end), 1000);
+        else
+            Xplot = X;
+        end
+        
+        if optBut.onaxes.Value
+            plotAxes = ax;
+            hold(plotAxes, 'on');
+            onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)), 'r--')];
+            uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
+            hold(plotAxes, 'off');
+        else
+            plotAxes = axes(figure);
+            hold(plotAxes, 'on');
+            plot(plotAxes, X, Y, '*');
+            plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)));
+            hold(plotAxes, 'off');
+        end
     end
 
 
