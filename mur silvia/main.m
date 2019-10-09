@@ -32,7 +32,7 @@ plts = transpose(plts);
 
 
 %ondelette
-Q = 50;
+Q = 70;
 MaxRidges = 10;
 MaxParallelRidges = 2;
 fmin = 50;
@@ -55,9 +55,36 @@ for k = 1:9
 end
 
 
-[t, freqs, shapes] = getModes(ridges);
+[t, freqs, shapes, errors, ridgesNumber] = getModes(ridges);
 
 
+figure;
+plot(t{1}, abs(shapes{1}));
+figure;
+plot(t{1}, angle(shapes{1}));
+figure;
+plot(t{1}, freqs{1});
+
+
+
+
+shapes0 = nan(1, 9);
+for k = 1:9
+    shapet = shapes{1}(k,:);
+    shapes0(k) = mean(shapet(~isnan(shapet)));
+end
+
+plotModShape(real(shapes0));
+
+figure;
+for k=1:9
+    polarplot([0, shapes0(k)], '-o');
+    hold on
+end
+
+figure;
+for k=1:9
+    p0 = 4-
 
 
 

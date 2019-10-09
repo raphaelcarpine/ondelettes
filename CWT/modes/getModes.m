@@ -1,4 +1,4 @@
-function [t, freqs, shapes] = getModes(Ridges, ddlRef)
+function [t, freqs, shapes, errors, ridgesNumber] = getModes(Ridges, ddlRef)
 %GETMODES Summary of this function goes here
 %   Ridges = {ridgeddl1, ...}
 %   t = {t1 = [...], ...}
@@ -16,17 +16,21 @@ nridges = length(ridgesRef.freq);
 t = cell(1, nridges);
 freqs = cell(1, nridges);
 shapes = cell(1, nridges);
+errors = cell(1, nridges);
+ridgesNumber = cell(1, nridges);
 
 
 for kr = 1:nridges % reference ridge increment
     tr = ridgesRef.time{kr};
     ntr = length(tr);
     freqsr = ridgesRef.freq{kr};
-    shapesr = ones(1, ntr);
     shapesRef = ridgesRef.val{kr}; % normalization
+    shapesr = shapesRef ./ shapesRef;
     
     freqsr = [nan(ddlRef-1, ntr); freqsr; nan(nddl-ddlRef, ntr)];
     shapesr = [nan(ddlRef-1, ntr); shapesr; nan(nddl-ddlRef, ntr)];
+    errorsr = freqTol * ones(nddl, ntr);
+    ridgesNumberr = nan(nddl, ntr);
     
     for kddl = [1:(ddlRef-1), (ddlRef+1):nddl] % ddl increment
         ridges2 = Ridges{kddl};
@@ -45,9 +49,11 @@ for kr = 1:nridges % reference ridge increment
                     continue
                 end
                 
-                if abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) / ridgesRef.freq{kr}(kt) < freqTol
+                if abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) / ridgesRef.freq{kr}(kt) < errorsr(kddl, kt2)
+                    errorsr(kddl, kt2) = abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) / ridgesRef.freq{kr}(kt);
                     freqsr(kddl, kt2) = ridges2.freq{kr2}(kt2);
                     shapesr(kddl, kt2) = ridges2.val{kr2}(kt2);
+                    ridgesNumberr(kddl, kt2) = kr2;
                 end
             end
         end
@@ -60,6 +66,22 @@ for kr = 1:nridges % reference ridge increment
     t{kr} = tr;
     freqs{kr} = freqsr;
     shapes{kr} = shapesr;
+    errors{kr} = errorsr;
+    ridgesNumber{kr} = ridgesNumberr;
 end
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
