@@ -219,9 +219,17 @@ xscaleAmplBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togg
 yscaleAmplBand = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
-Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeBand, checkboxAmplBand];
-XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeBand, xscaleAmplBand];
-YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeBand, yscaleAmplBand];
+checkboxTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'time, phase', 'Value', false);
+xscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+yscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+
+Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeBand, checkboxAmplBand,...
+    checkboxTimePhase];
+XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeBand, xscaleAmplBand, xscaleTimePhase];
+YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeBand, yscaleAmplBand, yscaleTimePhase];
 n1 = length(Checkboxs1);
 n2 = length(Checkboxs2);
 n = n1+n2;
@@ -323,6 +331,12 @@ end
                 RidgeQtyPlot2(ridge, 'val', 'bandwidth', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplBand, 'String'), 'ScaleY', get(yscaleAmplBand, 'String'),...
                     'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(5)));
+            end
+            if checkboxTimePhase.Value % plot de la phase
+                RidgeQtyPlot2(ridge, 'time', 'pha2',...
+                    'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
+                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(6)),...
+                    'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
         end
     end

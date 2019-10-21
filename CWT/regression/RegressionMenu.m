@@ -1,12 +1,16 @@
-function fig = RegressionMenu(varargin)
+function parameters = RegressionMenu(varargin)
 %WaveletMenu Summary of this function goes here
 %   Detailed explanation goes here
+numericPrecision = 10;
+
+
 p = inputParser;
 
 defaultEq = 'a*x+b';
 defaultParam = 'a b';
 defaultParam0 = '1 1';
 defaultFit = 'y';
+defaultFigureName = 'Regression';
 
 paramPrecision = 1e-6;
 maxIter = 1e6;
@@ -15,6 +19,7 @@ addOptional(p, 'Equation', defaultEq);
 addOptional(p, 'Param', defaultParam);
 addOptional(p, 'Param0', defaultParam0);
 addOptional(p, 'Fit', defaultFit);
+addOptional(p, 'FigureName', defaultFigureName);
 
 parse(p, varargin{:});
 
@@ -22,9 +27,14 @@ eq = p.Results.Equation;
 param = p.Results.Param;
 param0 = p.Results.Param0;
 fit = p.Results.Fit;
+FigureName = p.Results.FigureName;
+
+param0 = num2str(param0, numericPrecision);
+
+parameters = nan;
 %%
 
-fig = figure;
+fig = figure('Name', FigureName);
 fig.Units = 'characters';
 fig.Position(3) = 65;
 fig.Position(4) = 22;
@@ -152,6 +162,7 @@ for kopt = 1:length(options)
         'String', optionsStr.(opt), 'Position', [0.01, (nopt-kopt)/nopt, 0.98, 1/nopt]);
 end
 optBut.plot.Value = true;
+optBut.onaxes.Value = true;
 
 % delete plots button
 onAxesPlots = [];
@@ -216,9 +227,7 @@ ax = 0;
 
     function ok = updateXYAxes()
 %         line = findobj('Type', 'line');
-        if isempty(line)
-            ok = false;
-        else
+        if ~isempty(line)
 %             line = line(1);
             X = get(line, 'XData');
             Y = get(line, 'YData');
@@ -230,6 +239,8 @@ ax = 0;
             
             ax = get(line, 'Parent');
             ok = true;
+        else
+            ok = false;
         end
     end
 
@@ -307,6 +318,7 @@ ax = 0;
         
         try
             Param1 = lsqnonlin(S, Param0, lb, ub, optionsReg);
+            parameters = Param1;
         catch error
             warning('did not fit');
             warning(error.message);
@@ -314,7 +326,7 @@ ax = 0;
             return
         end
         
-        set(param0Edit, 'String', num2str(Param1));
+        set(param0Edit, 'String', num2str(Param1, numericPrecision));
         set(param0Edit, 'ForegroundColor', [0 0 0]);
         
         if optBut.plot.Value
@@ -356,6 +368,11 @@ ax = 0;
 
 
 buttonReg.Callback = @(~,~) computeReg();
+
+
+if nargout > 0
+    waitfor(fig);
+end
 
 
 end

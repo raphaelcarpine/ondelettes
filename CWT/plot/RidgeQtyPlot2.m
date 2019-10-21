@@ -15,7 +15,7 @@ defaultYLim = nan;
 defaultGrid = 'on'; % 'auto' pour ne pas changer
 defaultRenameAxes = true;
 
-validQty = {'time', 'val', 'freq', 'diff', 'bandwidth', 'freq2', 'pha'};
+validQty = {'time', 'val', 'freq', 'diff', 'bandwidth', 'freq2', 'pha', 'pha2'};
 checkQty = @(str) ismember(str, validQty);
 validEvaluationFunction = {'', 'abs', 'angle', 'real', 'imag', 'log'};
 checkEvaluationFunction = @(str) ismember(str, validEvaluationFunction);

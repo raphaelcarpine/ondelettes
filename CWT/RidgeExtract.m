@@ -112,6 +112,7 @@ end
 ridge.time = {};
 ridge.val = {};
 ridge.freq = {};
+ridge.pha = {};
 for C_r=1:NbMaxRidges % Pour chaque ridge
     [M2,I] = max(mesuEdge(:)); % Maximum global hors effets de bord pour initialiser le chainage
     
@@ -190,15 +191,19 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     % On convertit les indices en frequences
     WvltFreqLocal = [WvltFreq(ind_freq-1); WvltFreq(ind_freq); WvltFreq(ind_freq+1)];
-    ampl = abs(wavelet);
+    
     mesuEdgeLocal = NaN(3, length(ind_freq));
     for iT = 1:length(ind_freq)
         mesuEdgeLocal(:,iT) = [...
-            ampl(ind_freq(iT)-1, ridge.time{C_r}(iT));...
-            ampl(ind_freq(iT), ridge.time{C_r}(iT));...
-            ampl(ind_freq(iT)+1, ridge.time{C_r}(iT))];
+            wavelet(ind_freq(iT)-1, ridge.time{C_r}(iT));...
+            wavelet(ind_freq(iT), ridge.time{C_r}(iT));...
+            wavelet(ind_freq(iT)+1, ridge.time{C_r}(iT))];
     end
-    ridge.freq{C_r} = localMax3Points(WvltFreqLocal, mesuEdgeLocal);
+    
+    % calcul du ridge sur le sommet de l'interpolation quadratiques des 3
+    % points du sommet
+    [ridge.freq{C_r}, ridge.val{C_r}] = localMax3Points(WvltFreqLocal, mesuEdgeLocal);
+    
     
     % On convertit les indices en temps
     ridge.time{C_r} = X(ridge.time{C_r});
@@ -223,6 +228,17 @@ end
 %% Calcul de la phase (argument complexe)
 for C_r = 1:length(ridge.time)
     ridge.pha{C_r} = angle(ridge.val{C_r});
+end
+
+for C_r = 1:length(ridge.time)
+    ridge.pha2{C_r} = ridge.pha{C_r};
+    for kt = 1:(length(ridge.pha2{C_r})-1) % continuité de la phase
+        if abs(ridge.pha2{C_r}(kt+1)+2*pi-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
+            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) + 2*pi;
+        elseif abs(ridge.pha2{C_r}(kt+1)-2*pi-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
+            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) - 2*pi;
+        end
+    end
 end
 %% frequence instantanee alternative plus lisse, en reliant les discontinuites (saut d'une freq. a une autre)
 for C_r = 1:length(ridge.time)

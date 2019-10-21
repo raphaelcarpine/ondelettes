@@ -466,11 +466,54 @@ xlabel(ax, '$t$');
 ylabel(ax, '$\omega$');
 
 
+%% test derivee psi
+
+a1 = 1;
+a2 = 20;
+w1 = 6;
+w2 = 6.5;
+l1 = 0.9;
+l2 = 0.95;
+delta = 2;
+
+dt = 0.001;
+t = 0:dt:100;
+
+psi = angle(a1*exp(-l1*t) + a2*exp(-l2*t + 1i*(w2-w1)*t + 1i*delta));
+
+figure;
+plot(t, psi);
+
+dpsi = diff(psi);
+dpsi = [dpsi(1), dpsi] + [dpsi, dpsi(end)] / dt;
+
+figure;
+plot(t, dpsi);
+
+
+a = a2/a1;
+w = w2-w1;
+l = l2-l1;
+theta = w*t+delta;
+
+dpsi2 = a*exp(-l*t) .* (-l*sin(theta) + w*(a*exp(-l*t)+cos(theta))) ./ (1 + a^2*exp(-2*l*t) + 2*a*exp(-l*t).*cos(theta));
+
+hold on
+plot(t, dpsi2);
 
 
 
+%% test fonction
 
+a = linspace(0, 4, 100);
+c = linspace(-1, 1, 100);
+[a, c] = meshgrid(a, c);
+F = (a + c)./(a + 1./a + 2*c);
 
+figure;
+surf(a, c, F);
+xlabel('a');
+ylabel('cos');
 
 
 

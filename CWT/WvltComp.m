@@ -29,14 +29,12 @@ if length(WvltFreq) > 500
 end
 
 %%
-Fs = 1/mean(X(2:end)-X(1:end-1)); %Frequence d'echantillonage
+Fs = 1/mean(diff(X)); %Frequence d'echantillonage
 
 Diff = diff(X);
 Diff = Diff/Diff(1);
-for i = 2:length(Diff)
-    if abs(Diff(i)-1) > 1e-5
-        warning('pas de temps non constant');
-    end
+if max(abs(Diff-1)) > 1e-5
+    warning(['pas de temps non constant\nerreur : ', num2str(max(abs(Diff-1)))]);
 end
 
 if ~iscolumn(Y)

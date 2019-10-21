@@ -66,7 +66,7 @@ D = -3.0514;
 
 dpsi = @(dOm, D, t) dOm * (1 + a1/a2*exp((l2-l1)*t) .* (cos(dOm*t+D) - (l2-l1)/dOm*sin(dOm*t+D)))...
     ./ ( (a1/a2*exp((l2-l1)*t) + cos(dOm*t+D)).^2 + sin(dOm*t+D).^2);
-
+% c'est faux en fait lol
 
 %%
 %premier cas
