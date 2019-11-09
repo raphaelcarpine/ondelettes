@@ -10,7 +10,7 @@ ctRightDef = 3;
 % ctRightDef = 0;
 NbMaxRidgesDef = 100;
 NbMaxParallelRidgesDef = 1;
-MinModuDef = 0;
+MinModuDef = 0; % réel ou 'n*noise' avec n>=0
 LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
 WaveletDef = nan;
@@ -28,7 +28,7 @@ addParameter(p,'ctLeft',ctLeftDef);
 addParameter(p,'ctRight',ctRightDef);
 addParameter(p,'NbMaxRidges',NbMaxRidgesDef);
 addParameter(p,'NbMaxParallelRidges',NbMaxParallelRidgesDef);
-addParameter(p,'MinModu',MinModuDef);
+addParameter(p,'MinModu', MinModuDef); % *noise
 addParameter(p,'LengthMinRidge',LengthMinRidgeDef);
 addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
@@ -58,6 +58,11 @@ WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
 if isnan(wavelet)
     wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
 end
+
+% calcul du bruit
+noise = exp(mean(mean(log(abs(wavelet)))));
+%noise = mean(mean(abs(wavelet)));
+MinModu = MinModu * noise;
 
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);
@@ -225,7 +230,7 @@ end
 if isempty(ridge.time)
     return
 end
-%% Calcul de la phase (argument complexe)
+%% Calcul de la phase (argument complexe) et de la fréquence dérivée de la phase
 for C_r = 1:length(ridge.time)
     ridge.pha{C_r} = angle(ridge.val{C_r});
 end
@@ -240,6 +245,13 @@ for C_r = 1:length(ridge.time)
         end
     end
 end
+
+for C_r = 1:length(ridge.time)
+    deltaT = (ridge.time{C_r}(end)-ridge.time{C_r}(1)) / length(ridge.time{C_r});
+    freq2 = diff(ridge.pha2{C_r})./ deltaT;
+    ridge.freq2{C_r} = [freq2(1), (freq2(1:end-1)+freq2(2:end))/2, freq2(end)] / (2*pi);
+end
+
 %% frequence instantanee alternative plus lisse, en reliant les discontinuites (saut d'une freq. a une autre)
 for C_r = 1:length(ridge.time)
     FreqLeft = ridge.freq{C_r}(1:end-1);
@@ -248,11 +260,11 @@ for C_r = 1:length(ridge.time)
     Range(end)=1;
     ListFreq = [FreqLeft(1),(  FreqLeft(Range) + FreqRight(Range)  )/2]; % a chaque saut, on associe la moyenne de la freq avant et après
     ListTime = ridge.time{C_r}(logical([1,Range])); % instants associes aux sauts de freq.
-    ridge.freq2{C_r} = interp1(ListTime,ListFreq,ridge.time{C_r}); % interpolation avec ces valeurs pour tous les autres instants
+    ridge.freq3{C_r} = interp1(ListTime,ListFreq,ridge.time{C_r}); % interpolation avec ces valeurs pour tous les autres instants
     
-    ridge.freq2{C_r}(1)=ridge.freq{C_r}(1); % correction premier point
-    if isnan(ridge.freq2{C_r}(end))
-        ridge.freq2{C_r}(end)=ridge.freq{C_r}(end); % correction dernier point
+    ridge.freq3{C_r}(1)=ridge.freq{C_r}(1); % correction premier point
+    if isnan(ridge.freq3{C_r}(end))
+        ridge.freq3{C_r}(end)=ridge.freq{C_r}(end); % correction dernier point
     end
 end
 %% evaluation de la dissipation
@@ -260,17 +272,17 @@ for C_r = 1:length(ridge.time)
     % Si mesure de vitesse
     ridge.bandwidth{C_r} = -diff(log(abs(ridge.val{C_r})))*Fs; % -A'/A
     ridge.bandwidth{C_r} = [ridge.bandwidth{C_r}(1),ridge.bandwidth{C_r}]/(2*pi); % = -A'/2*pi*A
-    ridge.inv2Q{C_r} = ridge.bandwidth{C_r}./(ridge.freq2{C_r}); % = -A'/2*pi*f*A
+    ridge.inv2Q{C_r} = ridge.bandwidth{C_r}./(ridge.freq3{C_r}); % = -A'/2*pi*f*A
     
     % Si mesure d'acceleration et frequence variable
-    ridge.bandwidth2{C_r} = -diff(log(abs(ridge.val{C_r}./ridge.freq2{C_r})))*Fs; % -A'/A + f'/f
+    ridge.bandwidth2{C_r} = -diff(log(abs(ridge.val{C_r}./ridge.freq3{C_r})))*Fs; % -A'/A + f'/f
     ridge.bandwidth2{C_r} = [ridge.bandwidth2{C_r}(1),ridge.bandwidth2{C_r}]/(2*pi); % -A'/2*pi*A + f'/2*pi*f
-    ridge.inv2Q2{C_r} = ridge.bandwidth2{C_r}./(ridge.freq2{C_r}); % -A'/2*pi*A*f + f'/2*pi*f^2
+    ridge.inv2Q2{C_r} = ridge.bandwidth2{C_r}./(ridge.freq3{C_r}); % -A'/2*pi*A*f + f'/2*pi*f^2
     
     % Si mesure de deplacement et frequence variable
-    ridge.bandwidth3{C_r} = -diff(log(abs(ridge.val{C_r}.*ridge.freq2{C_r})))*Fs; % -A'/A - f'/f
+    ridge.bandwidth3{C_r} = -diff(log(abs(ridge.val{C_r}.*ridge.freq3{C_r})))*Fs; % -A'/A - f'/f
     ridge.bandwidth3{C_r} = [ridge.bandwidth3{C_r}(1),ridge.bandwidth3{C_r}]/(2*pi); % -A'/2*pi*A - f'/2*pi*f
-    ridge.inv2Q3{C_r} = ridge.bandwidth3{C_r}./(ridge.freq2{C_r}); % -A'/2*pi*A*f + f'/2*pi*f^2
+    ridge.inv2Q3{C_r} = ridge.bandwidth3{C_r}./(ridge.freq3{C_r}); % -A'/2*pi*A*f + f'/2*pi*f^2
     
 end
 

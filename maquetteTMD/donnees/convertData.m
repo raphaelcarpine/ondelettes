@@ -1,14 +1,15 @@
 folderName = 'maquetteTMD/donnees';
 
 try
-    delete([folderName, '/mData.mat']);
+    delete([folderName, '/mData.mat']); % écrasement de l'ancien fichier .mat
 catch
 end
 
 
 
-files = dir(folderName);
-filesNames = cell(size(files));
+files = dir(folderName); % récupération des fichiers du dossier
+
+filesNames = cell(size(files)); % récupération des noms des fichiers
 for ind = 1:length(files)
     filesNames{ind} = files(ind).name;
 end
@@ -17,7 +18,7 @@ firstVar = true;
 for ind = 1:length(filesNames)
     fileName = filesNames{ind};
     
-    mName = fileName;
+    mName = fileName; % nom de la variable
     if length(mName) >= 4 && isequal(mName(end-3:end), '.XLS')
         mName = mName(1:end-4);
     else
@@ -25,11 +26,11 @@ for ind = 1:length(filesNames)
     end
     
     try
-        eval([mName, '= xlsread(''', fileName, ''');']);
-        if firstVar
+        eval([mName, '= xlsread(''', fileName, ''');']); % convertion xls/variable matlab
+        if firstVar % premier fichier converti
             save([folderName, '/mData'], mName);
             firstVar = false;
-        else
+        else % suivants
             save([folderName, '/mData'], mName, '-append');
         end
     catch

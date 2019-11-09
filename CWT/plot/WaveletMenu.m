@@ -14,6 +14,11 @@ defaultQ = 1;
 defaultMaxRidges = 1;
 defaultMaxParallelRidges = 1;
 defaultMultipleAxesDisplay = false;
+defaultRidgeMinModu = 0;
+defaultCtEdgeEffects = 3;
+defaultZeroPaddingFourier = 0;
+
+
 
 checkParent = @(f) isa(f, 'matlab.ui.Figure') || isa(f, 'matlab.ui.container.Panel')...
     || isa(f, 'matlab.ui.container.Tab') || isa(f, 'matlab.ui.container.ButtonGroup');
@@ -29,6 +34,9 @@ addParameter(p,'Q', defaultQ);
 addParameter(p,'MaxRidges', defaultMaxRidges);
 addParameter(p,'MaxParallelRidges', defaultMaxParallelRidges);
 addParameter(p,'MultipleAxesDisplay', defaultMultipleAxesDisplay);
+addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
+addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
+addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 
 parse(p, varargin{:})
 
@@ -37,7 +45,7 @@ if fig == 0
     fig = figure;
     fig.Units = 'characters';
     fig.Position(3) = 65;
-    fig.Position(4) = 22;
+    fig.Position(4) = 23;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
 end
@@ -86,6 +94,9 @@ Q0 = p.Results.Q;
 MaxRidges = p.Results.MaxRidges;
 MaxParallelRidges = p.Results.MaxParallelRidges;
 multipleAxesDisplay = p.Results.MultipleAxesDisplay;
+RidgeMinModu = p.Results.RidgeMinModu;
+ctEdgeEffects = p.Results.CtEdgeEffects;
+ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 
 %% reglage affichage subpolt/simple plot
 
@@ -107,9 +118,9 @@ buttonWavelet = uicontrol('Parent',waveletPan, 'Units', 'normalized','Style','pu
 paramPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
 plotPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
 
-buttonWavelet.Position = [0.02 0.02 0.96 0.15];
-paramPan.Position = [0.02 0.19 0.4 0.79];
-plotPan.Position = [0.44 0.19 0.54 0.79];
+buttonWavelet.Position = [0.02 0.02 0.96 0.13];
+paramPan.Position = [0.02 0.16 0.4 0.81];
+plotPan.Position = [0.44 0.16 0.54 0.81];
 
 %autres transformees
 transformPan = uipanel('Parent',fig, 'Units', 'normalized');
@@ -171,7 +182,15 @@ end
 checkboxGeneral = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'general plot', 'Value', false);
 
-Checkboxs1 = checkboxGeneral;
+checkboxModule = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'module plot', 'Value', false);
+
+checkboxPhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'phase plot', 'Value', false);
+
+
+
+Checkboxs1 = [checkboxGeneral, checkboxModule, checkboxPhase];
 
 if ~isequal(plotAxes, 0)
     checkboxTimeAmplPlot = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
@@ -181,6 +200,8 @@ if ~isequal(plotAxes, 0)
     deleteButton = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','pushbutton',...
         'String', 'delete');
 end
+
+
 
 
 
@@ -261,6 +282,67 @@ end
 
 
 
+
+%% menu (autres paramètres)
+
+%autres valeurs par défault
+freqRidgeName = 'freq';
+phaseRidgeName = 'pha2';
+
+freqRidgeNames = {'freq', 'freq2'};
+phaseRidgeNames = {'pha', 'pha2'};
+
+fig.MenuBar = 'none';
+
+paramMenu = uimenu(fig,'Text','Paramètres');
+
+%freq
+freqMenu = uimenu(paramMenu, 'Text','Frequence');
+freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'maximum module', 'Checked' ,'on');
+freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'derivée phase');
+    function selectFreqMenu(kchoice)
+        for kchoices = 1:length(freqMenuChoices)
+            set(freqMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(freqMenuChoices(kchoice), 'Checked', 'on');
+        
+        freqRidgeName = freqRidgeNames{kchoice};
+    end
+set(freqMenuChoices(1), 'CallBack', @(~,~) selectFreqMenu(1));
+set(freqMenuChoices(2), 'CallBack', @(~,~) selectFreqMenu(2));
+
+%phase
+phaseMenu = uimenu(paramMenu, 'Text','Phase');
+phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bornée');
+phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continue', 'Checked' ,'on');
+    function selectPhaseMenu(kchoice)
+        for kchoices = 1:length(phaseMenuChoices)
+            set(phaseMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(phaseMenuChoices(kchoice), 'Checked', 'on');
+        
+        phaseRidgeName = phaseRidgeNames{kchoice};
+    end
+set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
+set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
+
+%zero padding fourier
+zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
+    function setZeroPaddingFourier()
+        ZeroPaddingFourier = nan;
+        while isnan(ZeroPaddingFourier)
+            ZeroPaddingFourier = inputdlg('Enter zero padding Fourier', 'zero padding Fourier');
+            try
+                ZeroPaddingFourier = str2double(ZeroPaddingFourier{1});
+                ZeroPaddingFourier = round(ZeroPaddingFourier);
+            catch
+            end
+        end
+    end
+set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
+
+
+
 %%
 
     function show()
@@ -275,14 +357,27 @@ end
         
         if checkboxGeneral.Value
             for kPlot = 1:nbPlots
-                WvltPlot(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q);
+                WvltPlot(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ctEdgeEffects', ctEdgeEffects,...
+                    'ctZeroPadding', ctEdgeEffects);
+            end
+        end
+        if checkboxModule.Value || checkboxPhase.Value
+            for kPlot = 1:nbPlots
+                wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
+                if checkboxModule.Value
+                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects);
+                end
+                if checkboxPhase.Value
+                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects);
+                end
             end
         end
         
         ridges = {};
         for kPlot = 1:nbPlots
             ridges{end+1} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
-                'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR);
+                'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects);
         end
         
         for kCheck = 1:length(Checkboxs2)
@@ -311,13 +406,13 @@ end
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxTimeFreq.Value % plot de la frequence
-                RidgeQtyPlot2(ridge, 'time', 'freq',...
+                RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                     'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(2)),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequance
-                RidgeQtyPlot2(ridge, 'val', 'freq', 'EvaluationFunctionX', 'abs',...
+                RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
                     'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(3)));
             end
@@ -333,7 +428,7 @@ end
                     'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(5)));
             end
             if checkboxTimePhase.Value % plot de la phase
-                RidgeQtyPlot2(ridge, 'time', 'pha2',...
+                RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                     'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                     'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(6)),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
@@ -407,9 +502,13 @@ end
         end
         
         for kPlot = 1:nbPlots
-            four = fft(y(kPlot,:));
-            four = four(1:end/2);
-            freqs = linspace(0, length(four)/(x(end)-x(1)), length(four));
+            Xfour = x;
+            Yfour = y(kPlot,:);
+            Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+            Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
+            four = fft(Yfour);
+            four = four(1:floor(end/2));
+            freqs = linspace(0, length(four)/Tfour, length(four));
             hold(fourierPlotAxes(kPlot), 'on');
             plot(freqs, abs(four), 'Parent', fourierPlotAxes(kPlot));
             hold(fourierPlotAxes(kPlot), 'off');

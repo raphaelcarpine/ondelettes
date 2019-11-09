@@ -10,6 +10,7 @@ defaultEq = 'a*x+b';
 defaultParam = 'a b';
 defaultParam0 = '1 1';
 defaultFit = 'y';
+defaultBounds = '-inf inf';
 defaultFigureName = 'Regression';
 
 paramPrecision = 1e-6;
@@ -19,6 +20,7 @@ addOptional(p, 'Equation', defaultEq);
 addOptional(p, 'Param', defaultParam);
 addOptional(p, 'Param0', defaultParam0);
 addOptional(p, 'Fit', defaultFit);
+addOptional(p, 'Bounds', defaultBounds);
 addOptional(p, 'FigureName', defaultFigureName);
 
 parse(p, varargin{:});
@@ -27,17 +29,18 @@ eq = p.Results.Equation;
 param = p.Results.Param;
 param0 = p.Results.Param0;
 fit = p.Results.Fit;
-FigureName = p.Results.FigureName;
+figureName = p.Results.FigureName;
+bounds = p.Results.Bounds;
 
 param0 = num2str(param0, numericPrecision);
 
 parameters = nan;
 %%
 
-fig = figure('Name', FigureName);
+fig = figure('Name', figureName);
 fig.Units = 'characters';
-fig.Position(3) = 65;
-fig.Position(4) = 22;
+fig.Position(3) = 70;
+fig.Position(4) = 25;
 fig.MenuBar = 'none';
 
 
@@ -131,8 +134,10 @@ param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'St
 param0Edit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param0);
 fitStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'fit :');
 fitEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', fit);
+boundsStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'bounds :');
+boundsEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', bounds);
 
-nLign = 4;
+nLign = 5;
 marge = 0.02;
 h = (1-(nLign+1)*marge)/nLign;
 H = h+marge;
@@ -144,6 +149,8 @@ param0Str.Position = [0.01, 1-3*H, 0.2, h];
 param0Edit.Position = [0.22, 1-3*H, 0.77, h];
 fitStr.Position = [0.01, 1-4*H, 0.2, h];
 fitEdit.Position = [0.22, 1-4*H, 0.77, h];
+boundsStr.Position = [0.01, 1-5*H, 0.2, h];
+boundsEdit.Position = [0.22, 1-5*H, 0.77, h];
 
 
 %% options
@@ -237,8 +244,18 @@ ax = 0;
             X = X(~isnan(X));
             Y = Y(~isnan(X));
             
+            % bounds
+            Bounds = boundsEdit.String;
+            Bounds = strsplit(Bounds);
+            for iBounds = 1:2
+                Bounds{iBounds} = eval(Bounds{iBounds});
+            end
+            Bounds = [Bounds{:}];
+            Y = Y(X>=Bounds(1) & X<=Bounds(2));
+            X = X(X>=Bounds(1) & X<=Bounds(2));
+            
             ax = get(line, 'Parent');
-            ok = true;
+            ok = ~isempty(X);
         else
             ok = false;
         end

@@ -2,7 +2,7 @@
 function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
 p = inputParser ;
 %% parametres par defaut
-ZeroPaddingDef = 1;
+ZeroPaddingDef = true;
 CenterSignalDef = false;
 ctDef = 3;
 %%
@@ -34,7 +34,7 @@ Fs = 1/mean(diff(X)); %Frequence d'echantillonage
 Diff = diff(X);
 Diff = Diff/Diff(1);
 if max(abs(Diff-1)) > 1e-5
-    warning(['pas de temps non constant\nerreur : ', num2str(max(abs(Diff-1)))]);
+    warning(['pas de temps non constant, erreur : ', num2str(max(abs(Diff-1)))]);
 end
 
 if ~iscolumn(Y)
@@ -53,7 +53,7 @@ for CQ=1:length(Qin)
     %% Choix du nb de zeros a ajouter pour chaque freq. de calcul de la CWT
     n=length(X);
     
-    if ZeroPadding==0
+    if ~ZeroPadding
         N0=2*ceil(n/2); %multiple de 2 tout juste superieur (plus facile de gerer la periodicite de la fft)
         NbSet = 1; %un seul set de calcul
         NSet = N0; %nb de points pour fft

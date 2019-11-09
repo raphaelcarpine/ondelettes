@@ -6,6 +6,8 @@ Fa = transpose(Fa);
 Fa = Fa(1,:) + 1i*Fa(2,:);
 
 a = real(ifft(Fa));
+%a = [a, zeros(1, 9*length(a))];
+
 t = 1/400 * (1:length(a));
 
 %% t0
