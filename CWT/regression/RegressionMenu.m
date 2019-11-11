@@ -370,6 +370,7 @@ ax = 0;
         if optBut.onaxes.Value
             plotAxes = ax;
             hold(plotAxes, 'on');
+            ylim(ax, 'manual');
             onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)), 'r--')];
             uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
             hold(plotAxes, 'off');
