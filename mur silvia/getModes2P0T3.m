@@ -182,14 +182,30 @@ for sensor = 1:9
     
     paramValue04 = [paramValue01(1:4), paramValue02(1:2), paramValue03];
     
-    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', 1e6,...
-        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
+    
+    % détermination de MaxFunctionEvaluations, pour ne pas calculer plus
+    % de 30s
+    tic
+    for k = 1:100
+        S(paramValue04);
+    end
+    T100 = toc;
+    
+    maxFunctionEval = round(30*100/T100);
+    
+    
+    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', inf,...
+        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', maxFunctionEval, 'FunctionTolerance', 0);
     
     lb = ones(size(paramValue04))*(-inf);
     ub = ones(size(paramValue04))*inf;
     
-    p1 = lsqnonlin(S, paramValue04, lb, ub, optionsReg);
-    
+    try
+        p1 = lsqnonlin(S, paramValue04, lb, ub, optionsReg);
+    catch
+        p1 = zeros(1, 8);
+    end
+        
     disp(['a1 = ', num2str(p1(1), 6)]);
     disp(['lambda1 = ', num2str(p1(3), 6)]);
     disp(['w1 = ', num2str(p1(5), 6), ' ; f1 = ', num2str(p1(5)/2/pi, 6)]);
@@ -232,7 +248,7 @@ end
 
 %% test
 
-mode = 1;
+mode = 2;
 
 shapes0 = shapes{mode};
 
@@ -248,15 +264,33 @@ for k=1:9
     hold on
 end
 
-figure;
-hold on
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
 circle = exp(1i*linspace(0, 2*pi, 30));
-for k=1:9
-    p0 = 2*mod(k-1, 3) + 2*1i*(3-fix((k-1)/3));
-    p1 = p0 + shapes0(k);
-    plot(real(p0 + circle), imag(p0 + circle), 'black');
-    plot(real([p0 p1]), imag([p0, p1]), '-o');
+plot([-1, 5], [0, 0], '--', 'Color', [0, 0, 0, 0.5]);
+plot([-1, 5], [2, 2], '--', 'Color', [0, 0, 0, 0.5]);
+plot([-1, 5], [4, 4], '--', 'Color', [0, 0, 0, 0.5]);
+plot([0, 0], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+plot([2, 2], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+plot([4, 4], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+for kx = 0:2
+    for ky = 0:2
+        p0 = 2*kx + 2*1i*(2-ky);
+        p1 = p0 + shapes0(3*ky+kx+1);
+        plot(real(p0 + circle), imag(p0 + circle), 'black');
+        colorI = get(gca,'ColorOrderIndex');
+        plot(real([p0 p1]), imag([p0, p1]), 'r', 'LineWidth', 2);
+        set(gca,'ColorOrderIndex', colorI);
+        plot(real(p1), imag(p1) , 'ro', 'LineWidth', 2);
+    end
 end
+
+axis equal;
+ax.Position = ax.OuterPosition;
+% fig.Position = 40*ones(1, 4) + ax.Position;
+
+axis off
 
 pbaspect(gca, [1 1 1]);
 

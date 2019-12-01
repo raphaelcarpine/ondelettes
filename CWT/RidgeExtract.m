@@ -215,17 +215,17 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
 end
 %% retrait des ridges trop courts
 d_r=0;
-for C_r=1:length(ridge.time)
-    if length(ridge.time{C_r-d_r})<=LengthMin        
-        FieldList = fieldnames(ridge);
-        for C_Field = 1:length(FieldList)
-            FieldName = FieldList{C_Field};
-            ridge.(FieldName)=ridge.(FieldName)([1:C_r-d_r-1,C_r-d_r+1:length(ridge.(FieldName))]);
-        end
-        
-        d_r=d_r+1;
-    end
-end
+% for C_r=1:length(ridge.time)
+%     if length(ridge.time{C_r-d_r})<=LengthMin        
+%         FieldList = fieldnames(ridge);
+%         for C_Field = 1:length(FieldList)
+%             FieldName = FieldList{C_Field};
+%             ridge.(FieldName)=ridge.(FieldName)([1:C_r-d_r-1, C_r-d_r+1:length(ridge.(FieldName))]);
+%         end
+%         
+%         d_r=d_r+1;
+%     end
+% end
 
 if isempty(ridge.time)
     return

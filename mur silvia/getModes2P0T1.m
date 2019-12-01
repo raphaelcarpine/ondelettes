@@ -188,7 +188,11 @@ for sensor = 1:9
     lb = ones(size(paramValue04))*(-inf);
     ub = ones(size(paramValue04))*inf;
     
-    p1 = lsqnonlin(S, paramValue04, lb, ub, optionsReg);
+    try
+        p1 = lsqnonlin(S, paramValue04, lb, ub, optionsReg);
+    catch
+        p1 = zeros(1, 8);
+    end
     
     disp(['a1 = ', num2str(p1(1), 6)]);
     disp(['lambda1 = ', num2str(p1(3), 6)]);

@@ -1,0 +1,4 @@
+grp1 : 0 kg
+grp2 : 0.371 kg
+grp3 : 0.186 kg
+grp4 : 1.7756 kg

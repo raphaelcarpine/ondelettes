@@ -56,26 +56,36 @@ end
 
 
 
-[t, freqs, shapes, errors, ridgesNumber] = getModes(ridges);
+[t, freq, freqs, shapes, amplitudes, errors, ridgesNumber] = getModes(ridges, 4);
 
 
 mode = 1;
 
-% figure;
-% plot(t{mode}, abs(shapes{mode}));
-% ylabel('|T|');
-% figure;
-% plot(t{mode}, angle(shapes{mode}));
-% ylabel('arg(T)');
+figure;
+plot(t{mode}, angle(shapes{mode}*exp(-1i*pi/2)) + pi/2);
+ylabel('arg(T)');
 figure;
 plot(t{mode}, real(shapes{mode}));
 ylabel('Re(T)');
 figure;
 plot(t{mode}, imag(shapes{mode}));
 ylabel('Im(T)');
+figure;
+plot(t{mode}, abs(amplitudes{mode}));
+ylabel('|A|');
+
+% figure;
+% plot(t{mode}, real(amplitudes{mode}));
+% ylabel('Re(A)');
+
+figure;
+plot(t{mode}, freq{mode});
+ylabel('f');
+
 
 figure;
 plot(t{mode}, freqs{mode});
+ylabel('f');
 
 
 
