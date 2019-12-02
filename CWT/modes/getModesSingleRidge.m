@@ -1,4 +1,4 @@
-function [t, freq, shapes, amplitudes] = getModesSingleRidge(X, Y, Q, fmin, fmax, NbFreq)
+function [t, freq, shapes, amplitudes] = getModesSingleRidge(X, Y, Q, fmin, fmax, NbFreq, varargin)
 %GETMODES Summary of this function goes here
 %   X = t
 %   Y(ddl, kt)
@@ -20,7 +20,7 @@ for kddl = 1:Nddl
     wvlt2 = wvlt2 + wvlt{kddl}.^2;
 end
 
-Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2);
+Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, varargin{:});
 
 %%
 Nridges = length(Ridges.time);

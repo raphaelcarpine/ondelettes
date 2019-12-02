@@ -4,13 +4,14 @@ p = inputParser ;
 %% parametres par defaut
 etDef = 1;
 efDef = 1;
+slopeRidgeDef = 0.5;
 ctLeftDef = 3;
 ctRightDef = 3;
 % ctLeftDef = 0;
 % ctRightDef = 0;
 NbMaxRidgesDef = 100;
 NbMaxParallelRidgesDef = 1;
-MinModuDef = 0; % réel ou 'n*noise' avec n>=0
+MinModuDef = 0;
 LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
 WaveletDef = nan;
@@ -24,6 +25,7 @@ addRequired(p,'fmax')
 addRequired(p,'NbFreq')
 addParameter(p,'et',etDef);
 addParameter(p,'ef',efDef);
+addParameter(p,'slopeRidge',slopeRidgeDef);
 addParameter(p,'ctLeft',ctLeftDef);
 addParameter(p,'ctRight',ctRightDef);
 addParameter(p,'NbMaxRidges',NbMaxRidgesDef);
@@ -38,6 +40,7 @@ parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
 %
 et = p.Results.et ;
 ef = p.Results.ef ;
+slopeRidge = p.Results.slopeRidge ;
 ctLeft =  p.Results.ctLeft;
 ctRight =  p.Results.ctRight;
 NbMaxRidges = p.Results.NbMaxRidges;
@@ -96,13 +99,16 @@ RangeRight = bsxfun(@plus,X,transpose(DeltaTimeRight))<X(end); % Zone d'effets d
 mesuEdge = mesu;
 mesuEdge(~(RangeLeft&RangeRight))=NaN; % Max locaux hors zone effets de bord seulement
 %% si Y_in = 0 au debut ou fin : zero-padding non voulu. On le retire
-if ~isnan(Y)
-    IndBegin = find(Y~=0,1); % eventuel zero-padding ou apparente (succession de 0 au début du signal)
-    IndEnd = find(Y~=0,1,'last');% Idem fin de signal
-else
-    IndBegin = 1;
-    IndEnd = length(X);
-end
+% if ~isnan(Y)
+%     IndBegin = find(Y~=0,1); % eventuel zero-padding ou apparente (succession de 0 au début du signal)
+%     IndEnd = find(Y~=0,1,'last');% Idem fin de signal
+% else
+%     IndBegin = 1;
+%     IndEnd = length(X);
+% end
+
+IndBegin = 1;
+IndEnd = length(X);
 
 %%
 Fs=1/mean(X(2:end)-X(1:end-1)); %Freq echantillonnage
@@ -111,7 +117,7 @@ if iscolumn(X)
     X=transpose(X); % X_in en ligne
 end
 %%
-[ny,nx]=size(mesu); % ny = nb de freq de CWT, nx = nb de points du signal
+[ny,nx] = size(mesu); % ny = nb de freq de CWT, nx = nb de points du signal
 
 %%
 ridge.time = {};
@@ -138,7 +144,9 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     C_ind = 2;
     while (ridge.time{C_r}(C_ind-1)+et<=nx) % On chaine vers l'avant
         
-        [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
+        ef = ceil (slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / Fs); % pente max dans le plan tps-freq
+        
+        [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny), bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
         
         [a,b] = ind2sub([ef*2+1,et],I1(I2)) ; % Conversion en indices
@@ -146,14 +154,14 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
         I_f = bound(a + ind_freq(C_ind-1) - ef - 1,1,ny) ; %Correction des indices de freq.
         I_t = b + ridge.time{C_r}(C_ind-1) ; % Correction des indices d'instant
         
-        if (M2 <= MinModu)||(isnan(M2))||(I_f==1)||(I_f==ny) % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
+        if (M2 <= MinModu)||(isnan(M2)) || (I_f==1) || (I_f==ny) % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
             break
         else
             ind_freq(C_ind) = I_f ; % Assignation freq.
             ridge.time{C_r}(C_ind) = I_t ; % Assignation instant
             ridge.val{C_r}(C_ind)  = wavelet(I_f,I_t) ; % Assignation valeur
             
-            C_ind = C_ind+1; % Increment
+            C_ind = C_ind + 1; % Increment
         end
     end
     NoNaN = ~isnan(ridge.time{C_r}); % On liste les instants ou on a identifier le ridge jusqu'ici
@@ -162,6 +170,8 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     ridge.val{C_r}(NoNaN) = flip(ridge.val{C_r}(NoNaN)); % idem valeurs
     
     while ridge.time{C_r}(C_ind-1)-et>=1 %On chaine vers l'arrière
+        
+        ef = ceil (slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / Fs); % pente max dans le plan tps-freq
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)-(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
