@@ -79,16 +79,15 @@ for kr = 1:Nridges
         
         ampl = sqrt(transpose(shape) * shape);
         
+        if k == 1 && real(shape(1)) < 0
+            shape = -shape;
+        end
+        
         if kt > 1 && abs(-ampl-amplitudes{kr}(kt-1)) < abs(ampl-amplitudes{kr}(kt-1))
             ampl = -ampl;
         end
         
         shape = shape / ampl;
-        
-        if kt == 1 && real(shape(1)) < 0
-            ampl = -ampl;
-            shape = -shape;
-        end
         
         shapes{kr}(:, kt) = shape;
         amplitudes{kr}(kt) = ampl;

@@ -237,9 +237,23 @@ d_r=0;
 %     end
 % end
 
+%% arret si pas de ridge et retrait des ridges vides
+
 if isempty(ridge.time)
     return
 end
+
+C_r = 1;
+while C_r <= length(ridge.time)
+    if length(ridge.time{C_r}) <= 1
+        ridge.time(C_r) = [];
+        ridge.freq(C_r) = [];
+        ridge.val(C_r) = [];
+    else
+        C_r = C_r+1;
+    end
+end
+
 %% Calcul de la phase (argument complexe) et de la fréquence dérivée de la phase
 for C_r = 1:length(ridge.time)
     ridge.pha{C_r} = angle(ridge.val{C_r});

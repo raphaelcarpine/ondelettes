@@ -1,6 +1,6 @@
 %etape et transient
-P = 0;
-transient = 2;
+P = 6;
+transient = 1;
 
 t0 = 0;
 tf = inf;
@@ -34,11 +34,11 @@ plts = transpose(plts);
 
 
 %ondelette
-Q = 50;
-MaxRidges = 10;
-MaxParallelRidges = 3;
-fmin = 60;
-fmax = 80;
+Q = 30;
+MaxRidges = 2;
+MaxParallelRidges = 2;
+fmin = 7;
+fmax = 13;
 NbFreq = 300;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
@@ -60,12 +60,15 @@ for mode = 1:length(t)
     hold on
     plot(t{mode}, zeros(size(t{mode})), 'black--');
     plot(t{mode}, pi*ones(size(t{mode})), 'black--');
+    xlabel('t');
     ylabel('arg(T)');
     figure;
-    plot(t{mode}, real(shapes{mode}));
+    plot(abs(amplitudes{mode}), real(shapes{mode}));
+    xlabel('|A|');
     ylabel('Re(T)');
     figure;
-    plot(t{mode}, imag(shapes{mode}));
+    plot(abs(amplitudes{mode}), imag(shapes{mode}));
+    xlabel('|A|');
     ylabel('Im(T)');
     figure;
     plot(t{mode}, abs(amplitudes{mode}));
