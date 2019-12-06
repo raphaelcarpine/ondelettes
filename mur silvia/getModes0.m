@@ -1,6 +1,6 @@
 %etape et transient
-P = 6;
-transient = 1;
+P = 0;
+transient = 3;
 
 t0 = 0;
 tf = inf;
@@ -23,7 +23,7 @@ t = t(t>=t0 & t<tf);
 %     plts(i) = plot(t, X(i,:), 'Parent', ax);
 % end
 
-sensors = 1:9;
+sensors = 1;
 
 
 
@@ -34,16 +34,32 @@ plts = transpose(plts);
 
 
 %ondelette
-Q = 30;
+Q =30;
 MaxRidges = 2;
 MaxParallelRidges = 2;
-fmin = 7;
-fmax = 13;
+fmin = 32;
+fmax = 46;
 NbFreq = 300;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
     'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges);
 
+
+%% choix de Q
+
+Df = 3;
+f = 35.5;
+Dt = 1.7;
+
+T = t(end) - t(1);
+
+[Qmin, Qmax, Qz] = getBoundsQ(f, Df, Dt, T);
+
+disp(['Qmin = ', num2str(Qmin)]);
+disp(['Qmax = ', num2str(Qmax)]);
+disp(['Qz = ', num2str(Qz)]);
+
+Q = (Qmin + min(Qmax, Qz)) / 2;
 
 
 %% test
