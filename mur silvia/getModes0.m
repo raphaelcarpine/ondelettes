@@ -58,24 +58,45 @@ T = t(end) - t(1);
 disp(['Qmin = ', num2str(Qmin)]);
 disp(['Qmax = ', num2str(Qmax)]);
 disp(['Qz = ', num2str(Qz)]);
+disp('');
 
 Q = (Qmin + min(Qmax, Qz)) / 2;
 
 
 %% test
 
-[t, freq, shapes, amplitudes] = getModesSingleRidge(t, X, Q, fmin, fmax, NbFreq,...
+[time, freq, shape, amplitude] = getModesSingleRidge(t, X, Q, fmin, fmax, NbFreq,...
     'NbMaxRidges', MaxRidges, 'NbMaxParallelRidges', MaxParallelRidges);
+
 
 %%
 
-for mode = 1:length(t)
+meanFreq = cell(size(freq));
+meanShape = cell(size(shape));
+zeta = cell(size(amplitude));
+for kr = 1:length(time)
+    meanFreq{kr} = mean(freq{kr});
+    meanShape{kr} = mean(shape{kr}, 2);
+    fig = figure;
+    plot(time{kr}, abs(amplitude{kr}));
+    Alambda = RegressionMenu('Equation', 'a*exp(-lambda*x)', 'Param', 'a lambda',...
+        'Param0', '1 1');
+    delete(fig);
+    zeta{kr} = Alambda(2) / (2*pi*meanFreq{kr});
+end
+
+
+
+
+%%
+
+for mode = 1:length(time)
     
     figure;
-    plot(t{mode}, angle(shapes{mode}*exp(-1i*pi/2)) + pi/2);
+    plot(time{mode}, angle(shapes{mode}*exp(-1i*pi/2)) + pi/2);
     hold on
-    plot(t{mode}, zeros(size(t{mode})), 'black--');
-    plot(t{mode}, pi*ones(size(t{mode})), 'black--');
+    plot(time{mode}, zeros(size(time{mode})), 'black--');
+    plot(time{mode}, pi*ones(size(time{mode})), 'black--');
     xlabel('t');
     ylabel('arg(T)');
     figure;
@@ -87,7 +108,7 @@ for mode = 1:length(t)
     xlabel('|A|');
     ylabel('Im(T)');
     figure;
-    plot(t{mode}, abs(amplitudes{mode}));
+    plot(time{mode}, abs(amplitudes{mode}));
     ylabel('|A|');
     
     % figure;
@@ -95,23 +116,17 @@ for mode = 1:length(t)
     % ylabel('Re(A)');
     
     figure;
-    plot(t{mode}, freq{mode});
+    plot(time{mode}, freq{mode});
     ylabel('f');
     
     
     
     
     
-    shapes0 = nan(1, 9);
-    for k = 1:9
-        shapet = shapes{mode}(k,:);
-        shapes0(k) = mean(shapet(~isnan(shapet)));
-        if isnan(shapes0(k))
-            shapes0(k) = 0;
-        end
-    end
+    shapes0 = meanShape{mode};
     
-    plotModShape(real(shapes0));
+    plotModShape(real(shapes0), ['freq : ', num2str(freq{mode}),...
+        ' ; amort. : ', num2str(zeta{mode})]);
     
     
     

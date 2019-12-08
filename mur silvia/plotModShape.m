@@ -1,8 +1,11 @@
-function plt = plotModShape(shape)
+function plt = plotModShape(shape, figTitle)
 %PLOTMODSHAPE Plot the modale shape 
 %   Detailed explanation goes here
 
 
+if nargin < 2
+    figTitle = '';
+end
 if nargin < 1 % exemple
     shape = [1.0000, -0.0027, -0.9622, 0.6654, -0.0474, -0.7961, 0.4438, -0.0047, -0.0557];
 end
@@ -40,7 +43,7 @@ shape2 = interp2(X, Y, shape, x, y, 'makima'); %, 'spline'
 
 %% affichage
 
-fig = figure;
+fig = figure('Name', figTitle);
 ax = axes(fig);
 hold(ax, 'on');
 plt = surf(ax, x, shape2, y, shape2, 'EdgeColor', 'none');

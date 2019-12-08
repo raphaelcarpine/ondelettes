@@ -245,6 +245,11 @@ end
 
 C_r = 1;
 while C_r <= length(ridge.time)
+    indNotNan = ~isnan(ridge.freq{C_r}); % on supprime les zones vides
+    ridge.time{C_r} = ridge.time{C_r}(indNotNan);
+    ridge.freq{C_r} = ridge.freq{C_r}(indNotNan);
+    ridge.val{C_r} = ridge.val{C_r}(indNotNan);
+    
     if length(ridge.time{C_r}) <= 1
         ridge.time(C_r) = [];
         ridge.freq(C_r) = [];
@@ -343,16 +348,22 @@ for C_r = 1:length(ridge.time)
     
 end
 %% Retrait des ridges entierement dans la zone d'effets de bord
-d_r=0;
-for C_r=1:length(ridge.time)
+C_r=1;
+while  C_r <= length(ridge.time)
     if all(isnan(ridge.val{C_r-d_r}))
         FieldList = fieldnames(ridge);
         
         for C_Field = 1:length(FieldList)
             FieldName = FieldList{C_Field};
-            ridge.(FieldName) = ridge.(FieldName)([1:C_r-d_r-1,C_r-d_r+1:length(ridge.(FieldName))]);
+            ridge.(FieldName) = ridge.(FieldName)([1:C_r-1, C_r +1:length(ridge.(FieldName))]);
         end
+    else
+        indNotNan = ~isnan(ridge.freq{C_r}); % on supprime les zones vides
         
-        d_r=d_r+1;
+        for C_Field = 1:length(FieldList)
+            FieldName = FieldList{C_Field};
+            ridge.(FieldName){C_r} = ridge.(FieldName){C_r}(indNotNan);
+        end
+        C_r = C_r + 1;
     end
 end
