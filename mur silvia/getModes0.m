@@ -23,7 +23,7 @@ t = t(t>=t0 & t<tf);
 %     plts(i) = plot(t, X(i,:), 'Parent', ax);
 % end
 
-sensors = 1;
+sensors = 1:9;
 
 
 
@@ -40,9 +40,10 @@ MaxParallelRidges = 2;
 fmin = 32;
 fmax = 46;
 NbFreq = 300;
+ct = 5;
 
-WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
-    'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges);
+WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
 
 
 %% choix de Q
@@ -66,7 +67,8 @@ Q = (Qmin + min(Qmax, Qz)) / 2;
 %% test
 
 [time, freq, shape, amplitude] = getModesSingleRidge(t, X, Q, fmin, fmax, NbFreq,...
-    'NbMaxRidges', MaxRidges, 'NbMaxParallelRidges', MaxParallelRidges);
+    'NbMaxRidges', MaxRidges, 'NbMaxParallelRidges', MaxParallelRidges,...
+    'ctLeft', ct, 'ctRight', ct);
 
 
 %%
@@ -93,22 +95,22 @@ end
 for mode = 1:length(time)
     
     figure;
-    plot(time{mode}, angle(shapes{mode}*exp(-1i*pi/2)) + pi/2);
+    plot(time{mode}, angle(shape{mode}*exp(-1i*pi/2)) + pi/2);
     hold on
     plot(time{mode}, zeros(size(time{mode})), 'black--');
     plot(time{mode}, pi*ones(size(time{mode})), 'black--');
     xlabel('t');
     ylabel('arg(T)');
     figure;
-    plot(abs(amplitudes{mode}), real(shapes{mode}));
+    plot(abs(amplitude{mode}), real(shape{mode}));
     xlabel('|A|');
     ylabel('Re(T)');
     figure;
-    plot(abs(amplitudes{mode}), imag(shapes{mode}));
+    plot(abs(amplitude{mode}), imag(shape{mode}));
     xlabel('|A|');
     ylabel('Im(T)');
     figure;
-    plot(time{mode}, abs(amplitudes{mode}));
+    plot(time{mode}, abs(amplitude{mode}));
     ylabel('|A|');
     
     % figure;
@@ -123,9 +125,9 @@ for mode = 1:length(time)
     
     
     
-    shapes0 = meanShape{mode};
+    shape0 = meanShape{mode};
     
-    plotModShape(real(shapes0), ['freq : ', num2str(freq{mode}),...
+    plotModShape(real(shape0), ['freq : ', num2str(meanFreq{mode}),...
         ' ; amort. : ', num2str(zeta{mode})]);
     
     
@@ -133,7 +135,7 @@ for mode = 1:length(time)
     
     figure;
     for k=1:9
-        polarplot([0, shapes0(k)], '-o');
+        polarplot([0, shape0(k)], '-o');
         hold on
     end
     
@@ -142,7 +144,7 @@ for mode = 1:length(time)
     circle = exp(1i*linspace(0, 2*pi, 30));
     for k=1:9
         p0 = 2*mod(k-1, 3) + 2*1i*(3-fix((k-1)/3));
-        p1 = p0 + shapes0(k);
+        p1 = p0 + shape0(k);
         plot(real(p0 + circle), imag(p0 + circle), 'black');
         plot(real([p0 p1]), imag([p0, p1]), '-o');
     end

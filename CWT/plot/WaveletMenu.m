@@ -45,7 +45,7 @@ if fig == 0
     fig = figure;
     fig.Units = 'characters';
     fig.Position(3) = 65;
-    fig.Position(4) = 23;
+    fig.Position(4) = 25;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
 end
