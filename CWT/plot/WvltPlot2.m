@@ -20,7 +20,7 @@ hold(ax, 'on');
 
 if isequal(plotQuantity, 'module')
     wavelet = moduleScale(abs(wavelet));
-    plt = pcolor(T, Freqs, wavelet);
+    plt = pcolor(ax, T, Freqs, wavelet);
     colormap(ax, jet);
 elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
     wavelet = angle(wavelet);
