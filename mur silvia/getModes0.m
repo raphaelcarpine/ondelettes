@@ -1,6 +1,6 @@
 %etape et transient
 P = 0;
-transient = 3;
+transient = 1;
 
 t0 = 0;
 tf = inf;
@@ -12,6 +12,31 @@ X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
 
 
+X1 = exp(2i*pi*33.9*t) .* exp(- 0.0051*2*pi*33.9*t);
+
+X1 = [0.5587 - 0.0295i
+  -0.0026 - 0.0307i
+  -0.5400 - 0.0327i
+   0.3721 - 0.0224i
+  -0.0280 - 0.0249i
+  -0.4466 - 0.0248i
+   0.2481 - 0.0184i
+  -0.0027 - 0.0007i
+  -0.0309 + 0.0042i] * X1;
+
+X2 = exp(2i*pi*36.8*t + 1) .* exp(- 0.0065*2*pi*36.8*t);
+
+X2 = [0.6162 - 0.0017i
+   0.0447 - 0.0037i
+  -0.4815 - 0.0105i
+   0.3967 - 0.0064i
+   0.0045 + 0.0018i
+  -0.4021 + 0.0015i
+   0.2585 - 0.0022i
+  -0.0002 + 0.0003i
+  -0.0287 + 0.0059i] * X2;
+
+%X = real(X1 + X2);
 
 
 
@@ -37,10 +62,10 @@ plts = transpose(plts);
 Q =30;
 MaxRidges = 2;
 MaxParallelRidges = 2;
-fmin = 32;
+fmin = 28;
 fmax = 46;
 NbFreq = 300;
-ct = 5;
+ct = 3;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
@@ -147,6 +172,7 @@ for mode = 1:length(time)
         p1 = p0 + shape0(k);
         plot(real(p0 + circle), imag(p0 + circle), 'black');
         plot(real([p0 p1]), imag([p0, p1]), '-o');
+        text(real(p0), imag(p0), num2str(k));
     end
     
     pbaspect(gca, [1 1 1]);
