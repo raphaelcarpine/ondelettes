@@ -1,6 +1,6 @@
 %etape et transient
-P = 0;
-transient = 3;
+P = 7;
+transient = 0;
 
 t0 = 0;
 tf = inf;
@@ -48,7 +48,7 @@ X2 = [0.6162 - 0.0017i
 %     plts(i) = plot(t, X(i,:), 'Parent', ax);
 % end
 
-sensors = 1;
+sensors = 1:9;
 
 
 
@@ -60,10 +60,10 @@ plts = transpose(plts);
 
 %ondelette
 Q = 30;
-MaxRidges = 2;
-MaxParallelRidges = 2;
-fmin = 28;
-fmax = 46;
+MaxRidges = 1;
+MaxParallelRidges = 1;
+fmin = 26;
+fmax = 30;
 NbFreq = 300;
 ct = 3;
 cf = 5;
@@ -74,8 +74,8 @@ WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,..
 
 %% choix de Q
 
-Df = 3;
-f = 35.5;
+Df = 2.5;
+f = 28.5;
 Dt = 1.7;
 
 T = t(end) - t(1);
@@ -166,24 +166,48 @@ for mode = 1:length(time)
         hold on
     end
     
-    figure;
+    figure('Position', [400 300 450 450]);
     hold on
     circle = exp(1i*linspace(0, 2*pi, 30));
+    circle2 = 1/2 * exp(1i*linspace(0, 2*pi, 30));
+    l0 = linspace(-1, 1, 2);
+    l30 = exp(1i*pi/6) * l0;
+    l60 = exp(1i*pi/3) * l0;
+    l90 = exp(1i*pi/2) * l0;
+    l120 = exp(2i*pi/3) * l0;
+    l150 = exp(5i*pi/6) * l0;
     for k=1:9
         p0 = 2*mod(k-1, 3) + 2*1i*(3-fix((k-1)/3));
         p1 = p0 + shape0(k);
+        grey = 0.9;
+        plot(real(p0 + circle2), imag(p0 + circle2), 'color', grey+[0 0 0]);
+        plot(real(p0 + l0), imag(p0 + l0), 'color', grey+[0 0 0]);
+        plot(real(p0 + l30), imag(p0 + l30), 'color', grey+[0 0 0]);
+        plot(real(p0 + l60), imag(p0 + l60), 'color', grey+[0 0 0]);
+        plot(real(p0 + l90), imag(p0 + l90), 'color', grey+[0 0 0]);
+        plot(real(p0 + l120), imag(p0 + l120), 'color', grey+[0 0 0]);
+        plot(real(p0 + l150), imag(p0 + l150), 'color', grey+[0 0 0]);
         plot(real(p0 + circle), imag(p0 + circle), 'black');
         plot(real([p0 p1]), imag([p0, p1]), '-o');
-        text(real(p0), imag(p0), num2str(k));
+        text(real(p0), imag(p0)+0.5, ['ch', num2str(k)]);
     end
     
     pbaspect(gca, [1 1 1]);
+    axis off
 
 
 end
 
 
-
+%% enregistrement
+% 
+% enregistrement = input('enregistrer ?');
+% 
+% if ~enregistrement
+%     return
+% end
+% 
+% title = ['P', num2str(P), 'T', num2str(transient), 
 
 
 

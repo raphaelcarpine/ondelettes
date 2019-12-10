@@ -17,6 +17,7 @@ defaultMultipleAxesDisplay = false;
 defaultRidgeMinModu = 0;
 defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
+defaultMultiSignalMode = false;
 
 
 
@@ -37,6 +38,7 @@ addParameter(p,'MultipleAxesDisplay', defaultMultipleAxesDisplay);
 addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
+addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 
 parse(p, varargin{:})
 
@@ -97,6 +99,7 @@ multipleAxesDisplay = p.Results.MultipleAxesDisplay;
 RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
+multiSignalMode = p.Results.MultiSignalMode;
 
 %% reglage affichage subpolt/simple plot
 
@@ -105,6 +108,15 @@ if multipleAxesDisplay
 else
     subplot0 = @(i,j,k,ax) ax;
 end
+
+    function setMultipleAxesDisplay(value)
+        multipleAxesDisplay = value;
+        if multipleAxesDisplay
+            subplot0 = @(i,j,k,ax) subplot(i,j,k,ax);
+        else
+            subplot0 = @(i,j,k,ax) ax;
+        end
+    end
 
 
 %% bouton ondelettes et panneaux param et sorties
@@ -341,6 +353,35 @@ zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
     end
 set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
 
+%multipleAxesDisplay
+
+multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','multiple axes', 'Checked', multipleAxesDisplay);
+    function switchMultipleAxesDisplay(~, ~)
+        if strcmp(multipleAxesDisplayMenu.Checked, 'on')
+            multipleAxesDisplayMenu.Checked = false;
+            setMultipleAxesDisplay(false);
+        else
+            multipleAxesDisplayMenu.Checked = true;
+            setMultipleAxesDisplay(true);
+        end
+    end
+
+multipleAxesDisplayMenu.MenuSelectedFcn = @switchMultipleAxesDisplay;
+
+%multiSignalMode
+
+multiSignalModeMenu = uimenu(paramMenu, 'Text','multi signal mode', 'Checked', multiSignalMode);
+    function switchMultiSignalModeDisplay(~, ~)
+        if strcmp(multiSignalModeMenu.Checked, 'on')
+            multiSignalModeMenu.Checked = false;
+            multiSignalMode = false;
+        else
+            multiSignalModeMenu.Checked = true;
+            multiSignalMode = true;
+        end
+    end
+
+multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
 
 %%
@@ -484,10 +525,12 @@ set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
     function fourierTransform()
         x = getX();
         y = getY();
+        fmin = eval(get(editfmin, 'String'));
+        fmax = eval(get(editfmax, 'String'));
         
         ffourier = figure;
         fourierPlotAxes = [];
-        if multipleAxesDisplay
+        if multipleAxesDisplay %création des axes où sont plot les courbes
             for kPlot = 1:nbPlots
                 fourierPlotAxes(kPlot) = subplot0(nbPlots, 1, kPlot, axes(ffourier));
                 set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
@@ -501,16 +544,40 @@ set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
             end            
         end
         
-        for kPlot = 1:nbPlots
-            Xfour = x;
-            Yfour = y(kPlot,:);
-            Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-            Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
-            four = fft(Yfour);
-            four = four(1:floor(end/2));
+        if ~multiSignalMode % plot des courbes
+            for kPlot = 1:nbPlots
+                Xfour = x;
+                Yfour = y(kPlot,:);
+                Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+                Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
+                
+                four = fft(Yfour);
+                four = four(1:floor(end/2));
+                freqs = linspace(0, length(four)/Tfour, length(four));
+                
+                hold(fourierPlotAxes(kPlot), 'on');
+                plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                hold(fourierPlotAxes(kPlot), 'off');
+                
+                xlabel(fourierPlotAxes(kPlot), 'freq');
+                ylabel(fourierPlotAxes(kPlot), 'fft');
+                set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
+            end
+        else
+            FourierTot = zeros(1, length(x));
+            FourierTot = FourierTot(1:floor(end/2));
+            for kPlot = 1:nbPlots
+                Xfour = x;
+                Yfour = y(kPlot,:);
+                Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+                Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
+                four = fft(Yfour);
+                four = four(1:floor(end/2));
+                FourierTot = FourierTot + four.^2;
+            end
             freqs = linspace(0, length(four)/Tfour, length(four));
             hold(fourierPlotAxes(kPlot), 'on');
-            plot(freqs, abs(four), 'Parent', fourierPlotAxes(kPlot));
+            plot(freqs, sqrt(abs(FourierTot)), 'Parent', fourierPlotAxes(kPlot));
             hold(fourierPlotAxes(kPlot), 'off');
             xlabel(fourierPlotAxes(kPlot), 'freq');
             ylabel(fourierPlotAxes(kPlot), 'fft');
