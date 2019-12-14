@@ -3,7 +3,12 @@ function [t, freq, freqs, shapes, amplitudes, errors, ridgesNumber] = getModes(R
 %   Ridges = {ridgeddl1, ...}
 %   t = {t1 = [...], ...}
 %   ...
-freqTol = 1e-2;
+
+% si true, prend seulement la partie où il y a des ridges pour tous les
+% ddl, sauf les ddl qui n'ont pas de ridge du tout pour cette freq
+continuite = true;
+
+freqTol = 5e-2;
 
 if nargin < 2
     ddlRef = 1;
@@ -78,11 +83,43 @@ for kr = 1:nridges % reference ridge increment
         amplitudesr(kt) = amplitudesr(kt) * angleMod;
     end
     
-    %mode frequency
-    dphi = angle(amplitudesr(2:end) ./ amplitudesr(1:end-1));
-    dphi = dphi ./ diff(tr);
-    dphi = [dphi(1), (dphi(1:end-1)+dphi(2:end))/2, dphi(end)];
-    freq{kr} = dphi/(2*pi);
+    if continuite
+        ridgeDdl = []; % liste des kddl avec un ridge à la bonne freq
+        for kddl = 1:nddl
+            if ~ all (isnan (ridgesNumberr(kddl, :))) % on ignore les ddl sans ridge
+                ridgeDdl = [ridgeDdl, kddl];
+            end
+        end
+        if isempty(ridgeDdl)
+            return
+        end
+        
+        % détermination du plus long ridge commun continu
+        kt0 = 1;
+        T = 0;
+        kt0max = kt0;
+        Tmax = T;
+        for kt = 1:length(tr)
+            if all (ridgesNumberr(ridgeDdl, kt) == ridgesNumberr(ridgeDdl, kt0))
+                T = T+1;
+                if T > Tmax
+                    kt0max = kt0;
+                    Tmax = T;
+                end
+            else
+                kt0 = kt+1;
+                T = 0;
+            end
+        end
+        contRidgeInd = kt0max:(kt0max + Tmax-1);
+        
+        tr = tr(contRidgeInd);
+        freqsr = freqsr(:, contRidgeInd);
+        shapesr = shapesr(:, contRidgeInd);
+        amplitudesr = amplitudesr(contRidgeInd);
+        errorsr = errorsr(:, contRidgeInd);
+        ridgesNumberr = ridgesNumberr(:, contRidgeInd);
+    end
     
     t{kr} = tr;
     freqs{kr} = freqsr;
@@ -90,6 +127,12 @@ for kr = 1:nridges % reference ridge increment
     amplitudes{kr} = amplitudesr;
     errors{kr} = errorsr;
     ridgesNumber{kr} = ridgesNumberr;
+    
+    %mode frequency
+    dphi = angle(amplitudesr(2:end) ./ amplitudesr(1:end-1));
+    dphi = dphi ./ diff(tr);
+    dphi = [dphi(1), (dphi(1:end-1)+dphi(2:end))/2, dphi(end)];
+    freq{kr} = dphi/(2*pi);
 end
 
 end

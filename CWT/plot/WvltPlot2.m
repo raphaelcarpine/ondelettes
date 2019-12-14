@@ -1,7 +1,11 @@
-function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects)
+function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, title)
 
 if ~ismember(plotQuantity, {'module', 'arg', 'phase'})
     error('');
+end
+
+if nargin < 7
+    title = '';
 end
 
 
@@ -10,7 +14,7 @@ moduleScale = @(x) log(x);
 
 %% figure
 
-fig = figure;
+fig = figure('Name', title);
 ax = axes(fig);
 hold(ax, 'on');
 

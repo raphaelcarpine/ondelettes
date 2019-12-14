@@ -363,6 +363,8 @@ multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','multiple axes', 'Checked', m
         else
             multipleAxesDisplayMenu.Checked = true;
             setMultipleAxesDisplay(true);
+            multiSignalModeMenu.Checked = false;
+            multiSignalMode = false;
         end
     end
 
@@ -377,6 +379,8 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','multi signal mode', 'Checked', m
             multiSignalMode = false;
         else
             multiSignalModeMenu.Checked = true;
+            multipleAxesDisplayMenu.Checked = false;
+            setMultipleAxesDisplay(false);
             multiSignalMode = true;
         end
     end
@@ -387,6 +391,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 %%
 
     function show()
+        % evaluation des parametres
         fmin = eval(get(editfmin, 'String'));
         fmax = eval(get(editfmax, 'String'));
         NbFreq = eval(get(editNbFreq, 'String'));
@@ -396,42 +401,91 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         x = getX();
         y = getY();
         
+        % plot de la transformee
         if checkboxGeneral.Value
-            for kPlot = 1:nbPlots
-                WvltPlot(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ctEdgeEffects', ctEdgeEffects,...
-                    'ctZeroPadding', ctEdgeEffects);
-            end
-        end
-        if checkboxModule.Value || checkboxPhase.Value
-            for kPlot = 1:nbPlots
-                wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
-                if checkboxModule.Value
-                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects);
-                end
-                if checkboxPhase.Value
-                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects);
+            if ~multiSignalMode
+                for kPlot = 1:nbPlots
+                    WvltPlot(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ctEdgeEffects', ctEdgeEffects,...
+                        'ctZeroPadding', ctEdgeEffects);
                 end
             end
         end
         
-        ridges = {};
-        for kPlot = 1:nbPlots
-            ridges{end+1} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
+        if checkboxModule.Value || checkboxPhase.Value
+            if ~multiSignalMode
+                for kPlot = 1:nbPlots
+                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
+                    if checkboxModule.Value
+                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects);
+                    end
+                    if checkboxPhase.Value
+                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects);
+                    end
+                end
+            else
+                wavelet = 0; % calcul de la somme des carrés de transformées
+                for kPlot = 1:nbPlots
+                    wavelet = wavelet +...
+                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects).^2;
+                end
+                %wavelet = sqrt(wavelet);
+                
+                if checkboxModule.Value
+                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
+                        'module', Q, ctEdgeEffects, 'sum wvlt^2');
+                end
+                if checkboxPhase.Value
+                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
+                        'phase', Q, ctEdgeEffects, 'sum wvlt^2');
+                end
+            end
+        end
+        
+        % calcul des ridges
+        if ~multiSignalMode
+            ridges = cell(1, nbPlots);
+            for kPlot = 1:nbPlots
+                ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
+                    'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                    'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects);
+            end
+        else
+            wavelet = 0;
+            for kPlot = 1:nbPlots
+                wavelet = wavelet +...
+                    WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects).^2;
+            end
+            
+            ridges = cell(1, 1);
+            ridges{1} = RidgeExtract(x(kPlot,:), nan, Q, fmin, fmax, NbFreq,...
+                'Wavelet', wavelet,...
                 'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                 'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects);
         end
         
+        % preparation des axes
         for kCheck = 1:length(Checkboxs2)
             cb = Checkboxs2(kCheck);
             if cb.Value
                 FiguresCheckboxs2(kCheck) = figure;
-                axesFiguresCheckboxs2(kCheck) = axes(FiguresCheckboxs2(kCheck));
-                if ~multipleAxesDisplay
-                    hold(axesFiguresCheckboxs2(kCheck), 'on');
+                if multipleAxesDisplay
+                    for kPlot = 1:nbPlots
+                        axesFiguresCheckboxs2(kCheck, kPlot) =...
+                            subplot0(nbPlots, 1, kPlot, axes(FiguresCheckboxs2(kCheck)));
+                    end
+                else
+                    axesFiguresCheckboxs2(kCheck, 1) = axes(FiguresCheckboxs2(kCheck));
+                    for kPlot = 2:nbPlots
+                        axesFiguresCheckboxs2(kCheck, kPlot) =...
+                            axesFiguresCheckboxs2(kCheck, 1);
+                    end
+                    hold(axesFiguresCheckboxs2(kCheck, 1), 'on');
                 end
             end
         end
-        for kPlot = 1:nbPlots
+        
+        % plot des ridges
+        for kPlot = 1:length(ridges);
             ridge = ridges{kPlot};
             
             if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
@@ -443,35 +497,35 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
             if checkboxTimeAmpl.Value % plot de l'amplitude
                 RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                     'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(1)),...
+                    'Axes', axesFiguresCheckboxs2(1, kPlot),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxTimeFreq.Value % plot de la frequence
                 RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                     'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(2)),...
+                    'Axes', axesFiguresCheckboxs2(2, kPlot),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequance
                 RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(3)));
+                    'Axes', axesFiguresCheckboxs2(3, kPlot));
             end
             if checkboxTimeBand.Value % plot de l'amortissement
                 RidgeQtyPlot2(ridge, 'time', 'bandwidth',...
                     'ScaleX', get(xscaleTimeBand, 'String'), 'ScaleY', get(yscaleTimeBand, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(4)),...
+                    'Axes', axesFiguresCheckboxs2(4, kPlot),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
             if checkboxAmplBand.Value % plot de l'amortissement
                 RidgeQtyPlot2(ridge, 'val', 'bandwidth', 'EvaluationFunctionX', 'abs',...
                     'ScaleX', get(xscaleAmplBand, 'String'), 'ScaleY', get(yscaleAmplBand, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(5)));
+                    'Axes', axesFiguresCheckboxs2(5, kPlot));
             end
             if checkboxTimePhase.Value % plot de la phase
                 RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                     'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
-                    'Axes', subplot0(nbPlots, 1, kPlot, axesFiguresCheckboxs2(6)),...
+                    'Axes', axesFiguresCheckboxs2(6, kPlot),...
                     'XLim', [x(kPlot,1), x(kPlot,end)]);
             end
         end
@@ -546,7 +600,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         
         if ~multiSignalMode % plot des courbes
             for kPlot = 1:nbPlots
-                Xfour = x;
+                Xfour = x(kPlot,:);
                 Yfour = y(kPlot,:);
                 Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
                 Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
@@ -561,7 +615,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 
                 xlabel(fourierPlotAxes(kPlot), 'freq');
                 ylabel(fourierPlotAxes(kPlot), 'fft');
-                set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
+%                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
             end
         else
             FourierTot = zeros(1, length(x));

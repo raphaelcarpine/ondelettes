@@ -1,6 +1,6 @@
 %etape et transient
 P = 0;
-transient = 1;
+transient = 3;
 
 t0 = 0;
 tf = inf;
@@ -23,7 +23,7 @@ t = t(t>=t0 & t<tf);
 %     plts(i) = plot(t, X(i,:), 'Parent', ax);
 % end
 
-sensors = 1;
+sensors = 1:9;
 
 
 
@@ -37,8 +37,8 @@ plts = transpose(plts);
 Q = 10;
 MaxRidges = 1;
 MaxParallelRidges = 1;
-fmin = 7;
-fmax = 9;
+fmin = 30;
+fmax = 40;
 NbFreq = 300;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
@@ -46,7 +46,28 @@ WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
 
 
 
-%% test
+%% choix de Q
+
+Df = 2.7;
+f = 34;
+Dt = 1.7;
+
+T = t(end) - t(1);
+
+[Qmin, Qmax, Qz] = getBoundsQ(f, Df, Dt, T, ct, cf);
+
+disp(['Qmin = ', num2str(Qmin)]);
+disp(['Qmax = ', num2str(Qmax)]);
+disp(['Qz = ', num2str(Qz)]);
+
+Q = (Qmin + min(Qmax, Qz)) / 2;
+disp(['Q : ', num2str(Q)]);
+disp('');
+
+
+
+
+%%
 
 ridges = {};
 for k = 1:9
@@ -56,7 +77,7 @@ end
 
 
 
-[t, freq, freqs, shapes, amplitudes, errors, ridgesNumber] = getModes(ridges, 4);
+[t, freq, freqs, shapes, amplitudes, errors, ridgesNumber] = getModes(ridges, 1);
 
 
 for mode = 1:length(t)
