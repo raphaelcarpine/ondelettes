@@ -1,6 +1,6 @@
 %etape et transient
 P = 0;
-transient = 1;
+transient = 3;
 
 singleRidgeMode = false;
 
@@ -61,12 +61,12 @@ plts = transpose(plts);
 
 
 %ondelette
-Q = 30;
+Q = 10;
 MaxRidges = 1;
 MaxParallelRidges = 1;
 fmin = 6;
 fmax = 10;
-NbFreq = 300;
+NbFreq = 400;
 
 ct = 3;
 cf = 5;
@@ -92,6 +92,8 @@ disp(['Qz = ', num2str(Qz)]);
 Q = (Qmin + min(Qmax, Qz)) / 2;
 disp(['Q : ', num2str(Q)]);
 disp('');
+
+Q = 15;
 
 
 %% extraction des modes
@@ -173,7 +175,7 @@ for mode = 1:length(time)
     shape0 = meanShape{mode};
     
     plotModShape(real(shape0), ['freq : ', num2str(meanFreq{mode}),...
-        ' ; amort. : ', num2str(zeta{mode})]);
+        ' ; amort. : ', num2str(10*zeta{mode}), '%']);
     
     
     figure;
@@ -183,7 +185,7 @@ for mode = 1:length(time)
     end
     
     plotComplexModShape(shape0, ['freq : ', num2str(meanFreq{mode}),...
-        ' ; amort. : ', num2str(zeta{mode})]);
+        ' ; amort. : ', num2str(100*zeta{mode}), '%']);
     
 end
 

@@ -39,6 +39,9 @@ for kr = 1:nridges % reference ridge increment
     amplitudesr = nan(1, ntr);
     ridgesNumberr = nan(nddl, ntr);
     
+    ridgesNumberr(ddlRef, :) = kr;
+    errorsr(ddlRef, :) = 0;
+    
     for kddl = [1:(ddlRef-1), (ddlRef+1):nddl] % ddl increment
         ridges2 = Ridges{kddl};
         
@@ -68,21 +71,24 @@ for kr = 1:nridges % reference ridge increment
     
     % normalization
     for kt = 1:ntr % time ind of ref ridge
-        angleMod = shapesr(ddlRef, kt) / abs(shapesr(ddlRef, kt));
-        shapesr(:, kt) = shapesr(:, kt) / angleMod;
+%         angleMod = shapesr(ddlRef, kt) / abs(shapesr(ddlRef, kt));
+%         shapesr(:, kt) = shapesr(:, kt) / angleMod;
+%         
+%         shape = shapesr(:, kt);
+%         for ks = 1:length(shape)
+%             if isnan(shape(ks))
+%                 shape(ks) = 0;
+%             end
+%         end
+%         amplitudesr(kt) = sqrt( transpose(shape) * shape);
+%         shapesr(:, kt) = shapesr(:, kt) / amplitudesr(kt);
+%         
+%         amplitudesr(kt) = amplitudesr(kt) * angleMod;
         
-        shape = shapesr(:, kt);
-        for ks = 1:length(shape)
-            if isnan(shape(ks))
-                shape(ks) = 0;
-            end
-        end
-        amplitudesr(kt) = sqrt(shape.' * shape);
-        shapesr(:, kt) = shapesr(:, kt) / amplitudesr(kt);
-        
-        amplitudesr(kt) = amplitudesr(kt) * angleMod;
+        amplitudesr(kt) = 1;
     end
     
+    % continuite
     if continuite
         ridgeDdl = []; % liste des kddl avec un ridge à la bonne freq
         for kddl = 1:nddl
