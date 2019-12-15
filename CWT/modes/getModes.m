@@ -55,11 +55,16 @@ for kr = 1:nridges % reference ridge increment
                 while kt2 <= length(ridges2.time{kr2}) && ridges2.time{kr2}(kt2) < ridgesRef.time{kr}(kt)
                     kt2 = kt2+1;
                 end
-                if kt2 > length(ridges2.time{kr2}) % ridge2 plus court que le ridge de ref à droite
+                
+                % overlap
+                if kt2 > length(ridges2.time{kr2})
+                    continue
+                end
+                if ridges2.time{kr2}(kt2) > ridgesRef.time{kr}(kt)
                     continue
                 end
                 
-                if abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) / ridgesRef.freq{kr}(kt) < errorsr(kddl, kt)
+                if abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) < errorsr(kddl, kt) * ridgesRef.freq{kr}(kt)
                     errorsr(kddl, kt) = abs(ridges2.freq{kr2}(kt2) - ridgesRef.freq{kr}(kt)) / ridgesRef.freq{kr}(kt);
                     freqsr(kddl, kt) = ridges2.freq{kr2}(kt2);
                     shapesr(kddl, kt) = ridges2.val{kr2}(kt2);
@@ -71,21 +76,19 @@ for kr = 1:nridges % reference ridge increment
     
     % normalization
     for kt = 1:ntr % time ind of ref ridge
-%         angleMod = shapesr(ddlRef, kt) / abs(shapesr(ddlRef, kt));
-%         shapesr(:, kt) = shapesr(:, kt) / angleMod;
-%         
-%         shape = shapesr(:, kt);
-%         for ks = 1:length(shape)
-%             if isnan(shape(ks))
-%                 shape(ks) = 0;
-%             end
-%         end
-%         amplitudesr(kt) = sqrt( transpose(shape) * shape);
-%         shapesr(:, kt) = shapesr(:, kt) / amplitudesr(kt);
-%         
-%         amplitudesr(kt) = amplitudesr(kt) * angleMod;
+        angleMod = shapesr(ddlRef, kt) / abs(shapesr(ddlRef, kt));
+        shapesr(:, kt) = shapesr(:, kt) / angleMod;
         
-        amplitudesr(kt) = 1;
+        shape = shapesr(:, kt);
+        for ks = 1:length(shape)
+            if isnan(shape(ks))
+                shape(ks) = 0;
+            end
+        end
+        amplitudesr(kt) = sqrt( transpose(shape) * shape);
+        shapesr(:, kt) = shapesr(:, kt) / amplitudesr(kt);
+        
+        amplitudesr(kt) = amplitudesr(kt) * angleMod;
     end
     
     % continuite

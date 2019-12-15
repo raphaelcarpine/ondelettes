@@ -618,8 +618,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 %                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
             end
         else
-            FourierTot = zeros(1, length(x));
-            FourierTot = FourierTot(1:floor(end/2));
+            FourierTot = 0;
             for kPlot = 1:nbPlots
                 Xfour = x;
                 Yfour = y(kPlot,:);
