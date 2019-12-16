@@ -1,5 +1,5 @@
 %etape et transient
-P = 0;
+P = 7;
 transient = 3;
 
 singleRidgeMode = false;
@@ -32,12 +32,12 @@ plts = transpose(plts);
 
 
 %ondelette
-Q = 10;
+Q = 30;
 MaxRidges = 1;
 MaxParallelRidges = 1;
-fmin = 6;
-fmax = 10;
-NbFreq = 400;
+fmin = 9;
+fmax = 13;
+NbFreq = 300;
 
 ct = 3;
 cf = 5;
@@ -59,8 +59,8 @@ end
 
 
 
-Df = 34-8;
-f = 8;
+Df = 3;
+f = 11;
 Dt = 1.5;
 
 T = t(end) - t(1);
@@ -75,7 +75,6 @@ Q = (Qmin + min(Qmax, Qz)) / 2;
 disp(['Q : ', num2str(Q)]);
 disp('');
 
-Q = 15;
 
 
 %% extraction des modes
