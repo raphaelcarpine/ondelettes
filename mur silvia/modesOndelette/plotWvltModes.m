@@ -1,6 +1,9 @@
 % affichage et methode de calcul
 verb = true;
 singleRidgeMode = false;
+plotTemporel = true;
+test = false;
+save = false;
 
 % choix precision
 ct = 3;
@@ -32,18 +35,28 @@ for ind = 1:3
     damps = Damps{ind};
     ModesTransientsP = ModesTransients{ind};
     
+    if verb
+        disp(' ');
+        disp(['~~~~~~ P', num2str(p), ' ~~~~~~']);
+    end
+    
     for transient = 1:length(ModesTransientsP)
-        modes = ModesTransientsP{transient}(1, :);
-        Dfs = ModesTransientsP{transient}(2, :);
         
-        for kmode = 1:length(modes)
+        if verb
+            disp(['~~~ T', num2str(transient)]);
+        end
+        
+        for kmode = 1:size(ModesTransientsP{transient}, 2)
+            modes = ModesTransientsP{transient}(1, :);
+            Dfs = ModesTransientsP{transient}(2, :);
+            
             mode = modes(kmode);
             
             % donnees mode
             Df = Dfs(kmode);
             f = freqs(mode);
             damp = damps(mode);
-            Dt = 1 / (damps * 2*pi*f);
+            Dt = 1 / (damp * 2*pi*f);
             
             [t, X] = getData(p, transient);
             T = t(end) - t(1);
@@ -54,10 +67,16 @@ for ind = 1:3
             if verb
                 disp(['Qmin = ', num2str(Qmin), ' ; Qmax = ', num2str(Qmax), ' ; Qz = ', num2str(Qz)]);
                 disp(['Q : ', num2str(Q)]);
-                disp(' ');
             end
             
             % calcul modes
+            fmin = f - min(f/2, Df/2);
+            fmax = f + min(f/2, Df/2);
+            NbFreq = 300;
+            
+            MaxRidges = 1;
+            MaxParallelRidges = 1;
+            
             if singleRidgeMode
                 [time, freq, shape, amplitude] = getModesSingleRidge(t, X, Q, fmin, fmax, NbFreq,...
                     'NbMaxRidges', MaxRidges, 'NbMaxParallelRidges', MaxParallelRidges,...
@@ -69,11 +88,106 @@ for ind = 1:3
                         'NbMaxParallelRidges', MaxRidges, 'NbMaxRidges', MaxParallelRidges);
                 end
                 
-                [time, freq, freqs, shape, amplitude, errors, ridgesNumber] = getModes(ridges, 1);
+                [time, freq, ~, shape, amplitude, errors, ridgesNumber] = getModes(ridges, 1);
             end
             
             % calcul moyenne
+            if isempty(time)
+                warning(['no ridge, P', num2str(p), 'T', num2str(transient), 'm', num2str(mode)]);
+                continue
+            end
             
+            if length(time) > 1
+                warning('multiple ridges');
+            end
+            
+            meanFreq = mean(freq{1});
+            meanShape = mean(shape{1}, 2);
+            
+            funReg = @(param) param(1).*exp(-param(2)*(time{1}-time{1}(1))) - abs(amplitude{1});
+            options = optimoptions(@lsqnonlin, 'Display', 'off');
+            A0lambda = lsqnonlin(funReg, [abs(amplitude{1}(1)), damp], [], [],...
+                options);
+            A0 = A0lambda(1);
+            lambda = A0lambda(2);
+            zeta = lambda / (2*pi*meanFreq);
+            
+            % plots temporels
+            figs = [];
+            if plotTemporel
+                figs(end+1) =  figure;
+                plot(time{1}, (angle(shape{1}*exp(-1i*pi/2)) + pi/2) * 180/pi);
+                hold on
+                plot(time{1}, zeros(size(time{1})), 'black--');
+                plot(time{1}, 180*ones(size(time{1})), 'black--');
+                ylim([-90, 270]);
+                xlabel('t');
+                ylabel('arg(T)');
+                
+                figs(end+1) = figure;
+                plot(time{1}, real(shape{1}));
+                xlabel('t');
+                ylabel('Re(T)');
+                figs(end+1) = figure;
+                plot(time{1}, imag(shape{1}));
+                xlabel('t');
+                ylabel('Im(T)');
+                
+                figs(end+1) = figure;
+                plot(time{1}, freq{1});
+                xlabel('t');
+                ylabel('f');
+                
+                figs(end+1) = figure;
+                hold on
+                plot(time{1}, abs(amplitude{1}));
+                plot(time{1}, A0*exp(-lambda*(time{1}-time{1}(1))), 'r--');
+                set(gca, 'YScale', 'log');
+                xlabel('t');
+                ylabel('|A|');
+            end
+            
+            % plots graphiques
+            
+            figs(end+1) = figure;
+            for k=1:9
+                polarplot([0, meanShape(k)], '-o');
+                hold on
+            end
+            
+            title = ['P', num2str(p), 'T', num2str(transient),...
+                '_freq=', num2str(meanFreq), '_damp=', num2str(100*zeta)];
+            
+            figs(end+1) = plotComplexModShape(meanShape, [title, '_complex']);
+            
+            figs(end+1) = plotModShape(real(meanShape), title);
+            
+            % enregistrement
+            
+            
+            
+            % fin
+            
+            str = input('continue ? ', 's');
+            
+            for fig = figs
+                try
+                    delete(fig);
+                catch
+                end
+            end
+            
+            if isequal(str, '0') || isequal(str, 'n') || isequal(str, 'no') || isequal(str, 'non')
+                return
+            elseif isequal(str, 'test')
+                % test
+                figs(end+1) = figure;
+                plts = plot(t, X(1:9,:));
+                plts = transpose(plts);
+                
+                figs(end+1) = WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+                    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
+            end
             
         end
     end

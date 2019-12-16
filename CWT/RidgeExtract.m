@@ -59,7 +59,7 @@ end
 WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
 
 if isnan(wavelet)
-    wavelet= WvltComp(X,Y,WvltFreq,Q); % Calcul CWT
+    wavelet= WvltComp(X, Y, WvltFreq, Q); % Calcul CWT
 end
 
 % calcul du bruit

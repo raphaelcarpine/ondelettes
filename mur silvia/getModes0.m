@@ -1,6 +1,6 @@
 %etape et transient
-P = 7;
-transient = 3;
+P = 0;
+transient = 1;
 
 singleRidgeMode = false;
 
@@ -21,7 +21,8 @@ t = t(t>=t0 & t<tf);
 % X = real([X1 ; X2]);
 
 
-sensors = 1:9;
+sensors = [3 7];
+sensors = 1;
 
 
 
@@ -121,7 +122,7 @@ end
 
 for mode = 1:length(time)
     
-    figure;
+    figs =  figure;
     plot(time{mode}, (angle(shape{mode}*exp(-1i*pi/2)) + pi/2) * 180/pi);
     hold on
     plot(time{mode}, zeros(size(time{mode})), 'black--');
@@ -129,24 +130,25 @@ for mode = 1:length(time)
     ylim([-90, 270]);
     xlabel('t');
     ylabel('arg(T)');
-    figure;
-    plot(abs(amplitude{mode}), real(shape{mode}));
-    xlabel('|A|');
+    
+    figs(end+1) = figure;
+    plot(time{mode}, real(shape{mode}));
+    xlabel('t');
     ylabel('Re(T)');
-    figure;
-    plot(abs(amplitude{mode}), imag(shape{mode}));
-    xlabel('|A|');
+    figs(end+1) = figure;
+    plot(time{mode}, imag(shape{mode}));
+    xlabel('t');
     ylabel('Im(T)');
-    figure;
+    
+    figs(end+1) = figure;
+    hold on
     plot(time{mode}, abs(amplitude{mode}));
+    xlabel('t');
     ylabel('|A|');
     
-    % figure;
-    % plot(t{mode}, real(amplitudes{mode}));
-    % ylabel('Re(A)');
-    
-    figure;
+    figs(end+1) = figure;
     plot(time{mode}, freq{mode});
+    xlabel('t');
     ylabel('f');
     
     
