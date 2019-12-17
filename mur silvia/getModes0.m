@@ -1,11 +1,11 @@
 %etape et transient
-P = 7;
+P = 0;
 transient = 0;
 
 singleRidgeMode = false;
 
-t0 = 0;
-tf = inf;
+t0 = 1449;
+tf = 1457;
 
 
 [t, X] = getData(P, transient);
@@ -13,6 +13,10 @@ tf = inf;
 X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
 
+X = exp( 2i*pi*rand (size(X)));
+f = 1:length(t);
+X = X .* (1i*f) ./ ((1i*f).^2 - (100i-1)^2);
+X = real (fft(X));
 
 % rééchantillonnage
 indices = 1:3:length(t);
