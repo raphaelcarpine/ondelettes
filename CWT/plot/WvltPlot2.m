@@ -11,6 +11,20 @@ end
 
 moduleScale = @(x) log(x);
 
+%% rééchantillonage
+reechant = true;
+
+Ntmax = 10000;
+
+if reechant
+    Nt = length(t);
+    step = ceil(Nt/Ntmax);
+    indices = 1:step:Nt;
+    
+    t = t(indices);
+    wavelet = wavelet(:, indices);
+end
+
 
 %% figure
 

@@ -1,6 +1,6 @@
 %etape et transient
-P = 0;
-transient = 1;
+P = 7;
+transient = 0;
 
 singleRidgeMode = false;
 
@@ -14,6 +14,12 @@ X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
 
 
+% rééchantillonnage
+indices = 1:3:length(t);
+X = X(:, indices);
+t = t(indices);
+
+
 % X1 = exp(2i*pi*33.9*t) .* exp(- 0.0051*2*pi*33.9*t);
 % X1 = X1 * [0.5587 - 0.0295i;  -0.0026 - 0.0307i;  -0.5400 - 0.0327i;   0.3721 - 0.0224i;  -0.0280 - 0.0249i;  -0.4466 - 0.0248i;   0.2481 - 0.0184i;  -0.0027 - 0.0007i;  -0.0309 + 0.0042i];
 % X2 = exp(2i*pi*36.8*t + 1) .* exp(- 0.0065*2*pi*36.8*t);
@@ -21,9 +27,7 @@ t = t(t>=t0 & t<tf);
 % X = real([X1 ; X2]);
 
 
-sensors = [3 7];
-sensors = 1;
-
+sensors = 1:3;
 
 
 fig = figure;
@@ -36,15 +40,16 @@ plts = transpose(plts);
 Q = 30;
 MaxRidges = 1;
 MaxParallelRidges = 1;
-fmin = 9;
-fmax = 13;
-NbFreq = 300;
+fmin = 4;
+fmax = 40;
+NbFreq = 200;
 
 ct = 3;
 cf = 5;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
-    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
+    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
+    , 'CtEdgeEffects', ct, 'MultiSignalMode', true);
 
 
 %%

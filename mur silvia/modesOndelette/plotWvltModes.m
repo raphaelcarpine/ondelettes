@@ -22,9 +22,13 @@ Damps = {[2.16, 0.47, 0.44] * 0.01,...
     [0.52, 1.16, 1.06] * 0.01};
 
 
+% ModesTransients = {{[1; 26], [], [1, 2, 3; 26, 3, 3]},... % P0
+%     {[1, 2, 3; 3, 1.8, 4.3], [1, 2, 3; 1.8, 1.4, 1.4]},... % P6
+%     {[1, 2; 17.4, 2.4], [2; 2.5], [1; 17.4]}}; % P7
+
 ModesTransients = {{[1; 26], [], [1, 2, 3; 26, 3, 3]},... % P0
-    {[1, 2, 3; 3, 1.8, 4.3], [1, 2, 3; 1.8, 1.4, 1.4]},... % P6
-    {[1, 2; 17.4, 2.4], [2; 2.5], [1; 17.4]}}; % P7
+    {[1, 2, 3; 3, 1.8, 4.3], [2; 1.4]},... % P6
+    {[2; 2.4], [2; 2.5], [1; 17.4]}}; % P7
 
 
 %%
@@ -115,7 +119,7 @@ for ind = 1:3
             % plots temporels
             figs = [];
             if plotTemporel
-                figs(end+1) =  figure;
+                figure;
                 plot(time{1}, (angle(shape{1}*exp(-1i*pi/2)) + pi/2) * 180/pi);
                 hold on
                 plot(time{1}, zeros(size(time{1})), 'black--');
@@ -124,21 +128,21 @@ for ind = 1:3
                 xlabel('t');
                 ylabel('arg(T)');
                 
-                figs(end+1) = figure;
+                figure;
                 plot(time{1}, real(shape{1}));
                 xlabel('t');
                 ylabel('Re(T)');
-                figs(end+1) = figure;
+                figure;
                 plot(time{1}, imag(shape{1}));
                 xlabel('t');
                 ylabel('Im(T)');
                 
-                figs(end+1) = figure;
+                figure;
                 plot(time{1}, freq{1});
                 xlabel('t');
                 ylabel('f');
                 
-                figs(end+1) = figure;
+                figure;
                 hold on
                 plot(time{1}, abs(amplitude{1}));
                 plot(time{1}, A0*exp(-lambda*(time{1}-time{1}(1))), 'r--');
@@ -148,45 +152,50 @@ for ind = 1:3
             end
             
             % plots graphiques
-            
-            figs(end+1) = figure;
+            figure;
             for k=1:9
                 polarplot([0, meanShape(k)], '-o');
                 hold on
             end
             
             title = ['P', num2str(p), 'T', num2str(transient),...
-                '_freq=', num2str(meanFreq), '_damp=', num2str(100*zeta)];
+                '_freq=', num2str(meanFreq), '_damp=', num2str(zeta)];
+            title2 = [title, '_complex'];
             
-            figs(end+1) = plotComplexModShape(meanShape, [title, '_complex']);
+            fig2 = plotComplexModShape(meanShape, title2);
             
-            figs(end+1) = plotModShape(real(meanShape), title);
+            fig = plotModShape(real(meanShape), title);
             
             % enregistrement
-            
-            
-            
-            % fin
-            
-            str = input('continue ? ', 's');
-            
-            for fig = figs
-                try
-                    delete(fig);
-                catch
-                end
+            if save
+                directory = 'mur silvia\modesOndelette\';
+                savefig(fig, [directory, 'save\', title, '.fig']);
+                saveas(fig, [directory, 'save\', title, '.png']);
+                savefig(fig2, [directory, 'save\', title2, '.fig']);
+                saveas(fig2, [directory, 'save\', title2, '.png']);
             end
             
-            if isequal(str, '0') || isequal(str, 'n') || isequal(str, 'no') || isequal(str, 'non')
-                return
-            elseif isequal(str, 'test')
-                % test
-                figs(end+1) = figure;
-                plts = plot(t, X(1:9,:));
-                plts = transpose(plts);
+            % fin
+            while true
+                str = input('continue ? ', 's');
                 
-                figs(end+1) = WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
-                    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
+                if isequal(str, '0') || isequal(str, 'n') || isequal(str, 'no') || isequal(str, 'non')
+                    close all
+                    return
+                
+                elseif isequal(str, 'test')
+                    % test
+                    figure;
+                    plts = plot(t, X(1:9,:));
+                    plts = transpose(plts);
+                    
+                    WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+                        'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
+                
+                else
+                    close all
+                    break
+                end
             end
             
         end

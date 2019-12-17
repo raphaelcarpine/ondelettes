@@ -442,6 +442,10 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         end
         
         % calcul des ridges
+        if ~checkboxTimeAmplPlot.Value && ~ any([Checkboxs2.Value])
+            return
+        end
+        
         if ~multiSignalMode
             ridges = cell(1, nbPlots);
             for kPlot = 1:nbPlots
