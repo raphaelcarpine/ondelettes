@@ -13,10 +13,6 @@ tf = 1457;
 X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
 
-X = exp( 2i*pi*rand (size(X)));
-f = 1:length(t);
-X = X .* (1i*f) ./ ((1i*f).^2 - (100i-1)^2);
-X = real (fft(X));
 
 % rééchantillonnage
 indices = 1:3:length(t);
@@ -31,7 +27,7 @@ t = t(indices);
 % X = real([X1 ; X2]);
 
 
-sensors = 1:3;
+sensors = 1;
 
 
 fig = figure;
