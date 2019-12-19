@@ -9,7 +9,7 @@ if nargin < 7
 end
 
 
-moduleScale = @(x) log(x);
+moduleScale = @(x) log10(x);
 
 %% rééchantillonage
 reechant = true;

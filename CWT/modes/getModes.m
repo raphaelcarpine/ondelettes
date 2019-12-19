@@ -37,7 +37,7 @@ for kr = 1:nridges % reference ridge increment
     shapesr = [nan(ddlRef-1, ntr); shapesr; nan(nddl-ddlRef, ntr)];
     errorsr = freqTol * ones(nddl, ntr);
     amplitudesr = nan(1, ntr);
-    ridgesNumberr = nan(nddl, ntr);
+    ridgesNumberr = zeros(nddl, ntr);
     
     ridgesNumberr(ddlRef, :) = kr;
     errorsr(ddlRef, :) = 0;
@@ -93,23 +93,13 @@ for kr = 1:nridges % reference ridge increment
     
     % continuite
     if continuite
-        ridgeDdl = []; % liste des kddl avec un ridge à la bonne freq
-        for kddl = 1:nddl
-            if ~ all (isnan (ridgesNumberr(kddl, :))) % on ignore les ddl sans ridge
-                ridgeDdl = [ridgeDdl, kddl];
-            end
-        end
-        if isempty(ridgeDdl)
-            return
-        end
-        
         % détermination du plus long ridge commun continu
         kt0 = 1;
         T = 0;
         kt0max = kt0;
         Tmax = T;
         for kt = 1:length(tr)
-            if all (ridgesNumberr(ridgeDdl, kt) == ridgesNumberr(ridgeDdl, kt0))
+            if all (ridgesNumberr(:, kt) == ridgesNumberr(:, kt0))
                 T = T+1;
                 if T > Tmax
                     kt0max = kt0;
