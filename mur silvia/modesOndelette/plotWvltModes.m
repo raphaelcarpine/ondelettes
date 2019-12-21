@@ -61,10 +61,16 @@ TransientsTimes{1} = [TransientsTimes{1}, [1450.2, 1450.2, 1450.2; 1452.5, 1453,
 TransientsDeltaF{1} = [TransientsDeltaF{1}, 2.7, 2.9, 2.9];
 
 %P6T1
-TransientsModes{1} = [TransientsModes{1}, 1, 2, 3];
-TransientsNumbers{1} = [TransientsNumbers{1}, 1, 1, 1];
-TransientsTimes{1} = [TransientsTimes{1}, [238, 238, 238; 243, , ]];
-TransientsDeltaF{1} = [TransientsDeltaF{1}, 4.7, , ];
+TransientsModes{2} = [TransientsModes{2}, 1, 2, 3];
+TransientsNumbers{2} = [TransientsNumbers{2}, 1, 1, 1];
+TransientsTimes{2} = [TransientsTimes{2}, [238, 238, 238; 243, 243, 239.5]];
+TransientsDeltaF{2} = [TransientsDeltaF{2}, 4.7, 1.5, 4.9];
+
+%P6T2
+TransientsModes{2} = [TransientsModes{2}, 2];
+TransientsNumbers{2} = [TransientsNumbers{2}, 2];
+TransientsTimes{2} = [TransientsTimes{2}, [444; 447]];
+TransientsDeltaF{2} = [TransientsDeltaF{2}, 1.4];
 
 
 
@@ -83,6 +89,7 @@ for indp = 1:3
     if verb
         disp(' ');
         disp(['~~~~~~ P', num2str(p), ' ~~~~~~']);
+        disp(' ');
     end
     
     for kridge = 1:length(TransientsNumbersP)
@@ -90,7 +97,7 @@ for indp = 1:3
         mode = TransientsModesP(kridge);
         
         if verb
-            disp(['~~~ T', num2str(transient)]);
+            disp(['~~~ P', num2str(p), 'T', num2str(transient)]);
             disp(['~ mode', num2str(mode)]);
         end
         

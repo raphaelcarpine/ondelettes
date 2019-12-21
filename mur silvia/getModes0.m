@@ -1,15 +1,15 @@
 close all
 
 %etape et transient
-P = 6;
+P = 7;
 transient = 0;
 
 singleRidgeMode = false;
 
 t0 = 238.1;
-tf = 243;
-% t0 = 235;
-% tf = 250;
+tf = 247;
+t0 = 0;
+tf = 100;
 % t0 = -inf;
 % tf = inf;
 
@@ -36,12 +36,14 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = 1;
+sensors = 1:9;
 
 
 fig = figure;
 ax = axes(fig);
 plts = plot(t, X(sensors,:), 'Parent', ax);
+xlabel(ax, 'time');
+ylabel(ax, 'acceleration');
 plts = transpose(plts);
 
 

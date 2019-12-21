@@ -52,7 +52,7 @@ shading flat
 
 %% zones d'effets de bord
 
-if ctEdgeEffects>0
+if ctEdgeEffects > 0
     deltat = ctEdgeEffects*Q./(2*pi*freqs); % = a * Delta t_psi, en considerant que 2*pi*Delta f_psi * Delta t_psi = 1/2
     
     t1 = t(1) + deltat;
@@ -75,5 +75,7 @@ if ctEdgeEffects>0
     % limites axes
     axis tight
 end
+
+set(ax, 'XLim', [t(1), t(end)]);
 
 end
