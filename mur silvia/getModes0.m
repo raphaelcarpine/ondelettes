@@ -6,8 +6,8 @@ transient = 0;
 
 singleRidgeMode = false;
 
-% t0 = 456;
-% tf = 462;
+t0 = 0;
+tf = 80;
 % t0 = 267.5;
 % tf = 271.4;
 t0 = -inf;

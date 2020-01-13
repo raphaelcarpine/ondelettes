@@ -1,9 +1,9 @@
 %etape et transient
 P = 0;
-transient = 3;
+transient = 0;
 
-t0 = 0.25;
-tf = 1.7;
+t0 = 1450.2;
+tf = 1452;
 
 
 [t, X] = getData(P, transient);
@@ -14,7 +14,7 @@ t = t(t>=t0 & t<tf);
 
 
 %% affichage optionnel
-if false
+if true
     
     % fig = figure;
     % ax = axes(fig);
