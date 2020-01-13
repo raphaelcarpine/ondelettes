@@ -72,6 +72,26 @@ TransientsNumbers{2} = [TransientsNumbers{2}, 2];
 TransientsTimes{2} = [TransientsTimes{2}, [444; 447]];
 TransientsDeltaF{2} = [TransientsDeltaF{2}, 1.4];
 
+%P7T1
+TransientsModes{3} = [TransientsModes{3}, 2, 3];
+TransientsNumbers{3} = [TransientsNumbers{3}, 1, 1];
+TransientsTimes{3} = [TransientsTimes{3}, [36.81, 36.81; 38.5, 39]];
+TransientsDeltaF{3} = [TransientsDeltaF{3}, 2.3, 3.7];
+
+
+%P7T2
+TransientsModes{3} = [TransientsModes{3}, 1];
+TransientsNumbers{3} = [TransientsNumbers{3}, 2];
+TransientsTimes{3} = [TransientsTimes{3}, [267.5; 271.4]];
+TransientsDeltaF{3} = [TransientsDeltaF{3}, 2.3];
+
+%P7T3
+TransientsModes{3} = [TransientsModes{3}, 2, 3];
+TransientsNumbers{3} = [TransientsNumbers{3}, 3, 3];
+TransientsTimes{3} = [TransientsTimes{3}, [457, 457; 461, 461]];
+TransientsDeltaF{3} = [TransientsDeltaF{3}, 6.2, 6.2];
+
+
 
 
 %%

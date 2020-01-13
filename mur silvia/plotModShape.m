@@ -85,7 +85,7 @@ ax = axes(fig);
 hold(ax, 'on');
 plt = surf(ax, x, shape2, y, shape2, 'EdgeColor', 'none');
 
-grey = 0.5;
+gray = 0.5;
 xGrid = [20, 65.5, 111];
 yGrid = [0, 36.25, 75, 114.25];
 if interpExt
@@ -93,10 +93,10 @@ if interpExt
     yGrid = [0, 36.25, 75, 114.25, 150];
 end
 for x = xGrid
-    plot3(ax, [x, x], [0, 0], [yGrid(1), yGrid(end)], 'Color', grey*[1 1 1]);
+    plot3(ax, [x, x], [0, 0], [yGrid(1), yGrid(end)], 'Color', gray*[1 1 1]);
 end
 for y = yGrid
-    plot3(ax, [xGrid(1), xGrid(end)], [0, 0], [y, y], 'Color', grey*[1 1 1]);
+    plot3(ax, [xGrid(1), xGrid(end)], [0, 0], [y, y], 'Color', gray*[1 1 1]);
 end
 
 if printChanels

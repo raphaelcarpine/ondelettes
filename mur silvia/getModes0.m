@@ -1,17 +1,17 @@
-close all
+% close all
 
 %etape et transient
-P = 7;
+P = 0;
 transient = 0;
 
 singleRidgeMode = false;
 
-t0 = 238.1;
-tf = 247;
-t0 = 0;
-tf = 100;
-% t0 = -inf;
-% tf = inf;
+% t0 = 456;
+% tf = 462;
+% t0 = 267.5;
+% tf = 271.4;
+t0 = -inf;
+tf = inf;
 
 
 [t, X] = getData(P, transient);
@@ -36,7 +36,7 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = 1:9;
+sensors = [1 3];
 
 
 fig = figure;
@@ -53,7 +53,7 @@ MaxRidges = 1;
 MaxParallelRidges = 1;
 fmin = 4;
 fmax = 40;
-NbFreq = 200;
+NbFreq = 300;
 
 ct = 3;
 cf = 5;

@@ -619,6 +619,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 
                 xlabel(fourierPlotAxes(kPlot), 'freq');
                 ylabel(fourierPlotAxes(kPlot), 'fft');
+                
 %                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
             end
         else
