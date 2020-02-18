@@ -18,6 +18,7 @@ defaultRidgeMinModu = 0;
 defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
+defaultWvltScale = 'log';
 
 
 
@@ -39,6 +40,7 @@ addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
+addParameter(p,'WvltScale', defaultWvltScale);
 
 parse(p, varargin{:})
 
@@ -100,6 +102,10 @@ RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 multiSignalMode = p.Results.MultiSignalMode;
+WvltScale = p.Results.WvltScale;
+
+Xmin = -inf;
+Xmax = inf;
 
 %% reglage affichage subpolt/simple plot
 
@@ -303,6 +309,7 @@ phaseRidgeName = 'pha2';
 
 freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
+WvltScaleNames = {'lin', 'log10'};
 
 fig.MenuBar = 'none';
 
@@ -338,24 +345,56 @@ phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continue', 'Checked' ,'on');
 set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
 set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
 
+% wavelet scale
+WvltScaleMenu = uimenu(paramMenu, 'Text','Wavelet Scale');
+WvltScaleMenuChoices(1) = uimenu(WvltScaleMenu, 'Text', 'lin');
+WvltScaleMenuChoices(2) = uimenu(WvltScaleMenu, 'Text', 'log', 'Checked' ,'on');
+    function selectWvltScaleMenu(kchoice)
+        for kchoices = 1:length(WvltScaleMenuChoices)
+            set(WvltScaleMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(WvltScaleMenuChoices(kchoice), 'Checked', 'on');
+        
+        WvltScale = WvltScaleNames{kchoice};
+    end
+set(WvltScaleMenuChoices(1), 'CallBack', @(~,~) selectWvltScaleMenu(1));
+set(WvltScaleMenuChoices(2), 'CallBack', @(~,~) selectWvltScaleMenu(2));
+
+% Xlim
+XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
+    function setXlim()
+        prompt = {'Enter Xmin :', 'Enter Xmax :'};
+        dlgtitle = 'Input Xlim';
+        dims = [1 35];
+        definput = {num2str(Xmin), num2str(Xmax)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            Xmin = str2double(answer{1});
+            Xmax = str2double(answer{2});
+        catch
+        end
+    end
+set(XlimMenu, 'CallBack', @(~,~) setXlim);
+
 %zero padding fourier
 zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
     function setZeroPaddingFourier()
-        ZeroPaddingFourier = nan;
-        while isnan(ZeroPaddingFourier)
-            ZeroPaddingFourier = inputdlg('Enter zero padding Fourier', 'zero padding Fourier');
-            try
-                ZeroPaddingFourier = str2double(ZeroPaddingFourier{1});
-                ZeroPaddingFourier = round(ZeroPaddingFourier);
-            catch
-            end
+        prompt = {'Enter zero padding Fourier :'};
+        dlgtitle = 'Input zero padding Fourier';
+        dims = [1 35];
+        definput = {num2str(ZeroPaddingFourier)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            ZeroPaddingFourier = str2double(answer{1});
+            ZeroPaddingFourier = max(round(ZeroPaddingFourier), 0);
+        catch
         end
     end
 set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
 
 %multipleAxesDisplay
 
-multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','multiple axes', 'Checked', multipleAxesDisplay);
+multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
     function switchMultipleAxesDisplay(~, ~)
         if strcmp(multipleAxesDisplayMenu.Checked, 'on')
             multipleAxesDisplayMenu.Checked = false;
@@ -372,7 +411,7 @@ multipleAxesDisplayMenu.MenuSelectedFcn = @switchMultipleAxesDisplay;
 
 %multiSignalMode
 
-multiSignalModeMenu = uimenu(paramMenu, 'Text','multi signal mode', 'Checked', multiSignalMode);
+multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', multiSignalMode);
     function switchMultiSignalModeDisplay(~, ~)
         if strcmp(multiSignalModeMenu.Checked, 'on')
             multiSignalModeMenu.Checked = false;
@@ -390,6 +429,17 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
 %%
 
+    function [X, Y] = getXY()
+        X = getX();
+        Y = getY();
+        for line = 1:size(X, 1)
+            Y2(line, :) = Y(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
+            X2(line, :) = X(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
+        end
+        X = X2;
+        Y = Y2;
+    end
+
     function show()
         % evaluation des parametres
         fmin = eval(get(editfmin, 'String'));
@@ -398,8 +448,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         Q = eval(get(editQ, 'String'));
         maxR = eval(get(editmaxR, 'String')); %nombre max de ridges
         PR = eval(get(editPR, 'String')); %nombre max de ridges parallèles
-        x = getX();
-        y = getY();
+        [x, y] = getXY();
         
         % plot de la transformee
         if checkboxGeneral.Value
@@ -416,10 +465,12 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 for kPlot = 1:nbPlots
                     wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
                     if checkboxModule.Value
-                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects);
+                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects,...
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale]);
                     end
                     if checkboxPhase.Value
-                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects);
+                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects,...
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale]);
                     end
                 end
             else
@@ -432,11 +483,13 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 
                 if checkboxModule.Value
                     WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
-                        'module', Q, ctEdgeEffects, 'sum wvlt^2');
+                        'module', Q, ctEdgeEffects, WvltScale,...
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale]);
                 end
                 if checkboxPhase.Value
                     WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
-                        'phase', Q, ctEdgeEffects, 'sum wvlt^2');
+                        'phase', Q, ctEdgeEffects, WvltScale,...
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale]);
                 end
             end
         end
@@ -551,8 +604,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
 
     function hilbertTransform()
-        x = getX();
-        y = getY();
+        [x, y] = getXY();
         
         hilbertPlotAxes = plotAxes;
         if isequal(hilbertPlotAxes, 0)
@@ -581,8 +633,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
 
     function fourierTransform()
-        x = getX();
-        y = getY();
+        [x, y] = getXY();
         fmin = eval(get(editfmin, 'String'));
         fmax = eval(get(editfmax, 'String'));
         

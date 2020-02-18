@@ -36,7 +36,7 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = [1 3];
+sensors = [1 ];
 
 
 fig = figure;

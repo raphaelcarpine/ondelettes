@@ -1,15 +1,26 @@
-function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, title)
+function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, scale, title)
 
 if ~ismember(plotQuantity, {'module', 'arg', 'phase'})
     error('');
 end
 
 if nargin < 7
+    scale = 'log10';
+end
+if nargin < 8
     title = '';
 end
 
+if isequal(scale, 'lin')
+    moduleScale = @(x) x;
+elseif isequal(scale, 'log')
+    moduleScale = @(x) log(x);
+elseif isequal(scale, 'log10')
+    moduleScale = @(x) log10(x);
+else
+    error("");
+end
 
-moduleScale = @(x) log10(x);
 
 %% rééchantillonage
 reechant = true;
