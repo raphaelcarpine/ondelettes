@@ -5,19 +5,26 @@ close all
 %% système
 
 w0 = 2*pi;
-zeta = 0.01;
+zeta = 0.02;
+
+w02 = 3*pi;
+zeta2 = 0.01;
+C1 = 1;
+C2 = 1;
+
+nbDDL = 1;
 
 
 %% excitation
 
-T = 100;
+T = 1000;
 dt = 0.01;
 fe = 1/dt;
 
 t = 0:dt:T;
 nt = length(t);
 
-excitation = 'bruit'; % 'bruit' 'dirac'
+excitation = 'gaussien'; % 'bruit' 'dirac' 'gaussien'
 
 if isequal(excitation, 'bruit')
     f = exp(2i*pi*rand(1, nt)); % bruit
@@ -26,9 +33,14 @@ if isequal(excitation, 'bruit')
         f(end+2-k) = conj(f(k));
     end
     f = ifft(f);
-elseif isequal(excitation, 'bruit')
+elseif isequal(excitation, 'dirac')
     f = ones(1, nt); % dirac
     f = ifft(f);
+elseif isequal(excitation, 'gaussien')
+%     f = normrnd(0, 1, 1, nt);
+    f = rand(1, nt);
+else
+    error('');
 end
 
 %% reponse
@@ -47,7 +59,7 @@ cf = 5;
 % plots
 
 if true % f plot
-    fig = figure('Name', 'bruit blanc');
+    fig = figure('Name', 'excitation');
     ax = axes(fig);
     pltf = plot(ax, t, f);
     xlabel(ax, 't');
@@ -59,7 +71,11 @@ if true % f plot
         , 'CtEdgeEffects', ct);
 end
 
-x = reponseSyst1ddl(t, f, w0, zeta);
+if nbDDL == 1
+    x = reponseSyst1ddl(t, f, w0, zeta);
+elseif nbDDL == 2
+    x = reponseSyst2ddl(t, f, w0, w02, zeta, zeta2, C1, C2);
+end
 
 fig = figure('Name', ['zeta=', num2str(zeta)]);
 ax = axes(fig);
@@ -74,14 +90,34 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
 
 %% autocorrelation
 
-Rx = autocorr(x);
+% x = f;
+
+Rx = xcov(x) / var(x);
+Rx = Rx(ceil(length(Rx)/2):end);
+
+
+%%% test
+n = length(x);
+Rx = nan(1, n);
+for k = 0:n-1
+    Rx(k+1) = mean(x(1:n-k) .* x(k+1:end));
+end
+%%% test
+
+
 fig = figure('Name', ['autocorrelation;zeta=', num2str(zeta)]);
 ax = axes(fig);
 plt = plot(ax, t, Rx);
 xlabel(ax, 't');
 ylabel(ax, 'Rx');
 
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
+    , 'CtEdgeEffects', ct);
 
+
+
+return
 
 %% stabilisation
 
