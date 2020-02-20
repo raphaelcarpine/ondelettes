@@ -38,7 +38,7 @@ elseif isequal(excitation, 'dirac')
     f = ifft(f);
 elseif isequal(excitation, 'gaussien')
 %     f = normrnd(0, 1, 1, nt);
-    f = rand(1, nt);
+    f = - sqrt(2) *  erfcinv(2*rand(1, nt));
 else
     error('');
 end
@@ -90,7 +90,7 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
 
 %% autocorrelation
 
-% x = f;
+x = f;
 
 Rx = xcov(x) / var(x);
 Rx = Rx(ceil(length(Rx)/2):end);
