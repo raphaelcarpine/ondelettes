@@ -40,6 +40,12 @@ parse(p, ridge, QtyX, QtyY, varargin{:})
 
 NameX = p.Results.NameX;
 NameY = p.Results.NameY;
+if isequal(NameX, 'val')
+    NameX = 'CWT';
+end
+if isequal(NameY, 'val')
+    NameY = 'CWT';
+end
 EvaluationFunctionX = p.Results.EvaluationFunctionX;
 EvaluationFunctionY = p.Results.EvaluationFunctionY;
 if ~isequal(EvaluationFunctionX, '')

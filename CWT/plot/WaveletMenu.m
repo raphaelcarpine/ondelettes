@@ -19,6 +19,7 @@ defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
 defaultWvltScale = 'log';
+defaultFourierScale = 'lin';
 
 
 
@@ -41,12 +42,13 @@ addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'WvltScale', defaultWvltScale);
+addParameter(p,'FourierScale', defaultFourierScale);
 
 parse(p, varargin{:})
 
 fig = p.Results.Parent;
 if fig == 0
-    fig = figure;
+    fig = figure('Name', 'Wavelet Menu', 'numbertitle', 'off');
     fig.Units = 'characters';
     fig.Position(3) = 65;
     fig.Position(4) = 25;
@@ -79,6 +81,7 @@ else
     getX = @() cellmat2mat (get(p.Results.WaveletPlot, 'XData'));
     getY = @() cellmat2mat (get(p.Results.WaveletPlot, 'YData'));
     plotAxes = cellmat2mat (get(p.Results.WaveletPlot, 'Parent'));
+    set(fig, 'Name', [get(fig, 'Name'), ' (fig', num2str(get(get(plotAxes, 'Parent'), 'number')), ')']);
     
     for waveplt = p.Results.WaveletPlot
         parent = waveplt;
@@ -103,6 +106,7 @@ ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 multiSignalMode = p.Results.MultiSignalMode;
 WvltScale = p.Results.WvltScale;
+FourierScale = p.Results.FourierScale;
 
 Xmin = -inf;
 Xmax = inf;
@@ -310,6 +314,7 @@ phaseRidgeName = 'pha2';
 freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
 WvltScaleNames = {'lin', 'log10'};
+FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
 
 fig.MenuBar = 'none';
 
@@ -359,6 +364,25 @@ WvltScaleMenuChoices(2) = uimenu(WvltScaleMenu, 'Text', 'log', 'Checked' ,'on');
     end
 set(WvltScaleMenuChoices(1), 'CallBack', @(~,~) selectWvltScaleMenu(1));
 set(WvltScaleMenuChoices(2), 'CallBack', @(~,~) selectWvltScaleMenu(2));
+
+% fourier scale
+FourierScaleMenu = uimenu(paramMenu, 'Text','Fourier Scale');
+FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin', 'Checked', 'on');
+FourierScaleMenuChoices(2) = uimenu(FourierScaleMenu, 'Text', 'squared');
+FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
+FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'phase');
+    function selectFourierScaleMenu(kchoice)
+        for kchoices = 1:length(FourierScaleMenuChoices)
+            set(FourierScaleMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(FourierScaleMenuChoices(kchoice), 'Checked', 'on');
+        
+        FourierScale = FourierScaleNames{kchoice};
+    end
+set(FourierScaleMenuChoices(1), 'CallBack', @(~,~) selectFourierScaleMenu(1));
+set(FourierScaleMenuChoices(2), 'CallBack', @(~,~) selectFourierScaleMenu(2));
+set(FourierScaleMenuChoices(3), 'CallBack', @(~,~) selectFourierScaleMenu(3));
+set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
 
 % Xlim
 XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
@@ -542,7 +566,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         end
         
         % plot des ridges
-        for kPlot = 1:length(ridges);
+        for kPlot = 1:length(ridges)
             ridge = ridges{kPlot};
             
             if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
@@ -665,7 +689,16 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 freqs = linspace(0, length(four)/Tfour, length(four));
                 
                 hold(fourierPlotAxes(kPlot), 'on');
-                plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                if isequal(FourierScale, 'lin')
+                    plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                elseif isequal(FourierScale, 'squared')
+                    plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
+                elseif isequal(FourierScale, 'log')
+                    plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                    set(fourierPlotAxes(kPlot), 'YScale', 'log');
+                elseif isequal(FourierScale, 'phase')
+                    plot(fourierPlotAxes(kPlot), freqs, angle(four));
+                end
                 hold(fourierPlotAxes(kPlot), 'off');
                 
                 xlabel(fourierPlotAxes(kPlot), 'freq');
