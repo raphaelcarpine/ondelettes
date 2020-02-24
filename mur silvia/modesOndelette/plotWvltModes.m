@@ -198,6 +198,7 @@ for indp = 1:3
         if verb
             disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq), '%']);
             disp(['shape error : ', num2str(100*errorShape), '%']);
+            disp(['amort : ', num2str(100*zeta), '%']);
         end
         
         % plots temporels
