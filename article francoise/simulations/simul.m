@@ -9,19 +9,19 @@ zeta = [0.01, 0.03];
 
 C = [1, 10];
 
-nbDDL = 2;
+nbDDL = 1;
 
 
 %% excitation
 
-T = 1000000;
-dt = 0.1;
+T = 1000;
+dt = 0.01;
 fe = 1/dt;
 
 t = 0:dt:T;
 nt = length(t);
 
-excitation = 'dirac'; % 'bruit' 'dirac' 'gaussien'
+excitation = 'gaussien'; % 'bruit' 'dirac' 'gaussien'
 
 if isequal(excitation, 'bruit')
     f = exp(2i*pi*rand(1, nt)); % bruit

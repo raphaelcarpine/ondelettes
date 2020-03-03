@@ -25,7 +25,7 @@ end
 %% rééchantillonage
 reechant = true;
 
-Ntmax = 10000;
+Ntmax = 20000;
 
 if reechant
     Nt = length(t);

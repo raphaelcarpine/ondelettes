@@ -18,6 +18,7 @@ cf = 5;
 
 P = [0, 6, 7];
 
+% données du paper draft (word)
 Freqs = {[8.35, 33.95, 36.77],...
     [11.12, 32.79, 37.76],...
     [10.97, 28.34, 34.22]};
@@ -88,7 +89,7 @@ TransientsDeltaF{3} = [TransientsDeltaF{3}, 2.3];
 %P7T3
 TransientsModes{3} = [TransientsModes{3}, 2, 3];
 TransientsNumbers{3} = [TransientsNumbers{3}, 3, 3];
-TransientsTimes{3} = [TransientsTimes{3}, [457, 457; 461, 461]];
+TransientsTimes{3} = [TransientsTimes{3}, [458.1, 458.1; 460, 460]];
 TransientsDeltaF{3} = [TransientsDeltaF{3}, 6.2, 6.2];
 
 
@@ -96,7 +97,7 @@ TransientsDeltaF{3} = [TransientsDeltaF{3}, 6.2, 6.2];
 
 %%
 
-for indp = 1:3
+for indp = 3
     p = P(indp);
     freqs = Freqs{indp};
     damps = Damps{indp};
@@ -192,13 +193,18 @@ for indp = 1:3
         errorFreq = abs(meanFreq - ModesLMS(indp, mode).freq) / ModesLMS(indp, mode).freq;
         
         shapeF = ModesLMS(indp, mode).shape;
+        
         errorShape = meanShape - shapeF;
-        errorShape = sqrt (sum((abs(errorShape).^2)) / sum((abs(shapeF).^2)));
+        errorShape = sqrt( errorShape'*errorShape / (shapeF'*shapeF));
+        
+        % modal assurance criterion
+        mac = abs(meanShape'*shapeF)^2 / ((meanShape'*meanShape) * (shapeF'*shapeF));
         
         if verb
             disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq), '%']);
-            disp(['shape error : ', num2str(100*errorShape), '%']);
+            disp(['MAC : ', num2str(100*mac), '%, ', 'shape error : ', num2str(100*errorShape), '%']);
             disp(['amort : ', num2str(100*zeta), '%']);
+            disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%']);
         end
         
         % plots temporels
@@ -250,6 +256,7 @@ for indp = 1:3
         fig2 = plotComplexModShape(meanShape, title2);
         
         fig = plotModShape(real(meanShape), title);
+%         fig = plotModShape(imag(meanShape), title);
         
         % enregistrement
         if save
@@ -278,6 +285,7 @@ for indp = 1:3
                     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct);
                 
             else
+                disp(' ');
                 close all
                 break
             end

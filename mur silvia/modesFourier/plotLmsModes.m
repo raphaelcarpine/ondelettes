@@ -16,6 +16,7 @@ for k = 1:3
         
         title = ['P', num2str(p), '_freq=', num2str(freq)];
         fig = plotModShape(real(shape), title);
+%         fig0 = plotModShape(imag(shape), title);
         title2 = [title, '_complex'];
         fig2 = plotComplexModShape(shape, title2);
         

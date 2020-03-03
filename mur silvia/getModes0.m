@@ -8,8 +8,8 @@ singleRidgeMode = false;
 
 t0 = 0;
 tf = 80;
-% t0 = 267.5;
-% tf = 271.4;
+t0 = 1445;
+tf = 1460;
 t0 = -inf;
 tf = inf;
 
@@ -36,7 +36,30 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = [1 ];
+sensors = [1];
+
+%%% test %%%
+if false
+    for k = 1:9
+        x = X(k,:);
+        Rx = xcorr(x, 'biased') / var(x);
+        Rx = Rx(ceil(length(Rx)/2):end);
+        X(k, :) = Rx;
+    end
+end
+%%% test %%%
+
+%%% test %%%
+if true
+    inputSensor = 1;
+    outputSensor = 2;
+    
+    sensors = 1;
+    
+    X(sensors, :) = ifft(fft(X(outputSensor, :)) ./ fft(X(inputSensor, :)));
+end
+%%% test %%%
+
 
 
 fig = figure;
@@ -52,7 +75,7 @@ Q = 30;
 MaxRidges = 1;
 MaxParallelRidges = 1;
 fmin = 4;
-fmax = 40;
+fmax = 50;
 NbFreq = 300;
 
 ct = 3;

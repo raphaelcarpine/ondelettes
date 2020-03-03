@@ -10,11 +10,12 @@ tf = 1452;
 
 X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
+t = t-t0;
 
 
 
 %% affichage optionnel
-if true
+if false
     
     % fig = figure;
     % ax = axes(fig);
@@ -73,7 +74,7 @@ end
 
 paramsReg = nan(9, 8);
 
-paramValue01 = [0.02, 0.01, 1, 1, 5*2*pi, 0]; % a1, a2, l1, l2, dw, delta
+paramValue01 = [0.02, 0.01, 1, 1, 3*2*pi, 0]; % a1, a2, l1, l2, dw, delta
 paramValue02 = [34*2*pi, 37*2*pi, 0]; % w1, w2, d
 paramValue03 = [0, 0]; % delta1, delta2
 

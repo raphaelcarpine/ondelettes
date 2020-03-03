@@ -10,7 +10,7 @@ end
 
 
 % zero padding
-T = t(end)-t(1);
+T = dt * length(t);
 zeroPaddingLength = ceil(1/(T*precision));
 
 x = [x, zeros(1, zeroPaddingLength*length(x))];

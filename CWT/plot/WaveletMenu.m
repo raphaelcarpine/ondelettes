@@ -81,7 +81,7 @@ else
     getX = @() cellmat2mat (get(p.Results.WaveletPlot, 'XData'));
     getY = @() cellmat2mat (get(p.Results.WaveletPlot, 'YData'));
     plotAxes = cellmat2mat (get(p.Results.WaveletPlot, 'Parent'));
-    set(fig, 'Name', [get(fig, 'Name'), ' (fig', num2str(get(get(plotAxes, 'Parent'), 'number')), ')']);
+    set(fig, 'Name', [get(fig, 'Name'), ' (fig', num2str(get(get(plotAxes(1), 'Parent'), 'number')), ')']);
     
     for waveplt = p.Results.WaveletPlot
         parent = waveplt;
@@ -400,21 +400,21 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
     end
 set(XlimMenu, 'CallBack', @(~,~) setXlim);
 
-%zero padding fourier
-zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
-    function setZeroPaddingFourier()
-        prompt = {'Enter zero padding Fourier :'};
-        dlgtitle = 'Input zero padding Fourier';
-        dims = [1 35];
-        definput = {num2str(ZeroPaddingFourier)};
-        answer = inputdlg(prompt,dlgtitle,dims,definput);
-        try
-            ZeroPaddingFourier = str2double(answer{1});
-            ZeroPaddingFourier = max(round(ZeroPaddingFourier), 0);
-        catch
-        end
-    end
-set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
+% %zero padding fourier
+% zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
+%     function setZeroPaddingFourier()
+%         prompt = {'Enter zero padding Fourier :'};
+%         dlgtitle = 'Input zero padding Fourier';
+%         dims = [1 35];
+%         definput = {num2str(ZeroPaddingFourier)};
+%         answer = inputdlg(prompt,dlgtitle,dims,definput);
+%         try
+%             ZeroPaddingFourier = str2double(answer{1});
+%             ZeroPaddingFourier = max(round(ZeroPaddingFourier), 0);
+%         catch
+%         end
+%     end
+% set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
 
 %multipleAxesDisplay
 
@@ -682,10 +682,11 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 Xfour = x(kPlot,:);
                 Yfour = y(kPlot,:);
                 Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
+                Tfour = mean(diff(Xfour))*length(Yfour);
                 
-                four = fft(Yfour);
+                four = fft(Yfour) / length(Yfour);
                 four = four(1:floor(end/2));
+                four(2:end) = 2*four(2:end);
                 freqs = linspace(0, length(four)/Tfour, length(four));
                 
                 hold(fourierPlotAxes(kPlot), 'on');
@@ -709,17 +710,28 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         else
             FourierTot = 0;
             for kPlot = 1:nbPlots
-                Xfour = x;
+                Xfour = x(kPlot,:);
                 Yfour = y(kPlot,:);
                 Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                Tfour = (Xfour(end)-Xfour(1))*length(Yfour)/length(Xfour);
-                four = fft(Yfour);
+                Tfour = mean(diff(Xfour)) * length(Yfour);
+                four = fft(Yfour) / length(Yfour);
                 four = four(1:floor(end/2));
+                four(2:end) = 2*four(2:end);
                 FourierTot = FourierTot + four.^2;
             end
             freqs = linspace(0, length(four)/Tfour, length(four));
+            four = sqrt(FourierTot);
             hold(fourierPlotAxes(kPlot), 'on');
-            plot(freqs, sqrt(abs(FourierTot)), 'Parent', fourierPlotAxes(kPlot));
+            if isequal(FourierScale, 'lin')
+                plot(fourierPlotAxes(kPlot), freqs, abs(four));
+            elseif isequal(FourierScale, 'squared')
+                plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
+            elseif isequal(FourierScale, 'log')
+                plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                set(fourierPlotAxes(kPlot), 'YScale', 'log');
+            elseif isequal(FourierScale, 'phase')
+                plot(fourierPlotAxes(kPlot), freqs, angle(four));
+            end
             hold(fourierPlotAxes(kPlot), 'off');
             xlabel(fourierPlotAxes(kPlot), 'freq');
             ylabel(fourierPlotAxes(kPlot), 'fft');
