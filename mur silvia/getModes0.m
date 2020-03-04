@@ -1,7 +1,7 @@
 % close all
 
 %etape et transient
-P = 6;
+P = 7;
 transient = 0;
 
 singleRidgeMode = false;
@@ -36,7 +36,7 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = [1];
+sensors = [1:9];
 
 %%% test %%%
 if false
@@ -50,7 +50,7 @@ end
 %%% test %%%
 
 %%% test %%%
-if true
+if false
     inputSensor = 1;
     outputSensor = 2;
     
@@ -85,6 +85,8 @@ WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,..
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
     , 'CtEdgeEffects', ct, 'MultiSignalMode', true);
 
+
+return
 
 %%
 try

@@ -4,17 +4,20 @@ load([directory, 'ModesLMS.mat']);
 
 P = [0 6 7];
 
+delete([directory, 'save\*']);
 
 for k = 1:3
     tab = xlsread([directory, files{k}]);
     
     p = P(k);
     
-    for mode = 1:3
+    mode = 1;
+    while mode <= size(ModesLMS, 2) && ~isempty(ModesLMS(k, mode).freq)
         freq = ModesLMS(k, mode).freq;
         shape = ModesLMS(k, mode).shape;
+        damping = ModesLMS(k, mode).damping;
         
-        title = ['P', num2str(p), '_freq=', num2str(freq)];
+        title = ['P', num2str(p), '_freq=', num2str(freq), '_damping=', num2str(100*damping)];
         fig = plotModShape(real(shape), title);
 %         fig0 = plotModShape(imag(shape), title);
         title2 = [title, '_complex'];
@@ -25,5 +28,7 @@ for k = 1:3
         saveas(fig, [directory, 'save\', title, '.png']);
         savefig(fig2, [directory, 'save\', title2, '.fig']);
         saveas(fig2, [directory, 'save\', title2, '.png']);
+        
+        mode = mode + 1;
     end
 end

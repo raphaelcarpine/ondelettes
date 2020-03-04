@@ -5,7 +5,7 @@ ModesWvlt = struct([]);
 %%
 % affichage et methode de calcul
 verb = true;
-singleRidgeMode = false;
+singleRidgeMode = true;
 plotTemporel = true;
 % test = false;
 save = false;
@@ -18,14 +18,17 @@ cf = 5;
 
 P = [0, 6, 7];
 
-% données du paper draft (word)
-Freqs = {[8.35, 33.95, 36.77],...
-    [11.12, 32.79, 37.76],...
-    [10.97, 28.34, 34.22]};
-
-Damps = {[2.16, 0.47, 0.44] * 0.01,...
-    [0.57, 0.72, 0.99] * 0.01,...
-    [1.03, 0.68, 0.71] * 0.01};
+% données de l'algo polymax
+Freqs = {[], [], []};
+Damps = {[], [], []};
+for p = 1:3
+    mode = 1;
+    while mode <= size(ModesLMS, 2) && ~isempty(ModesLMS(p, mode).freq)
+        Freqs{p}(end+1) = ModesLMS(p, mode).freq;
+        Damps{p}(end+1) = ModesLMS(p, mode).damping;
+        mode = mode+1;
+    end
+end
 
 
 % ModesTransients = {{[1; 26], [], [1, 2, 3; 26, 3, 3]},... % P0
@@ -62,10 +65,10 @@ TransientsTimes{1} = [TransientsTimes{1}, [1450.2, 1450.2, 1450.2; 1452.5, 1453,
 TransientsDeltaF{1} = [TransientsDeltaF{1}, 2.7, 2.9, 2.9];
 
 %P6T1
-TransientsModes{2} = [TransientsModes{2}, 1, 2, 3];
-TransientsNumbers{2} = [TransientsNumbers{2}, 1, 1, 1];
-TransientsTimes{2} = [TransientsTimes{2}, [238, 238, 238; 243, 243, 239.5]];
-TransientsDeltaF{2} = [TransientsDeltaF{2}, 4.7, 1.5, 4.9];
+TransientsModes{2} = [TransientsModes{2}, 1, 2, 3, 4];
+TransientsNumbers{2} = [TransientsNumbers{2}, 1, 1, 1, 1];
+TransientsTimes{2} = [TransientsTimes{2}, [238, 238, 238, 238; 243, 241, 241, 239.5]];
+TransientsDeltaF{2} = [TransientsDeltaF{2}, 4.7, 1.7, 1.7, 4.9];
 
 %P6T2
 TransientsModes{2} = [TransientsModes{2}, 2];
@@ -97,7 +100,7 @@ TransientsDeltaF{3} = [TransientsDeltaF{3}, 6.2, 6.2];
 
 %%
 
-for indp = 3
+for indp = 1:3
     p = P(indp);
     freqs = Freqs{indp};
     damps = Damps{indp};
@@ -138,6 +141,10 @@ for indp = 3
         
         % choix Q
         [Qmin, Qmax, Qz] = getBoundsQ(f, Df, Dt, T, ct, cf);
+        if Qmin > min(Qmax, Qz)
+            warning('Qmin > min(Qmax, Qz)');
+        end
+        
         Q = (Qmin + min(Qmax, Qz)) / 2;
         if verb
             disp(['Qmin = ', num2str(Qmin), ' ; Qmax = ', num2str(Qmax), ' ; Qz = ', num2str(Qz)]);
@@ -201,10 +208,11 @@ for indp = 3
         mac = abs(meanShape'*shapeF)^2 / ((meanShape'*meanShape) * (shapeF'*shapeF));
         
         if verb
-            disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq), '%']);
+            disp(['freq : ', num2str(meanFreq), ' ; freq lms : ', num2str(ModesLMS(indp, mode).freq), ' ; error : ', num2str(100*errorFreq), '%']);
             disp(['MAC : ', num2str(100*mac), '%, ', 'shape error : ', num2str(100*errorShape), '%']);
-            disp(['amort : ', num2str(100*zeta), '%']);
-            disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%']);
+            disp(['amort : ', num2str(100*zeta), '% ; amort lms : ', num2str(100*ModesLMS(indp, mode).damping), '%']);
+            disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%',...
+                ' ; I lms : ', num2str(100*nonPropIndex(ModesLMS(indp, mode).shape)), '%']);
         end
         
         % plots temporels
@@ -250,7 +258,7 @@ for indp = 3
         end
         
         title = ['P', num2str(p), 'T', num2str(transient),...
-            '_freq=', num2str(meanFreq), '_damp=', num2str(zeta)];
+            '_freq=', num2str(meanFreq), '_damp=', num2str(100*zeta)];
         title2 = [title, '_complex'];
         
         fig2 = plotComplexModShape(meanShape, title2);
