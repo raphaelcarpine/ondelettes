@@ -108,8 +108,9 @@ multiSignalMode = p.Results.MultiSignalMode;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 
-Xmin = -inf;
-Xmax = inf;
+x0 = getX();
+Xmin = x0(1);
+Xmax = x0(end);
 
 %% reglage affichage subpolt/simple plot
 

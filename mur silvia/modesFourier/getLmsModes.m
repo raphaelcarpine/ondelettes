@@ -1,3 +1,6 @@
+close all
+clear all
+
 directory = 'mur silvia\modesFourier\';
 
 files{1} = 'B1_1_P0_03032020.xlsx';
