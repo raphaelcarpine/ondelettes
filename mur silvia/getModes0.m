@@ -1,7 +1,7 @@
 % close all
 
 %etape et transient
-P = 7;
+P = 6;
 transient = 0;
 
 singleRidgeMode = false;
@@ -75,7 +75,7 @@ Q = 30;
 MaxRidges = 1;
 MaxParallelRidges = 1;
 fmin = 4;
-fmax = 50;
+fmax = 40;
 NbFreq = 300;
 
 ct = 3;

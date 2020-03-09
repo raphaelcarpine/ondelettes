@@ -62,10 +62,10 @@ if isnan(wavelet)
     wavelet= WvltComp(X, Y, WvltFreq, Q); % Calcul CWT
 end
 
-% calcul du bruit
-noise = exp(mean(mean(log(abs(wavelet)))));
-%noise = mean(mean(abs(wavelet)));
-MinModu = MinModu * noise;
+% % calcul du bruit
+% noise = exp(mean(mean(log(abs(wavelet)))));
+% %noise = mean(mean(abs(wavelet)));
+% MinModu = MinModu * noise;
 
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);

@@ -17,7 +17,7 @@ for k = 1:3
         shape = ModesLMS(k, mode).shape;
         damping = ModesLMS(k, mode).damping;
         
-        title = ['P', num2str(p), '_freq=', num2str(freq), '_damping=', num2str(100*damping)];
+        title = ['P', num2str(p), 'M', num2str(mode), '_freq=', num2str(freq), '_damping=', num2str(100*damping)];
         fig = plotModShape(real(shape), title);
 %         fig0 = plotModShape(imag(shape), title);
         title2 = [title, '_complex'];
@@ -26,8 +26,10 @@ for k = 1:3
         % enregistrement figures
         savefig(fig, [directory, 'save\', title, '.fig']);
         saveas(fig, [directory, 'save\', title, '.png']);
+        saveas(fig, [directory, 'save\', title, '.eps']);
         savefig(fig2, [directory, 'save\', title2, '.fig']);
         saveas(fig2, [directory, 'save\', title2, '.png']);
+        saveas(fig2, [directory, 'save\', title2, '.eps']);
         
         mode = mode + 1;
     end

@@ -20,6 +20,7 @@ defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
+defaultXLim = nan;
 
 
 
@@ -43,6 +44,7 @@ addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
+addParameter(p,'XLim', defaultXLim);
 
 parse(p, varargin{:})
 
@@ -107,10 +109,16 @@ ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 multiSignalMode = p.Results.MultiSignalMode;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
+XLim = p.Results.XLim;
 
 x0 = getX();
-Xmin = x0(1);
-Xmax = x0(end);
+if isnan(XLim)
+    Xmin = x0(1);
+    Xmax = x0(end);
+else
+    Xmin = XLim(1);
+    Xmax = XLim(2);
+end
 
 %% reglage affichage subpolt/simple plot
 
