@@ -1,5 +1,6 @@
 load('mur silvia\modesFourier\ModesLMS.mat');
 
+
 load('mur silvia\modesOndelette\allModalQuantities.mat');
 
 allFreqs = AllModalQuantities.freqs;
@@ -7,48 +8,40 @@ allShapes = AllModalQuantities.shapes;
 allDamps = AllModalQuantities.damps;
 
 %%
-verb = true;
-plotGlobal = true;
-saveFigs = true;
-
-%%
-
-meanFreqs = {[], [], []};
-meanShapes = {[], [], []};
-meanDamps = {[], [], []};
-nbTransients = {[], [], []};
-stdFreqs = {[], [], []};
-stdShapes = {[], [], []};
-stdDamps = {[], [], []};
 
 P = [0, 6, 7];
 
+tableMat = 0;
+lineMat = 1;
+columnMat = 1;
+
 
 %%
-
-if saveFigs
-    delete('mur silvia\modesOndelette\save\*');
-end
 
 for indp = 1:3
     p = P(indp);
     
-    if verb
-        disp(' ');
-        disp(' ');
-        disp(['~~~~~ P', num2str(p), ' : mean, std']);
-    end
-    
     for mode = 1:nbModes(indp)
+        
+        % nb transient
+        nbTransients = length(allFreqs{indp}{mode});
+        tableMat(lineMat, columnMat) = nbTransients;
+        
+        
+        % freq
         meanFreqs{indp}(mode) = mean(allFreqs{indp}{mode});
         stdFreqs{indp}(mode) = std(allFreqs{indp}{mode});
+        
+        
+        % damping
         meanDamps{indp}(mode) = mean(allDamps{indp}{mode});
         stdDamps{indp}(mode) = std(allDamps{indp}{mode});
         
+        
+        % shape
         meanShapes{indp}(mode, :) = mean(allShapes{indp}{mode}, 1);
         stdShapes{indp}(mode, :) = std( real( allShapes{indp}{mode}), 0, 1) + 1i*std( imag( allShapes{indp}{mode}), 0, 1);
         
-        nbTransients{indp}(mode) = length(allFreqs{indp}{mode});
         
         meanFreq = meanFreqs{indp}(mode);
         meanShape = transpose(meanShapes{indp}(mode, :));
