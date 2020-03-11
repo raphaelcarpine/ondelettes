@@ -9,6 +9,7 @@ verb = true;
 plotTemporel = true;
 saveFiles = true;
 progressBar = true;
+noiseMean = @(x) exp( mean( log(x)));
 
 % choix precision
 ct = 3;
@@ -80,11 +81,12 @@ TransientsDeltaF = {[],... % P0
     []}; % P7
 
 
-%P0T0
-TransientsModes{1} = [TransientsModes{1}, 1];
-TransientsNumbers{1} = [TransientsNumbers{1}, 0];
-TransientsTimes{1} = [TransientsTimes{1}, [700.2; 701.5]];
-TransientsDeltaF{1} = [TransientsDeltaF{1}, 2.7];
+% %P0T0
+% TransientsModes{1} = [TransientsModes{1}, 1];
+% TransientsNumbers{1} = [TransientsNumbers{1}, 0];
+% % TransientsTimes{1} = [TransientsTimes{1}, [700.2; 701.5]];
+% TransientsTimes{1} = [TransientsTimes{1}, [700.2; 703]];
+% TransientsDeltaF{1} = [TransientsDeltaF{1}, 2.7];
 
 %P0T1
 TransientsModes{1} = [TransientsModes{1}, 2, 3];
@@ -197,7 +199,7 @@ if progressBar
 end
 
 
-for indp = 2:3
+for indp = 1:3
     p = P(indp);
     freqs = Freqs{indp};
     damps = Damps{indp};
@@ -227,6 +229,8 @@ for indp = 2:3
         damp = damps(mode);
         Dt = 1 / (damp * 2*pi*f);
         
+        %% premiere extraction avec Qmin pour déterminer les bornes
+        
         % chargement des donnees
         [t, X] = getData(p, 0);
         
@@ -242,8 +246,121 @@ for indp = 2:3
             warning('Qmin > min(Qmax, Qz)');
         end
         
-        Q = (Qmin + min(Qmax, Qz)) / 2;
         Q = Qmin;
+        
+        % calcul modes
+        fmin = f - min(f/2, Df/2);
+        fmax = f + min(f/2, Df/2);
+        NbFreq = 300;
+        
+        MaxRidges = 1;
+        MaxParallelRidges = 1;
+        
+        
+        if singleRidgeMode
+            [time, freq, shape, amplitude] = getModesSingleRidge(t, X, Q, fmin, fmax, NbFreq,...
+                'NbMaxRidges', MaxRidges, 'NbMaxParallelRidges', MaxParallelRidges,...
+                'ctLeft', ct, 'ctRight', ct);
+        else
+            ridges = {};
+            for k = 1:9
+                ridges{end+1} = RidgeExtract(t, X(k,:), Q, fmin, fmax, NbFreq,...
+                    'NbMaxParallelRidges', MaxRidges, 'NbMaxRidges', MaxParallelRidges,...
+                    'ctLeft', ct, 'ctRight', ct);
+            end
+            
+            [time, freq, ~, shape, amplitude, errors, ridgesNumber] = getModes(ridges, 1);
+        end
+        
+        if isempty(time)
+            warning(['no ridge, P', num2str(p), 'T', num2str(transient), 'm', num2str(mode)]);
+            if verb
+                % test
+                [ttest, Xtest] = getData(p, 0);
+                boundsT = TransientsTimesP(:, kridge);
+                figure;
+                plts = plot(ttest, Xtest(1:9,:));
+                plts = transpose(plts);
+                
+                WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+                    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct,...
+                    'XLim', boundsT);
+                
+                input('continue ?');
+            end
+            continue
+        end
+        
+        % threshold noise
+        thresholdNoise = nan(1, 9);
+        sumWvltF2 = 0;
+        for k = 1:9
+            WvltF = WvltComp(t, X(k, :), f, Q);
+            thresholdNoise(k ) = noiseMean( abs( WvltF));
+            sumWvltF2 = sumWvltF2 + WvltF.^2;
+        end
+        thresholdNoiseTotal = noiseMean( sqrt( abs( sumWvltF2)));
+        
+        % time threshold
+        kTfThreshold = 1;
+        while kTfThreshold <= length(amplitude{1}) && abs(amplitude{1}(kTfThreshold)) > thresholdNoiseTotal
+            kTfThreshold = kTfThreshold + 1;
+        end
+        if kTfThreshold > length(amplitude{1})
+            warning('threshold non atteint');
+        end
+        kTfThreshold = kTfThreshold - 1;
+        
+        TfThreshold = time{1}(kTfThreshold);
+        
+        % donnees approchée
+        freqApprox = mean(freq{1}(1:kTfThreshold));
+        
+        funReg = @(param) log(param(1)) - param(2)*(time{1}(1:kTfThreshold)-time{1}(1))...
+            - log(abs(amplitude{1}(1:kTfThreshold)));
+        options = optimoptions(@lsqnonlin, 'Display', 'off');
+        A0lambda = lsqnonlin(funReg, [abs(amplitudeThreshold(1)), damp], [], [],...
+            options);
+        lambdaApprox = A0lambda(2);
+        DtApprox = 1 / lambdaApprox;
+        
+        % affichage
+        if plotTemporel && verb
+            fig = figure;
+            hold on
+            plot(time{1}, abs(amplitude{1}), ':');
+            ax = gca;
+            ax.ColorOrderIndex = 1;
+            plot(time{1}, abs(amplitude{1}));
+            plot(time{1}, thresholdNoiseTotal * ones( size( time{1})));
+            set(ax, 'YScale', 'log');
+            set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
+            xlabel('t');
+            ylabel('|A|');
+            set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0]));
+        end
+        
+        %% deuxieme extraction avec (Qmin+Qmax)/2
+        
+        % chargement des donnees
+        [t, X] = getData(p, 0);
+        
+        boundsT = TransientsTimesP(:, kridge);
+        if ~ (p == 0 && transient == 3) % deuxième choc pour P0T3
+            boundsT(2) = boundsT(1) + 2 * (TfThreshold - boundsT(1));
+        end
+        X = X(:, t>=boundsT(1) & t<boundsT(2));
+        t = t(t>=boundsT(1) & t<boundsT(2));
+        
+        T = t(end) - t(1);
+        
+        % choix Q
+        [Qmin, Qmax, Qz] = getBoundsQ(freqApprox, Df, DtApprox, T, ct, cf);
+        if Qmin > min(Qmax, Qz)
+            warning('Qmin > min(Qmax, Qz)');
+        end
+        
+        Q = (Qmin + min(Qmax, Qz)) / 2;
         if verb
             disp(['Qmin = ', num2str(Qmin), ' ; Qmax = ', num2str(Qmax), ' ; Qz = ', num2str(Qz)]);
             disp(['Q : ', num2str(Q)]);
@@ -296,11 +413,11 @@ for indp = 2:3
         thresholdNoise = nan(1, 9);
         sumWvltF2 = 0;
         for k = 1:9
-            WvltF = WvltComp(t, X(k, :), f, Q);
-            thresholdNoise(k ) = exp( mean( log( abs( WvltF))));
+            WvltF = WvltComp(t, X(k, :), freqApprox, Q);
+            thresholdNoise(k ) = noiseMean( abs( WvltF));
             sumWvltF2 = sumWvltF2 + WvltF.^2;
         end
-        thresholdNoiseTotal = exp( mean( 1/2 * log( abs( sumWvltF2))));
+        thresholdNoiseTotal = noiseMean( sqrt( abs( sumWvltF2)));
         
         % threshold
         timeThreshold = time{1};
@@ -315,6 +432,8 @@ for indp = 2:3
         else
             % à faire
         end
+        
+        %%
         
         % moyenne
         meanFreq = mean(freqThreshold);
@@ -407,7 +526,8 @@ for indp = 2:3
             set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
             xlabel('t');
             ylabel('|A|');
-            set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0]));
+            set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0])...
+                - [0 1 0 0] * (get(fig, 'Position') * [0;0;0;1]) );
         end
         
         % plots graphiques
@@ -444,9 +564,8 @@ for indp = 2:3
                 
             elseif isequal(str, 'test')
                 % test
-                [t, X] = getData(p, 0);
-                boundsT = TransientsTimesP(:, kridge);
                 figure;
+                [t, X] = getData(p, 0);
                 plts = plot(t, X(1:9,:));
                 plts = transpose(plts);
                 

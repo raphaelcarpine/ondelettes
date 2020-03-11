@@ -1,6 +1,6 @@
 function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, scale, title)
 
-if ~ismember(plotQuantity, {'module', 'arg', 'phase'})
+if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');
 end
 
@@ -47,14 +47,20 @@ hold(ax, 'on');
 
 [T, Freqs] = meshgrid(t, freqs);
 
-if isequal(plotQuantity, 'module')
+if isequal(plotQuantity, 'abs') || isequal(plotQuantity, 'module')
     wavelet = moduleScale(abs(wavelet));
-    plt = pcolor(ax, T, Freqs, wavelet);
+%     plt = pcolor(ax, T, Freqs, wavelet);
+    plt = surf(ax, T, Freqs, wavelet);
     colormap(ax, jet);
+    
+    ZedgeEffects = max(max(wavelet)) + 1;
+    
 elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
     wavelet = angle(wavelet);
     plt = pcolor(T, Freqs, wavelet);
     colormap(ax, hsv);
+    
+    ZedgeEffects = 0;
 end
 
 xlabel(ax, 'time')
@@ -76,12 +82,12 @@ if ctEdgeEffects > 0
     tEdge2 = [t2, t(end), t(end)];
     freqsEdge2 = [freqs, freqs(end), freqs(1)];
     
-    patch(tEdge1,freqsEdge1,'white','EdgeColor','none','FaceAlpha',.35);
-    patch(tEdge2,freqsEdge2,'white','EdgeColor','none','FaceAlpha',.35);
+    patch(tEdge1,freqsEdge1, ZedgeEffects * ones(size(tEdge1)),'white','EdgeColor','none','FaceAlpha',.35);
+    patch(tEdge2,freqsEdge2, ZedgeEffects * ones(size(tEdge2)),'white','EdgeColor','none','FaceAlpha',.35);
     
     %ligne démarcation
-    plot(ax, t1, freqs, 'black--', 'LineWidth', 1.5);
-    plot(ax, t2, freqs, 'black--', 'LineWidth', 1.5);
+    plot3(ax, t1, freqs, ZedgeEffects * ones(size(t1)), 'black--', 'LineWidth', 1.5);
+    plot3(ax, t2, freqs, ZedgeEffects * ones(size(t2)), 'black--', 'LineWidth', 1.5);
     
     % limites axes
     axis tight

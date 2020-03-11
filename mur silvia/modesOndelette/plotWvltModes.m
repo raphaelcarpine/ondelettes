@@ -6,7 +6,7 @@ allDamps = AllModalQuantities.damps;
 
 %%
 verb = true;
-plotGlobal = true;
+plotGlobal = false;
 saveFigs = true;
 
 %%
@@ -53,12 +53,12 @@ for indp = 1:3
         zeta = meanDamps{indp}(mode);
         
         % erreur stat
-        errorFreq = stdFreqs{indp}(mode) / sqrt(nbTransients{indp}(mode));
-        errorDamp = stdDamps{indp}(mode) / sqrt(nbTransients{indp}(mode));
-        errorShape = norm( stdShapes{indp}(mode, :)) / sqrt(nbTransients{indp}(mode));
-        errorShape = errorShape / norm(meanShape);
+        stdFreq = stdFreqs{indp}(mode);
+        stdDamp = stdDamps{indp}(mode);
+        stdShape = norm( stdShapes{indp}(mode, :));
+        stdShape = stdShape / norm(meanShape);
         shapeI = norm( imag( meanShape));
-        errorShapeI = norm( imag( stdShapes{indp}(mode, :))) / sqrt(nbTransients{indp}(mode));
+        stdShapeI = norm( imag( stdShapes{indp}(mode, :)));
         
         % comparaison fourier
         errorFreqF = abs(meanFreq - ModesLMS(indp, mode).freq) / ModesLMS(indp, mode).freq;
@@ -73,14 +73,14 @@ for indp = 1:3
         if verb
             disp(' ');
             disp(['~ mode', num2str(mode), ' (', num2str(nbTransients{indp}(mode)), ' transients)']);
-            disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq/meanFreq), '%',...
+            disp(['freq : ', num2str(meanFreq), ' ; std : ', num2str(stdFreq),...
                 ' ; freq lms : ', num2str(ModesLMS(indp, mode).freq), ' ; error lms : ', num2str(100*errorFreqF), '%']);
-            disp(['MAC : ', num2str(100*mac), '% ; ', ' ; shape error : ', num2str(100*errorShape), '%',...
+            disp(['MAC : ', num2str(100*mac), '% ; ', ' ; shape cov : ', num2str(100*stdShape), '%',...
                 ' ; shape error lms : ', num2str(100*errorShapeF), '%']);
-            disp(['imaginary shape : ', num2str(shapeI), ' ; ', 'imaginary shape error : ',...
-                num2str(100*errorShapeI/shapeI), '%']);
-            disp(['amort : ', num2str(100*zeta), '% ; error : ', num2str(100*errorDamp), '%',...
-                ' ; relative error : ', num2str(100*errorDamp/zeta), '%',...
+            disp(['imaginary shape : ', num2str(shapeI), ' ; ', 'imaginary shape cov : ',...
+                num2str(100*stdShapeI/shapeI), '%']);
+            disp(['amort : ', num2str(100*zeta), '% ; std : ', num2str(100*stdDamp), '%',...
+                ' ; cov : ', num2str(100*stdDamp/zeta), '%',...
                 ' ; amort lms : ', num2str(100*ModesLMS(indp, mode).damping), '%']);
             
             disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%',...

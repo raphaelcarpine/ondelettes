@@ -1,7 +1,7 @@
 % close all
 
 %etape et transient
-P = 6;
+P = 0;
 transient = 0;
 
 singleRidgeMode = false;
