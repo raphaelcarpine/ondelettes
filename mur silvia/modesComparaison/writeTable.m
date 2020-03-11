@@ -8,13 +8,14 @@ allShapes = AllModalQuantities.shapes;
 allDamps = AllModalQuantities.damps;
 
 %%
+createDoc = true;
 
+%%
 P = [0, 6, 7];
 
 tableMat = 0;
 lineMat = 1;
 columnMat = 1;
-
 
 %%
 
@@ -23,81 +24,159 @@ for indp = 1:3
     
     for mode = 1:nbModes(indp)
         
+        %% transients
         % nb transient
         nbTransients = length(allFreqs{indp}{mode});
         tableMat(lineMat, columnMat) = nbTransients;
+        columnMat = columnMat+1;
         
+        %% freqs
+        % freq polymax
+        tableMat(lineMat, columnMat) = ModesLMS(indp,mode).freq;
+        columnMat = columnMat+1;
         
-        % freq
-        meanFreqs{indp}(mode) = mean(allFreqs{indp}{mode});
-        stdFreqs{indp}(mode) = std(allFreqs{indp}{mode});
+        % mean freqs cwt
+        tableMat(lineMat, columnMat) = mean(allFreqs{indp}{mode});
+        columnMat = columnMat+1;
         
+        % std freqs cwt
+        if nbTransients == 1
+            tableMat(lineMat, columnMat) = nan;
+        else
+            tableMat(lineMat, columnMat) = std(allFreqs{indp}{mode});
+        end
+        columnMat = columnMat+1;
         
-        % damping
-        meanDamps{indp}(mode) = mean(allDamps{indp}{mode});
-        stdDamps{indp}(mode) = std(allDamps{indp}{mode});
+        %% damping
+        % damping polymax
+        tableMat(lineMat, columnMat) = 100*ModesLMS(indp,mode).damping;
+        columnMat = columnMat+1;
         
+        % mean dampings cwt
+        tableMat(lineMat, columnMat) = 100*mean(allDamps{indp}{mode});
+        columnMat = columnMat+1;
         
-        % shape
-        meanShapes{indp}(mode, :) = mean(allShapes{indp}{mode}, 1);
-        stdShapes{indp}(mode, :) = std( real( allShapes{indp}{mode}), 0, 1) + 1i*std( imag( allShapes{indp}{mode}), 0, 1);
+        % std dampings cwtif nbTransients == 1
+        if nbTransients == 1
+            tableMat(lineMat, columnMat) = nan;
+        else
+            tableMat(lineMat, columnMat) = 100*std(allDamps{indp}{mode});
+        end
+        columnMat = columnMat+1;
         
+        %% shape
+        meanShape = transpose( mean( allShapes{indp}{mode}, 1));
+        stdShape = std( real( allShapes{indp}{mode}), 0, 1) + 1i*std( imag( allShapes{indp}{mode}), 0, 1);
+        shapeF = ModesLMS(indp,mode).shape;
         
-        meanFreq = meanFreqs{indp}(mode);
-        meanShape = transpose(meanShapes{indp}(mode, :));
-        zeta = meanDamps{indp}(mode);
-        
-        % erreur stat
-        errorFreq = stdFreqs{indp}(mode) / sqrt(nbTransients{indp}(mode));
-        errorDamp = stdDamps{indp}(mode) / sqrt(nbTransients{indp}(mode));
-        errorShape = norm( stdShapes{indp}(mode, :)) / sqrt(nbTransients{indp}(mode));
-        errorShape = errorShape / norm(meanShape);
-        shapeI = norm( imag( meanShape));
-        errorShapeI = norm( imag( stdShapes{indp}(mode, :))) / sqrt(nbTransients{indp}(mode));
-        
-        % comparaison fourier
-        errorFreqF = abs(meanFreq - ModesLMS(indp, mode).freq) / ModesLMS(indp, mode).freq;
-        
-        shapeF = ModesLMS(indp, mode).shape;
-        errorShapeF = meanShape - shapeF;
-        errorShapeF = sqrt( errorShapeF'*errorShapeF / (shapeF'*shapeF));
-        
-        % modal assurance criterion
+        % mac
         mac = abs(meanShape'*shapeF)^2 / ((meanShape'*meanShape) * (shapeF'*shapeF));
+        tableMat(lineMat, columnMat) = 100*mac;
+        columnMat = columnMat+1;
         
-        if verb
-            disp(' ');
-            disp(['~ mode', num2str(mode), ' (', num2str(nbTransients{indp}(mode)), ' transients)']);
-            disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq/meanFreq), '%',...
-                ' ; freq lms : ', num2str(ModesLMS(indp, mode).freq), ' ; error lms : ', num2str(100*errorFreqF), '%']);
-            disp(['MAC : ', num2str(100*mac), '% ; ', ' ; shape error : ', num2str(100*errorShape), '%',...
-                ' ; shape error lms : ', num2str(100*errorShapeF), '%']);
-            disp(['imaginary shape : ', num2str(shapeI), ' ; ', 'imaginary shape error : ',...
-                num2str(100*errorShapeI/shapeI), '%']);
-            disp(['amort : ', num2str(100*zeta), '% ; error : ', num2str(100*errorDamp), '%',...
-                ' ; relative error : ', num2str(100*errorDamp/zeta), '%',...
-                ' ; amort lms : ', num2str(100*ModesLMS(indp, mode).damping), '%']);
-            
-            disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%',...
-                ' ; I lms : ', num2str(100*nonPropIndex(ModesLMS(indp, mode).shape)), '%']);
+        % I polymax
+        tableMat(lineMat, columnMat) = 100*nonPropIndex(shapeF);
+        columnMat = columnMat+1;
+        
+        % I cwt
+        tableMat(lineMat, columnMat) = 100*nonPropIndex(meanShape);
+        columnMat = columnMat+1;
+        
+        % SD I
+        allI = [];
+        for ktransient = 1:size(allShapes{indp}{mode}, 1)
+            allI = [allI, nonPropIndex( transpose( allShapes{indp}{mode}(ktransient, :)))];
+        end
+        if nbTransients == 1
+            tableMat(lineMat, columnMat) = nan;
+        else
+            tableMat(lineMat, columnMat) = 100*std( allI);
+        end
+        columnMat = columnMat+1;
+        
+        %%
+        columnMat = 1;
+        lineMat = lineMat+1;
+        
+    end
+end
+
+
+
+
+
+
+
+
+
+%% tex doc
+
+docString = '';
+docString = [docString, '\begin{tabular}{ccc|c|c|c|c|c|c|c|c|c|c|} ', newline];
+docString = [docString, '\cline{4-13} &  &  & \multicolumn{3}{c|}{Frequencies} & \multicolumn{3}{c|}{Damping coefficients}  & \multicolumn{4}{c|}{Modal shapes} \\ \hline ', newline];
+docString = [docString, '\multicolumn{1}{|c|}{Step} & ', newline];
+docString = [docString, '\multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular}} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Number of\\ transients\\ (CWT) \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (PolyMAX)\\ Hz \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT)\\ Hz\end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD\\ (CWT)\\ Hz\end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Damping\\ (PolyMAX)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Damping\\ (CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD\\ (CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}MAC\\ (PolyMAX\\ $\times$ CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}$I_{np}$\\ (PolyMAX)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}$I_{np}$\\ (CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD $I_{np}$\\ (CWT)\\ \% \end{tabular} ', newline];
+docString = [docString, ' \\ \hline ', newline, newline];
+
+
+lineMat = 1;
+for indp = 1:3
+    p = P(indp);
+    
+    for mode = 1:nbModes(indp)
+        if mode == 1
+            docString = [docString, '\multicolumn{1}{|c|}{\multirow{3}{*}{$P_', num2str(p), '$}} & \multicolumn{1}{c|}{1} ', newline];
+        else
+            docString = [docString, '\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{', num2str(mode), '} ', newline];
         end
         
-        if plotGlobal
-            title = ['P', num2str(p), 'M', num2str(mode), '_freq=', num2str(meanFreq), '_damping=', num2str(100*zeta)];
-            fig = plotModShape(real(meanShape), title);
-            
-            title2 = [title, '_complex'];
-            fig2 = plotComplexModShape(meanShape, title2);
-            
-            % enregistrement
-            if saveFigs
-                directory = 'mur silvia\modesOndelette\save\';
-                savefig(fig, [directory, title, '.fig']);
-                saveas(fig, [directory, title, '.png']);
-                savefig(fig2, [directory, title2, '.fig']);
-                saveas(fig2, [directory, title2, '.png']);
+        for columnMat = 1:size(tableMat, 2)
+            if isnan( tableMat(lineMat, columnMat))
+                docString = [docString, ' & /'];
+            elseif columnMat == 1
+                docString = [docString, ' & ', num2str(tableMat(lineMat, columnMat), '%u')];
+            else
+                docString = [docString, ' & ', num2str(tableMat(lineMat, columnMat), '%.2f')];
             end
         end
         
+        if mode ~= nbModes(indp)
+            docString = [docString, ' \\ \cline{2-13} ', newline];
+        else
+            docString = [docString, ' \\ \hline ', newline, newline];
+        end
+        
+        lineMat = lineMat+1;
     end
+end
+
+docString = [docString, '\end{tabular}'];
+
+
+%% creation document
+
+tableFile = fopen('mur silvia\modesComparaison\table.txt', 'w');
+fwrite(tableFile, docString);
+fclose(tableFile);
+
+
+%% creation document pour test
+if createDoc
+    headerString = ['\documentclass[11pt, landscape]{article}', newline, newline, '\usepackage[margin=0.1in]{geometry}', newline, newline, '\usepackage{multirow}', newline, '\usepackage{graphicx}', newline, newline, '\begin{document}', newline, newline, '\begin{small}', newline, newline, '\begin{table}', newline];
+    endString = ['', newline, '\end{table}', newline, newline, '\end{small}', newline, newline, '\end{document}'];
+    
+    tableDocFile = fopen('mur silvia\modesComparaison\document test\tableDoc.tex', 'w');
+    fwrite(tableDocFile, [headerString, docString, endString]);
+    fclose(tableDocFile);
 end

@@ -1,5 +1,9 @@
 directory = 'mur silvia\modesFourier\';
 
+files{1} = 'B1_1_P0_03032020.xlsx';
+files{2} = 'B1_1_P6_03032020.xlsx';
+files{3} = 'B1_1_P7_03032020.xlsx';
+
 load([directory, 'ModesLMS.mat']);
 
 P = [0 6 7];
@@ -17,7 +21,7 @@ for k = 1:3
         shape = ModesLMS(k, mode).shape;
         damping = ModesLMS(k, mode).damping;
         
-        title = ['P', num2str(p), 'M', num2str(mode), '_freq=', num2str(freq), '_damping=', num2str(100*damping)];
+        title = ['P', num2str(p), 'M', num2str(mode), 'PolyMAX'];
         fig = plotModShape(real(shape), title);
 %         fig0 = plotModShape(imag(shape), title);
         title2 = [title, '_complex'];

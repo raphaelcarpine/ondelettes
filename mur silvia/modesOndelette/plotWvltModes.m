@@ -8,8 +8,10 @@ allDamps = AllModalQuantities.damps;
 
 %%
 verb = true;
-plotGlobal = false;
+plotGlobal = true;
 saveFigs = true;
+
+directory = 'mur silvia\modesOndelette\save\';
 
 %%
 
@@ -27,7 +29,7 @@ P = [0, 6, 7];
 %%
 
 if saveFigs
-    delete('mur silvia\modesOndelette\save\*');
+    delete([directory, '*']);
 end
 
 for indp = 1:3
@@ -90,7 +92,7 @@ for indp = 1:3
         end
         
         if plotGlobal
-            title = ['P', num2str(p), 'M', num2str(mode), '_freq=', num2str(meanFreq), '_damping=', num2str(100*zeta)];
+            title = ['P', num2str(p), 'M', num2str(mode), 'CWT'];
             fig = plotModShape(real(meanShape), title);
             
             title2 = [title, '_complex'];
@@ -98,10 +100,11 @@ for indp = 1:3
             
             % enregistrement
             if saveFigs
-                directory = 'mur silvia\modesOndelette\save\';
                 savefig(fig, [directory, title, '.fig']);
+                saveas(fig, [directory, title, '.eps']);
                 saveas(fig, [directory, title, '.png']);
                 savefig(fig2, [directory, title2, '.fig']);
+                saveas(fig2, [directory, title2, '.eps']);
                 saveas(fig2, [directory, title2, '.png']);
             end
         end
