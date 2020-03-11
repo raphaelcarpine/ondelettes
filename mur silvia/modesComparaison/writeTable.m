@@ -1,5 +1,6 @@
 load('mur silvia\modesFourier\ModesLMS.mat');
 
+
 load('mur silvia\modesOndelette\allModalQuantities.mat');
 
 allFreqs = AllModalQuantities.freqs;
@@ -7,60 +8,52 @@ allShapes = AllModalQuantities.shapes;
 allDamps = AllModalQuantities.damps;
 
 %%
-verb = true;
-plotGlobal = false;
-saveFigs = true;
-
-%%
-
-meanFreqs = {[], [], []};
-meanShapes = {[], [], []};
-meanDamps = {[], [], []};
-nbTransients = {[], [], []};
-stdFreqs = {[], [], []};
-stdShapes = {[], [], []};
-stdDamps = {[], [], []};
 
 P = [0, 6, 7];
 
+tableMat = 0;
+lineMat = 1;
+columnMat = 1;
+
 
 %%
-
-if saveFigs
-    delete('mur silvia\modesOndelette\save\*');
-end
 
 for indp = 1:3
     p = P(indp);
     
-    if verb
-        disp(' ');
-        disp(' ');
-        disp(['~~~~~ P', num2str(p), ' : mean, std']);
-    end
-    
     for mode = 1:nbModes(indp)
+        
+        % nb transient
+        nbTransients = length(allFreqs{indp}{mode});
+        tableMat(lineMat, columnMat) = nbTransients;
+        
+        
+        % freq
         meanFreqs{indp}(mode) = mean(allFreqs{indp}{mode});
         stdFreqs{indp}(mode) = std(allFreqs{indp}{mode});
+        
+        
+        % damping
         meanDamps{indp}(mode) = mean(allDamps{indp}{mode});
         stdDamps{indp}(mode) = std(allDamps{indp}{mode});
         
+        
+        % shape
         meanShapes{indp}(mode, :) = mean(allShapes{indp}{mode}, 1);
         stdShapes{indp}(mode, :) = std( real( allShapes{indp}{mode}), 0, 1) + 1i*std( imag( allShapes{indp}{mode}), 0, 1);
         
-        nbTransients{indp}(mode) = length(allFreqs{indp}{mode});
         
         meanFreq = meanFreqs{indp}(mode);
         meanShape = transpose(meanShapes{indp}(mode, :));
         zeta = meanDamps{indp}(mode);
         
         % erreur stat
-        stdFreq = stdFreqs{indp}(mode);
-        stdDamp = stdDamps{indp}(mode);
-        stdShape = norm( stdShapes{indp}(mode, :));
-        stdShape = stdShape / norm(meanShape);
+        errorFreq = stdFreqs{indp}(mode) / sqrt(nbTransients{indp}(mode));
+        errorDamp = stdDamps{indp}(mode) / sqrt(nbTransients{indp}(mode));
+        errorShape = norm( stdShapes{indp}(mode, :)) / sqrt(nbTransients{indp}(mode));
+        errorShape = errorShape / norm(meanShape);
         shapeI = norm( imag( meanShape));
-        stdShapeI = norm( imag( stdShapes{indp}(mode, :)));
+        errorShapeI = norm( imag( stdShapes{indp}(mode, :))) / sqrt(nbTransients{indp}(mode));
         
         % comparaison fourier
         errorFreqF = abs(meanFreq - ModesLMS(indp, mode).freq) / ModesLMS(indp, mode).freq;
@@ -75,14 +68,14 @@ for indp = 1:3
         if verb
             disp(' ');
             disp(['~ mode', num2str(mode), ' (', num2str(nbTransients{indp}(mode)), ' transients)']);
-            disp(['freq : ', num2str(meanFreq), ' ; std : ', num2str(stdFreq),...
+            disp(['freq : ', num2str(meanFreq), ' ; error : ', num2str(100*errorFreq/meanFreq), '%',...
                 ' ; freq lms : ', num2str(ModesLMS(indp, mode).freq), ' ; error lms : ', num2str(100*errorFreqF), '%']);
-            disp(['MAC : ', num2str(100*mac), '% ; ', ' ; shape cov : ', num2str(100*stdShape), '%',...
+            disp(['MAC : ', num2str(100*mac), '% ; ', ' ; shape error : ', num2str(100*errorShape), '%',...
                 ' ; shape error lms : ', num2str(100*errorShapeF), '%']);
-            disp(['imaginary shape : ', num2str(shapeI), ' ; ', 'imaginary shape cov : ',...
-                num2str(100*stdShapeI/shapeI), '%']);
-            disp(['amort : ', num2str(100*zeta), '% ; std : ', num2str(100*stdDamp), '%',...
-                ' ; cov : ', num2str(100*stdDamp/zeta), '%',...
+            disp(['imaginary shape : ', num2str(shapeI), ' ; ', 'imaginary shape error : ',...
+                num2str(100*errorShapeI/shapeI), '%']);
+            disp(['amort : ', num2str(100*zeta), '% ; error : ', num2str(100*errorDamp), '%',...
+                ' ; relative error : ', num2str(100*errorDamp/zeta), '%',...
                 ' ; amort lms : ', num2str(100*ModesLMS(indp, mode).damping), '%']);
             
             disp(['I : ', num2str(100*nonPropIndex(meanShape)), '%',...
