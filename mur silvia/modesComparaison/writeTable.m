@@ -31,7 +31,7 @@ for indp = 1:3
         columnMat = columnMat+1;
         
         %% freqs
-        % freq polymax
+        % freq LMS
         tableMat(lineMat, columnMat) = ModesLMS(indp,mode).freq;
         columnMat = columnMat+1;
         
@@ -48,7 +48,7 @@ for indp = 1:3
         columnMat = columnMat+1;
         
         %% damping
-        % damping polymax
+        % damping LMS
         tableMat(lineMat, columnMat) = 100*ModesLMS(indp,mode).damping;
         columnMat = columnMat+1;
         
@@ -74,7 +74,7 @@ for indp = 1:3
         tableMat(lineMat, columnMat) = 100*mac;
         columnMat = columnMat+1;
         
-        % I polymax
+        % I LMS
         tableMat(lineMat, columnMat) = 100*nonPropIndex(shapeF);
         columnMat = columnMat+1;
         
@@ -117,16 +117,16 @@ docString = [docString, '\cline{4-13} &  &  & \multicolumn{3}{c|}{Frequencies} &
 docString = [docString, '\multicolumn{1}{|c|}{Step} & ', newline];
 docString = [docString, '\multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular}} & ', newline];
 docString = [docString, '\begin{tabular}[c]{@{}c@{}}Number of\\ transients\\ (CWT) \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (PolyMAX)\\ Hz \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (LMS)\\ Hz \end{tabular} & ', newline];
 docString = [docString, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT)\\ Hz\end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD\\ (CWT)\\ Hz\end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}Damping\\ (PolyMAX)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ Hz\end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Damping\\ (LMS)\\ \% \end{tabular} & ', newline];
 docString = [docString, '\begin{tabular}[c]{@{}c@{}}Damping\\ (CWT)\\ \% \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD\\ (CWT)\\ \% \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}MAC\\ (PolyMAX\\ $\times$ CWT)\\ \% \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}$I_{np}$\\ (PolyMAX)\\ \% \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}$I_{np}$\\ (CWT)\\ \% \end{tabular} & ', newline];
-docString = [docString, '\begin{tabular}[c]{@{}c@{}}SD $I_{np}$\\ (CWT)\\ \% \end{tabular} ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}MAC\\ (LMS\\ $\times$ CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (LMS)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT)\\ \% \end{tabular} & ', newline];
+docString = [docString, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} ', newline];
 docString = [docString, ' \\ \hline ', newline, newline];
 
 

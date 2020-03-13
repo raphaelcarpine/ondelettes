@@ -1,4 +1,4 @@
-function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, scale, title)
+function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, scale, figureTitle, axesTitle)
 
 if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');
@@ -8,8 +8,12 @@ if nargin < 7
     scale = 'log10';
 end
 if nargin < 8
-    title = '';
+    figureTitle = '';
 end
+if nargin < 9
+    axesTitle = '';
+end
+
 
 if isequal(scale, 'lin')
     moduleScale = @(x) x;
@@ -39,7 +43,7 @@ end
 
 %% figure
 
-fig = figure('Name', title);
+fig = figure('Name', figureTitle);
 ax = axes(fig);
 hold(ax, 'on');
 
@@ -65,6 +69,7 @@ end
 
 xlabel(ax, 'time')
 ylabel(ax, 'frequency')
+title(ax, axesTitle);
 shading flat
 
 %% zones d'effets de bord

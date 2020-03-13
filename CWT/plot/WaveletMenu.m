@@ -21,6 +21,7 @@ defaultMultiSignalMode = false;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
 defaultXLim = nan;
+defaultWvltAxesTitle = '';
 
 
 
@@ -45,6 +46,7 @@ addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
 addParameter(p,'XLim', defaultXLim);
+addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 
 parse(p, varargin{:})
 
@@ -110,6 +112,7 @@ multiSignalMode = p.Results.MultiSignalMode;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
+wvltAxesTitle = p.Results.WvltAxesTitle;
 
 x0 = getX();
 if isnan(XLim)
@@ -499,11 +502,11 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                     wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
                     if checkboxModule.Value
                         WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale]);
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                     end
                     if checkboxPhase.Value
                         WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale]);
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                     end
                 end
             else
@@ -517,12 +520,12 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 if checkboxModule.Value
                     WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
                         'module', Q, ctEdgeEffects, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale]);
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                 end
                 if checkboxPhase.Value
                     WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
                         'phase', Q, ctEdgeEffects, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale]);
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                 end
             end
         end
