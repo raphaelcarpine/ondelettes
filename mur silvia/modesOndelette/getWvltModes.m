@@ -7,7 +7,7 @@ singleRidgeMode = true;
 
 verb = true;
 plotTemporel = true;
-saveFiles = true;
+saveFiles = false;
 progressBar = true;
 noiseMean = @(x) exp( mean( log(x)));
 
@@ -313,11 +313,17 @@ for indp = 1:3
         
         TfThreshold = time{1}(kTfThreshold);
         
-        % donnees approchée
-        freqApprox = mean(freq{1}(1:kTfThreshold));
+        % threshold
+        timeThreshold = time{1}(1:kTfThreshold);
+        freqThreshold = freq{1}(1:kTfThreshold);
+        shapeThreshold = shape{1}(1:kTfThreshold);
+        amplitudeThreshold = amplitude{1}(1:kTfThreshold);
         
-        funReg = @(param) log(param(1)) - param(2)*(time{1}(1:kTfThreshold)-time{1}(1))...
-            - log(abs(amplitude{1}(1:kTfThreshold)));
+        % donnees approchée
+        freqApprox = mean(freqThreshold);
+        
+        funReg = @(param) log(param(1)) - param(2)*(timeThreshold-timeThreshold(1))...
+            - log(abs(amplitudeThreshold));
         options = optimoptions(@lsqnonlin, 'Display', 'off');
         A0lambda = lsqnonlin(funReg, [abs(amplitudeThreshold(1)), damp], [], [],...
             options);
@@ -328,14 +334,29 @@ for indp = 1:3
         if plotTemporel && verb
             fig = figure;
             hold on
+            plot(time{1}, freq{1}, ':');
+            ax = gca;
+            ax.ColorOrderIndex = 1;
+            plot(timeThreshold, freqThreshold);
+            plot(time{1}, freqApprox * ones( size( time{1})), 'r--');
+            set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
+            xlim(ax, [time{1}(1), time{1}(end)]);
+            xlabel('time');
+            ylabel('freq');
+            set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0]));
+            
+            fig = figure;
+            hold on
             plot(time{1}, abs(amplitude{1}), ':');
             ax = gca;
             ax.ColorOrderIndex = 1;
-            plot(time{1}, abs(amplitude{1}));
+            plot(timeThreshold, abs(amplitudeThreshold));
             plot(time{1}, thresholdNoiseTotal * ones( size( time{1})));
+            plot(time{1}, A0lambda(1)*exp(-lambdaApprox*(time{1}-time{1}(1))), 'r--');
             set(ax, 'YScale', 'log');
             set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
-            xlabel('t');
+            xlim(ax, [time{1}(1), time{1}(end)]);
+            xlabel('time');
             ylabel('|A|');
             set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0]));
         end
@@ -356,11 +377,14 @@ for indp = 1:3
         
         % choix Q
         [Qmin, Qmax, Qz] = getBoundsQ(freqApprox, Df, DtApprox, T, ct, cf);
-        if Qmin > min(Qmax, Qz)
-            warning('Qmin > min(Qmax, Qz)');
+        if Qmin > Qmax
+            warning('Qmin > Qmax');
+        end
+        if Qmin > Qz
+            warning('Qmin > Qz');
         end
         
-        Q = (Qmin + min(Qmax, Qz)) / 2;
+        Q = min( (Qmin+Qmax)/2, Qz);
         if verb
             disp(['Qmin = ', num2str(Qmin), ' ; Qmax = ', num2str(Qmax), ' ; Qz = ', num2str(Qz)]);
             disp(['Q : ', num2str(Q)]);
@@ -485,7 +509,7 @@ for indp = 1:3
             plot(timeThreshold, zeros(size(timeThreshold)), 'black--');
             plot(timeThreshold, 180*ones(size(timeThreshold)), 'black--');
             ylim([-90, 270]);
-            xlabel('t');
+            xlabel('time');
             ylabel('arg(T)');
             
             figure;
@@ -494,7 +518,7 @@ for indp = 1:3
             ax = gca;
             ax.ColorOrderIndex = 1;
             plot(timeThreshold, real(shapeThreshold));
-            xlabel('t');
+            xlabel('time');
             ylabel('Re(T)');
             figure;
             hold on
@@ -502,7 +526,7 @@ for indp = 1:3
             ax = gca;
             ax.ColorOrderIndex = 1;
             plot(timeThreshold, imag(shapeThreshold));
-            xlabel('t');
+            xlabel('time');
             ylabel('Im(T)');
             
             figure;
@@ -511,8 +535,11 @@ for indp = 1:3
             ax = gca;
             ax.ColorOrderIndex = 1;
             plot(timeThreshold, freqThreshold);
-            xlabel('t');
-            ylabel('f');
+            plot(time{1}, meanFreq * ones( size( time{1})), 'r--');
+            xlim(ax, [time{1}(1), time{1}(end)]);
+            set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
+            xlabel('time');
+            ylabel('freq');
             
             fig = figure;
             hold on
@@ -524,7 +551,8 @@ for indp = 1:3
             plot(time{1}, thresholdNoiseTotal * ones( size( time{1})));
             set(ax, 'YScale', 'log');
             set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1);
-            xlabel('t');
+            xlim(ax, [time{1}(1), time{1}(end)]);
+            xlabel('time');
             ylabel('|A|');
             set(fig, 'Position', get(fig, 'Position') + [1 0 0 0] * (get(fig, 'Position') * [0;0;1;0])...
                 - [0 1 0 0] * (get(fig, 'Position') * [0;0;0;1]) );
@@ -571,7 +599,7 @@ for indp = 1:3
                 
                 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
                     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges, 'CtEdgeEffects', ct,...
-                    'XLim', boundsT);
+                    'XLim', boundsT, 'MultiSignalMode', singleRidgeMode);
             else
                 disp(' ');
                 close all

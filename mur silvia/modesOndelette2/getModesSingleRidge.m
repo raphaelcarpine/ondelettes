@@ -1,32 +1,65 @@
-%etape et transient
-P = 0;
-transient = 1;
+kTransient = 2;
 
-t0 = 0.22;
-tf = inf;
+%% etape et transient
+
+Transient  = struct([]);
+
+% transient 1
+Transient(1).P = 0;
+Transient(1).t0 = 1267.35;
+Transient(1).tf = 1269.95;
+Transient(1).f1 = 33.93;
+Transient(1).f2 = 36.76;
+Transient(1).lambda1 = 0;
+Transient(1).lambda2 = 0;
+Transient(1).f3 = 8.35;
+
+% transient 2
+Transient(2).P = 0;
+Transient(2).t0 = 1450.2; %1450
+Transient(2).tf = 1452;
+Transient(2).f1 = 33.93;
+Transient(2).f2 = 36.76;
+Transient(2).lambda1 = 0;
+Transient(2).lambda2 = 0;
+Transient(2).f3 = 8.35;
 
 
-[t, X] = getData(P, transient);
 
-X = X(:, t>=t0 & t<tf);
-t = t(t>=t0 & t<tf);
+%% initialisation
+P = Transient(kTransient).P;
+t0 = Transient(kTransient).t0;
+tf = Transient(kTransient).tf;
+f1 = Transient(kTransient).f1;
+f2 = Transient(kTransient).f2;
+lambda1 = Transient(kTransient).lambda1;
+lambda2 = Transient(kTransient).lambda2;
+f3 = Transient(kTransient).f3;
 
+[t, X] = getData(P, 0);
+
+% choix precision
+ct = 3;
+cf = 5;
+
+%% calcul de Q
+[Qmin, Qmax, Qa] = getBoundsQsingleRidge(f1, f2, lambda1, lambda2, f3, tf-t0, ct, cf);
+if Qmin > Qa
+    warning('Qmin > Qa');
+end
+if Qmin > Qmax
+    warning('Qmin > Qmax');
+end
+
+Q = (Qmin + Qa)/2;
+
+disp(['Qmin = ', num2str(Qmin), ' ; Qa = ', num2str(Qa), ' ; Qmax = ', num2str(Qmax)]);
+disp(['Q : ', num2str(Q)]);
 
 
 %% affichage optionnel
-if false
-    
-    % fig = figure;
-    % ax = axes(fig);
-    % hold(ax, 'on');
-    % plts = nan(1, 9);
-    % for i = 1:9
-    %     plts(i) = plot(t, X(i,:), 'Parent', ax);
-    % end
-    
-    sensor = 1;
-    
-    
+if true
+    sensor = [2 5 8];
     
     fig = figure;
     ax = axes(fig);
@@ -35,30 +68,39 @@ if false
     
     
     %ondelette
-    Q = 5;
+%     Q = 5;
     MaxRidges = 1;
     MaxParallelRidges = 1;
-    fmin = 6;
-    fmax = 10;
+    fmin = 30;
+    fmax = 40;
     NbFreq = 300;
     
     WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
-        'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges);
+        'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges,...
+        'XLim', [t0, tf]);
     
-    return
+    str = input('continue ? ', 's');
     
+    if isequal(str, '0') || isequal(str, 'n') || isequal(str, 'no') || isequal(str, 'non')
+        return
+    end
 end
+
+
+X = X(:, t>=t0 & t<tf);
+t = t(t>=t0 & t<tf);
+t = t-t0;
 
 
 %% regressions
 
 % wavelet
 
-Q = 5;
+% Q = 10;
 % MaxRidges = 1;
 % MaxParallelRidges = 1;
-fmin = 6;
-fmax = 10;
+fmin = 30;
+fmax = 40;
 NbFreq = 300;
 
 
@@ -73,7 +115,7 @@ end
 
 paramsReg = nan(9, 8);
 
-paramValue01 = [0.02, 0.01, 1, 1, 5*2*pi, 0]; % a1, a2, l1, l2, dw, delta
+paramValue01 = [0.02, 0.01, 1, 1, 3*2*pi, 0]; % a1, a2, l1, l2, dw, delta
 paramValue02 = [34*2*pi, 37*2*pi, 0]; % w1, w2, d
 paramValue03 = [0, 0]; % delta1, delta2
 
@@ -182,8 +224,20 @@ for sensor = 1:9
     
     paramValue04 = [paramValue01(1:4), paramValue02(1:2), paramValue03];
     
-    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', 1e6,...
-        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
+    
+    % détermination de MaxFunctionEvaluations, pour ne pas calculer plus
+    % de 30s
+    tic
+    for k = 1:100
+        S(paramValue04);
+    end
+    T100 = toc;
+    
+    maxFunctionEval = round(30*100/T100);
+    
+    
+    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', inf,...
+        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', maxFunctionEval, 'FunctionTolerance', 0);
     
     lb = ones(size(paramValue04))*(-inf);
     ub = ones(size(paramValue04))*inf;
@@ -193,7 +247,7 @@ for sensor = 1:9
     catch
         p1 = zeros(1, 8);
     end
-    
+        
     disp(['a1 = ', num2str(p1(1), 6)]);
     disp(['lambda1 = ', num2str(p1(3), 6)]);
     disp(['w1 = ', num2str(p1(5), 6), ' ; f1 = ', num2str(p1(5)/2/pi, 6)]);
@@ -236,7 +290,7 @@ end
 
 %% test
 
-mode = 1;
+mode = 2;
 
 shapes0 = shapes{mode};
 
@@ -252,15 +306,33 @@ for k=1:9
     hold on
 end
 
-figure;
-hold on
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
 circle = exp(1i*linspace(0, 2*pi, 30));
-for k=1:9
-    p0 = 2*mod(k-1, 3) + 2*1i*(3-fix((k-1)/3));
-    p1 = p0 + shapes0(k);
-    plot(real(p0 + circle), imag(p0 + circle), 'black');
-    plot(real([p0 p1]), imag([p0, p1]), '-o');
+plot([-1, 5], [0, 0], '--', 'Color', [0, 0, 0, 0.5]);
+plot([-1, 5], [2, 2], '--', 'Color', [0, 0, 0, 0.5]);
+plot([-1, 5], [4, 4], '--', 'Color', [0, 0, 0, 0.5]);
+plot([0, 0], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+plot([2, 2], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+plot([4, 4], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
+for kx = 0:2
+    for ky = 0:2
+        p0 = 2*kx + 2*1i*(2-ky);
+        p1 = p0 + shapes0(3*ky+kx+1);
+        plot(real(p0 + circle), imag(p0 + circle), 'black');
+        colorI = get(gca,'ColorOrderIndex');
+        plot(real([p0 p1]), imag([p0, p1]), 'r', 'LineWidth', 2);
+        set(gca,'ColorOrderIndex', colorI);
+        plot(real(p1), imag(p1) , 'ro', 'LineWidth', 2);
+    end
 end
+
+axis equal;
+ax.Position = ax.OuterPosition;
+% fig.Position = 40*ones(1, 4) + ax.Position;
+
+axis off
 
 pbaspect(gca, [1 1 1]);
 

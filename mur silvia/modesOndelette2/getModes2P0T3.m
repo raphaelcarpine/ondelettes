@@ -15,7 +15,7 @@ t = t-t0;
 
 
 %% affichage optionnel
-if false
+if true
     
     % fig = figure;
     % ax = axes(fig);

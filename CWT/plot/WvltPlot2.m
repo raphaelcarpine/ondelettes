@@ -68,7 +68,7 @@ elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
 end
 
 xlabel(ax, 'time')
-ylabel(ax, 'frequency')
+ylabel(ax, 'freq')
 title(ax, axesTitle);
 shading flat
 

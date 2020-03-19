@@ -4,7 +4,7 @@ p = inputParser ;
 %% parametres par defaut
 etDef = 1;
 efDef = 1;
-slopeRidgeDef = 0.5;
+MaxSlopeRidgeDef = 1;
 ctLeftDef = 3;
 ctRightDef = 3;
 % ctLeftDef = 0;
@@ -25,7 +25,7 @@ addRequired(p,'fmax')
 addRequired(p,'NbFreq')
 addParameter(p,'et',etDef);
 addParameter(p,'ef',efDef);
-addParameter(p,'slopeRidge',slopeRidgeDef);
+addParameter(p,'MaxSlopeRidge',MaxSlopeRidgeDef);
 addParameter(p,'ctLeft',ctLeftDef);
 addParameter(p,'ctRight',ctRightDef);
 addParameter(p,'NbMaxRidges',NbMaxRidgesDef);
@@ -40,7 +40,7 @@ parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
 %
 et = p.Results.et ;
 ef = p.Results.ef ;
-slopeRidge = p.Results.slopeRidge ;
+slopeRidge = p.Results.MaxSlopeRidge ;
 ctLeft =  p.Results.ctLeft;
 ctRight =  p.Results.ctRight;
 NbMaxRidges = p.Results.NbMaxRidges;
@@ -144,7 +144,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     C_ind = 2;
     while (ridge.time{C_r}(C_ind-1)+et<=nx) % On chaine vers l'avant
         
-        ef = ceil (slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / Fs); % pente max dans le plan tps-freq
+        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * mean(diff(WvltFreq)))); % pente max dans le plan tps-freq
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny), bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
@@ -171,7 +171,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     while ridge.time{C_r}(C_ind-1)-et>=1 %On chaine vers l'arrière
         
-        ef = ceil (slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / Fs); % pente max dans le plan tps-freq
+        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * mean(diff(WvltFreq)))); % pente max dans le plan tps-freq
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)-(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne

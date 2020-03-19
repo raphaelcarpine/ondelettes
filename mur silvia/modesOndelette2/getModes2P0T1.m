@@ -1,21 +1,20 @@
 %etape et transient
 P = 0;
-transient = 0;
+transient = 1;
 
-t0 = 1267.35;
-tf = 1269.95;
+t0 = 0.22;
+tf = inf;
 
 
 [t, X] = getData(P, transient);
 
 X = X(:, t>=t0 & t<tf);
 t = t(t>=t0 & t<tf);
-t = t-t0;
 
 
 
 %% affichage optionnel
-if false
+if true
     
     % fig = figure;
     % ax = axes(fig);
@@ -39,9 +38,9 @@ if false
     Q = 5;
     MaxRidges = 1;
     MaxParallelRidges = 1;
-    fmin = 30;
-    fmax = 40;
-    NbFreq = 100;
+    fmin = 6;
+    fmax = 10;
+    NbFreq = 300;
     
     WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax,...
         'NbFreq', NbFreq, 'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges);
@@ -55,12 +54,12 @@ end
 
 % wavelet
 
-Q = 10;
+Q = 5;
 % MaxRidges = 1;
 % MaxParallelRidges = 1;
-fmin = 30;
-fmax = 40;
-NbFreq = 100;
+fmin = 6;
+fmax = 10;
+NbFreq = 300;
 
 
 ridges = cell(1, 9);
@@ -74,7 +73,7 @@ end
 
 paramsReg = nan(9, 8);
 
-paramValue01 = [0.02, 0.01, 1, 1, 3*2*pi, 0]; % a1, a2, l1, l2, dw, delta
+paramValue01 = [0.02, 0.01, 1, 1, 5*2*pi, 0]; % a1, a2, l1, l2, dw, delta
 paramValue02 = [34*2*pi, 37*2*pi, 0]; % w1, w2, d
 paramValue03 = [0, 0]; % delta1, delta2
 
@@ -183,20 +182,8 @@ for sensor = 1:9
     
     paramValue04 = [paramValue01(1:4), paramValue02(1:2), paramValue03];
     
-    
-    % détermination de MaxFunctionEvaluations, pour ne pas calculer plus
-    % de 30s
-    tic
-    for k = 1:100
-        S(paramValue04);
-    end
-    T100 = toc;
-    
-    maxFunctionEval = round(30*100/T100);
-    
-    
-    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', inf,...
-        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', maxFunctionEval, 'FunctionTolerance', 0);
+    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', 1e6,...
+        'StepTolerance', 1e-10, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
     
     lb = ones(size(paramValue04))*(-inf);
     ub = ones(size(paramValue04))*inf;
@@ -206,7 +193,7 @@ for sensor = 1:9
     catch
         p1 = zeros(1, 8);
     end
-        
+    
     disp(['a1 = ', num2str(p1(1), 6)]);
     disp(['lambda1 = ', num2str(p1(3), 6)]);
     disp(['w1 = ', num2str(p1(5), 6), ' ; f1 = ', num2str(p1(5)/2/pi, 6)]);
@@ -249,7 +236,7 @@ end
 
 %% test
 
-mode = 2;
+mode = 1;
 
 shapes0 = shapes{mode};
 
@@ -265,33 +252,15 @@ for k=1:9
     hold on
 end
 
-fig = figure;
-ax = axes(fig);
-hold(ax, 'on');
+figure;
+hold on
 circle = exp(1i*linspace(0, 2*pi, 30));
-plot([-1, 5], [0, 0], '--', 'Color', [0, 0, 0, 0.5]);
-plot([-1, 5], [2, 2], '--', 'Color', [0, 0, 0, 0.5]);
-plot([-1, 5], [4, 4], '--', 'Color', [0, 0, 0, 0.5]);
-plot([0, 0], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
-plot([2, 2], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
-plot([4, 4], [-1, 5], '--', 'Color', [0, 0, 0, 0.5]);
-for kx = 0:2
-    for ky = 0:2
-        p0 = 2*kx + 2*1i*(2-ky);
-        p1 = p0 + shapes0(3*ky+kx+1);
-        plot(real(p0 + circle), imag(p0 + circle), 'black');
-        colorI = get(gca,'ColorOrderIndex');
-        plot(real([p0 p1]), imag([p0, p1]), 'r', 'LineWidth', 2);
-        set(gca,'ColorOrderIndex', colorI);
-        plot(real(p1), imag(p1) , 'ro', 'LineWidth', 2);
-    end
+for k=1:9
+    p0 = 2*mod(k-1, 3) + 2*1i*(3-fix((k-1)/3));
+    p1 = p0 + shapes0(k);
+    plot(real(p0 + circle), imag(p0 + circle), 'black');
+    plot(real([p0 p1]), imag([p0, p1]), '-o');
 end
-
-axis equal;
-ax.Position = ax.OuterPosition;
-% fig.Position = 40*ones(1, 4) + ax.Position;
-
-axis off
 
 pbaspect(gca, [1 1 1]);
 

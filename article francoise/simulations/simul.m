@@ -14,7 +14,7 @@ nbDDL = 1;
 
 %% excitation
 
-T = 1000;
+T = 10000;
 dt = 0.01;
 fe = 1/dt;
 
