@@ -1,0 +1,8 @@
+P0
+Q = 3.0888 (Qmin = 3.5927 ; Qa = 2.5849 ; Qmax = 170.5508)
+threshold = 5*@(x)exp(mean(log(x)))
+
+P7
+Q = 3.9672 (Qmin = 4.9608 ; Qa = 2.9737 ; Qmax = 62.081)
+threshold = 2.5*@(x)exp(mean(log(x)))
+

@@ -11,7 +11,10 @@ defaultParam = 'a b';
 defaultParam0 = '1 1';
 defaultFit = 'y';
 defaultBounds = '-inf inf';
+defaultLowerBoundsParams = '';
+defaultUpperBoundsParams = '';
 defaultFigureName = 'Regression';
+defaultOptionsRegression = [];
 
 paramPrecision = 1e-6;
 maxIter = 1e6;
@@ -21,7 +24,10 @@ addOptional(p, 'Param', defaultParam);
 addOptional(p, 'Param0', defaultParam0);
 addOptional(p, 'Fit', defaultFit);
 addOptional(p, 'Bounds', defaultBounds);
+addOptional(p, 'LowerBoundsParams', defaultLowerBoundsParams);
+addOptional(p, 'UpperBoundsParams', defaultUpperBoundsParams);
 addOptional(p, 'FigureName', defaultFigureName);
+addOptional(p, 'OptionsRegression', defaultOptionsRegression);
 
 parse(p, varargin{:});
 
@@ -30,17 +36,40 @@ param = p.Results.Param;
 param0 = p.Results.Param0;
 fit = p.Results.Fit;
 figureName = p.Results.FigureName;
+
 bounds = p.Results.Bounds;
+lowerBoundsParams = p.Results.LowerBoundsParams;
+upperBoundsParams = p.Results.UpperBoundsParams;
+if isa(bounds, 'double')
+    bounds = num2str(bounds, numericPrecision);
+end
+if isa(lowerBoundsParams, 'double')
+    lowerBoundsParams = num2str(lowerBoundsParams, numericPrecision);
+end
+if isa(upperBoundsParams, 'double')
+    upperBoundsParams = num2str(upperBoundsParams, numericPrecision);
+end
+
+
+optionsReg = p.Results.OptionsRegression;
+if isempty(optionsReg)
+    optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', maxIter,...
+        'StepTolerance', paramPrecision, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
+end
 
 param0 = num2str(param0, numericPrecision);
 
-parameters = nan;
-%%
+parameters = [];
+%% fig
+
+% lignes pans
+Hpans = [4, 17, 5, 3];
 
 fig = figure('Name', figureName);
 fig.Units = 'characters';
 fig.Position(3) = 70;
-fig.Position(4) = 25;
+fig.Position(4) = sum(Hpans);
+fig.Position(2) = fig.Position(2) - fig.Position(4) - 2;
 fig.MenuBar = 'none';
 
 
@@ -53,10 +82,17 @@ optionsPan = uipanel('Parent',fig, 'Units', 'normalized');
 buttonReg = uicontrol('Parent',fig, 'Units', 'normalized','Style','pushbutton',...
     'String', 'regression');
 
-linePan.Position = [0.02 0.84 0.96 0.14];
-eqPan.Position = [0.02 0.37 0.96 0.45];
-optionsPan.Position = [0.02 0.15 0.96 0.2];
-buttonReg.Position = [0.02 0.02 0.96 0.11];
+margin = 0.02;
+hpans = (1 - margin*(length(Hpans)+1)) * Hpans/sum(Hpans);
+zpans = margin * ones(size(hpans));
+for iz = length(zpans)-1:-1:1
+    zpans(iz) = zpans(iz+1) + hpans(iz+1) + margin;
+end
+
+linePan.Position = [0.02, zpans(1), 0.96, hpans(1)];
+eqPan.Position = [0.02, zpans(2), 0.96, hpans(2)];
+optionsPan.Position = [0.02, zpans(3), 0.96, hpans(3)];
+buttonReg.Position = [0.02, zpans(4), 0.96, hpans(4)];
 
 
 
@@ -124,20 +160,26 @@ nextBut.Callback = @(~,~) nextprev(1);
 
 fig.CloseRequestFcn = @(~,~) closeReg();
 
+
+
 %% equation
 
 eqStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'y = ');
 eqEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', eq);
 paramStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params :');
 paramEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param);
-param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params0 :');
+param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params init :');
 param0Edit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param0);
+paramLbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params lb :');
+paramLbEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', lowerBoundsParams);
+paramUbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params ub :');
+paramUbEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', upperBoundsParams);
 fitStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'fit :');
 fitEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', fit);
 boundsStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'bounds :');
 boundsEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', bounds);
 
-nLign = 5;
+nLign = 7;
 marge = 0.02;
 h = (1-(nLign+1)*marge)/nLign;
 H = h+marge;
@@ -147,10 +189,14 @@ paramStr.Position = [0.01, 1-2*H, 0.2, h];
 paramEdit.Position = [0.22, 1-2*H, 0.77, h];
 param0Str.Position = [0.01, 1-3*H, 0.2, h];
 param0Edit.Position = [0.22, 1-3*H, 0.77, h];
-fitStr.Position = [0.01, 1-4*H, 0.2, h];
-fitEdit.Position = [0.22, 1-4*H, 0.77, h];
-boundsStr.Position = [0.01, 1-5*H, 0.2, h];
-boundsEdit.Position = [0.22, 1-5*H, 0.77, h];
+paramLbStr.Position = [0.01, 1-4*H, 0.2, h];
+paramLbEdit.Position = [0.22, 1-4*H, 0.77, h];
+paramUbStr.Position = [0.01, 1-5*H, 0.2, h];
+paramUbEdit.Position = [0.22, 1-5*H, 0.77, h];
+fitStr.Position = [0.01, 1-6*H, 0.2, h];
+fitEdit.Position = [0.22, 1-6*H, 0.77, h];
+boundsStr.Position = [0.01, 1-7*H, 0.2, h];
+boundsEdit.Position = [0.22, 1-7*H, 0.77, h];
 
 
 %% options
@@ -196,8 +242,8 @@ plotBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushbut
         Eq = eqEdit.String;
         Param = paramEdit.String;
         Param0 = param0Edit.String;
-        Param = strsplit(Param);
-        Param0 = strsplit(Param0);
+        Param = strsplit2(Param);
+        Param0 = strsplit2(Param0);
         for ip = 1:length(Param0)
             Param0{ip} = eval(Param0{ip});
         end
@@ -230,7 +276,9 @@ plotBut.Callback = @(~,~) plotFunc();
 
 X = nan;
 Y = nan;
+Z = nan;
 ax = 0;
+dimension = nan;
 
     function ok = updateXYAxes()
 %         line = findobj('Type', 'line');
@@ -238,6 +286,13 @@ ax = 0;
 %             line = line(1);
             X = get(line, 'XData');
             Y = get(line, 'YData');
+            Z = get(line, 'ZData');
+            if isempty(Z)
+                dimension = 2;
+            else
+                dimension = 3;
+                Y = Y + 1i*Z;
+            end
             
             X = X(~isnan(Y)); % on enlève les valeurs inappropriées
             Y = Y(~isnan(Y));
@@ -246,7 +301,7 @@ ax = 0;
             
             % bounds
             Bounds = boundsEdit.String;
-            Bounds = strsplit(Bounds);
+            Bounds = strsplit2(Bounds);
             for iBounds = 1:2
                 Bounds{iBounds} = eval(Bounds{iBounds});
             end
@@ -289,8 +344,19 @@ ax = 0;
     end
 
 
+    function split2 = strsplit2(str)
+        while ~isempty(str) && str(1) == ' '
+            str = str(2:end);
+        end
+        while ~isempty(str) && str(end) == ' '
+            str = str(1:end-1);
+        end
+        split2 = strsplit(str);
+    end
 
-%%
+
+
+%% regression
 
 
     function computeReg()
@@ -299,19 +365,46 @@ ax = 0;
             return;
         end
         
+        % upload
         Eq = eqEdit.String;
         Param = paramEdit.String;
         Param0 = param0Edit.String;
-        Param = strsplit(Param);
-        Param0 = strsplit(Param0);
+        LowerBoundsParams = paramLbEdit.String;
+        UpperBoundsParams = paramUbEdit.String;
+        
+        %
+        set(param0Edit, 'ForegroundColor', [0.5 0.5 0.5]);
+        set(fig, 'pointer', 'watch');
+        drawnow;
+        
+        % conditionnement
+        Param = strsplit2(Param);
+        
+        Param0 = strsplit2(Param0);
         for ip = 1:length(Param0)
             Param0{ip} = eval(Param0{ip});
         end
         Param0 = [Param0{:}];
+        LowerBoundsParams = strsplit2(LowerBoundsParams);
+        if isempty(LowerBoundsParams{1})
+            LowerBoundsParams = {};
+        end
+        for ip = 1:length(LowerBoundsParams)
+            LowerBoundsParams{ip} = eval(LowerBoundsParams{ip});
+        end
+        LowerBoundsParams = [LowerBoundsParams{:}];
+            
+        UpperBoundsParams = strsplit2(UpperBoundsParams);
+        if isempty(UpperBoundsParams{1})
+            UpperBoundsParams = {};
+        end
+        for ip = 1:length(UpperBoundsParams)
+            UpperBoundsParams{ip} = eval(UpperBoundsParams{ip});
+        end
+        UpperBoundsParams = [UpperBoundsParams{:}];
         
-        set(param0Edit, 'ForegroundColor', [0.5 0.5 0.5]);
-        drawnow;
         
+        % regression
         Fstring = Eq;
         for ip = 1:length(Param)
             Fstring = varNameRep(Fstring, Param{ip}, ['P(' num2str(ip) ')']);
@@ -328,13 +421,8 @@ ax = 0;
         
         S = @(P) fitFunction(F(P, X)) - fitFunction(Y);
         
-        lb = ones(size(Param0))*(-inf);
-        ub = ones(size(Param0))*inf;
-        optionsReg = optimoptions(@lsqnonlin, 'MaxIterations', maxIter,...
-            'StepTolerance', paramPrecision, 'MaxFunctionEvaluations', inf, 'FunctionTolerance', 0);
-        
         try
-            Param1 = lsqnonlin(S, Param0, lb, ub, optionsReg);
+            Param1 = lsqnonlin(S, Param0, LowerBoundsParams, UpperBoundsParams, optionsReg);
             parameters = Param1;
         catch error
             warning('did not fit');
@@ -344,7 +432,11 @@ ax = 0;
         end
         
         set(param0Edit, 'String', num2str(Param1, numericPrecision));
+        
+        %
         set(param0Edit, 'ForegroundColor', [0 0 0]);
+        set(fig, 'pointer', 'arrow');
+        drawnow
         
         if optBut.plot.Value
             plotReg(F, Param1);
@@ -371,14 +463,26 @@ ax = 0;
             plotAxes = ax;
             hold(plotAxes, 'on');
             ylim(ax, 'manual');
-            onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)), 'r--')];
+            if dimension == 2
+                onAxesPlots = [onAxesPlots, plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)),...
+                    'r--', 'LineWidth', lineWidth)];
+            elseif dimension == 3
+                onAxesPlots = [onAxesPlots, plot3(plotAxes, Xplot, real(F(Param, Xplot) .* ones(size(Xplot))),...
+                    imag(F(Param, Xplot) .* ones(size(Xplot))), 'r', 'LineWidth', lineWidth)];
+            end
             uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
             hold(plotAxes, 'off');
         else
             plotAxes = axes(figure);
             hold(plotAxes, 'on');
-            plot(plotAxes, X, Y, '*');
-            plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)));
+            if dimension == 2
+                plot(plotAxes, X, Y, '*');
+                plot(plotAxes, Xplot, F(Param, Xplot) .* ones(size(Xplot)));
+            elseif dimension == 3
+                plot3(plotAxes, X, Y, Z, '*');
+                plot3(plotAxes, Xplot, real(F(Param, Xplot) .* ones(size(Xplot))),...
+                    imag(F(Param, Xplot) .* ones(size(Xplot))));
+            end
             hold(plotAxes, 'off');
         end
     end
@@ -387,6 +491,31 @@ ax = 0;
 
 buttonReg.Callback = @(~,~) computeReg();
 
+
+%% raccourcis
+
+    function keyboardShortcuts(~, event)
+        if isequal(event.Key, 'return') || isequal(event.Key, 'space')
+            computeReg();
+        elseif isequal(event.Key, 'shift') || isequal(event.Key, 's')
+            lineSelect.Value = ~ lineSelect.Value;
+            selectFunction(lineSelect.Value);
+        elseif isequal(event.Key, 'p')
+            plotFunc();
+        elseif isequal(event.Key, 'd')
+            deletePlots();
+        elseif isequal(event.Key, 'leftarrow')
+            nextprev(-1);
+        elseif isequal(event.Key, 'rightarrow')
+            nextprev(1);
+        elseif isequal(event.Key, 'delete') || isequal(event.Key, 'backspace')
+            close(fig);
+        end
+    end
+set(fig, 'KeyPressFcn', @keyboardShortcuts);
+
+
+%% fermeture
 
 if nargout > 0
     waitfor(fig);

@@ -1,0 +1,38 @@
+\begin{tabular}{ccc|c|c|c|c|c|c|c|} 
+\cline{4-10} &  &  & \multicolumn{7}{c|}{Modal Shapes} \\ \hline 
+\multicolumn{1}{|c|}{Step} & 
+\multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular}} & 
+\begin{tabular}[c]{@{}c@{}}Number of\\ transients\\ (CWT) \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT\\ $\times$ LMS)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ LMS)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ CWT)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (LMS)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} & 
+\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT2)\\ \% \end{tabular}
+ \\ \hline 
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_0$}} & \multicolumn{1}{c|}{1} 
+ & 1 & 99.73 & / & / & 2.46 & 1.39 & / & / \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
+ & 3 & 99.98 & 99.94 & 99.88 & 7.10 & 7.90 & 0.81 & 7.21 \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
+ & 2 & 98.91 & 99.11 & 99.52 & 5.50 & 3.93 & 3.50 & 4.31 \\ \hline 
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_6$}} & \multicolumn{1}{c|}{1} 
+ & 2 & 100.00 & / & / & 0.23 & 0.29 & 0.26 & / \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
+ & 1 & 99.94 & / & / & 1.34 & 1.07 & / & / \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
+ & 2 & 99.92 & / & / & 1.09 & 1.43 & 0.04 & / \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{4} 
+ & 1 & 98.96 & / & / & 5.75 & 5.51 & / & / \\ \hline 
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_7$}} & \multicolumn{1}{c|}{1} 
+ & 3 & 99.99 & / & / & 0.46 & 0.61 & 0.39 & / \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
+ & 5 & 99.96 & 97.65 & 97.59 & 0.65 & 1.56 & 1.78 & 3.21 \\ \cline{2-10} 
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
+ & 8 & 91.08 & 84.49 & 97.30 & 31.32 & 3.86 & 2.89 & 2.83 \\ \hline 
+
+\end{tabular}
