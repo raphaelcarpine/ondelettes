@@ -12,6 +12,8 @@ createDoc = true;
 %%
 P = [0, 6, 7];
 
+nbModes = [3, 4, 3];
+
 tableMatFreq = 0;
 tableMatDamp = 0;
 tableMatShape = 0;
@@ -299,15 +301,15 @@ docStringShape = [docStringShape, '\end{tabular}'];
 %% creation documents
 
 % freq
-tableFile = fopen('mur silvia\modesComparaison\tableFreq.txt', 'w');
+tableFile = fopen('mur silvia\modesComparaison\tableFreq.tex', 'w');
 fwrite(tableFile, docStringFreq);
 fclose(tableFile);
 % damp
-tableFile = fopen('mur silvia\modesComparaison\tableDamp.txt', 'w');
+tableFile = fopen('mur silvia\modesComparaison\tableDamp.tex', 'w');
 fwrite(tableFile, docStringDamp);
 fclose(tableFile);
 % shape
-tableFile = fopen('mur silvia\modesComparaison\tableShape.txt', 'w');
+tableFile = fopen('mur silvia\modesComparaison\tableShape.tex', 'w');
 fwrite(tableFile, docStringShape);
 fclose(tableFile);
 

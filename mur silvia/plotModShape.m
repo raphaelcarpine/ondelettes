@@ -12,7 +12,7 @@ if nargin < 2
 end
 if nargin < 1 % exemple
     shape = [1.0000, -0.0027, -0.9622, 0.6654, -0.0474, -0.7961, 0.4438, -0.0047, -0.0557];
-    %shape = [1.0000, 0, 0, 0, 0, 0, 0, 0, 0];
+    %shape = [1, 1, 1, 0.5, 0.5, 0.5, 0, 0, 0];
     shape = shape / sqrt(shape * shape.');
 end
 
@@ -84,6 +84,7 @@ fig = figure('Name', figTitle);
 ax = axes(fig);
 hold(ax, 'on');
 plt = surf(ax, x, shape2, y, shape2, 'EdgeColor', 'none');
+ylim(ax, maxAbsShape*[-1, 1]);
 
 gray = 0.5;
 xGrid = [20, 65.5, 111];
@@ -105,7 +106,7 @@ if printChanels
     ych = transpose(Ych);
     ych = ych(:);
     for ch = 1:9
-        text(ax, xch(ch), -1, ych(ch), ['ch', num2str(ch)]);
+        text(ax, xch(ch), -3.5*maxAbsShape, ych(ch), ['ch', num2str(ch)]);
     end
 end
 
@@ -113,7 +114,7 @@ load('mur silvia/customColorMap');
 
 colormap(fig, customColorMap);
 % colormap(fig, jet);
-caxis(ax, [-maxAbsShape, maxAbsShape]);
+caxis(ax, maxAbsShape*[-1, 1]);
 colorbar(ax);
 
 view(ax, 45, 20);

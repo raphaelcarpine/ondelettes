@@ -21,7 +21,7 @@ for k = 1:3
         shape = ModesLMS(k, mode).shape;
         damping = ModesLMS(k, mode).damping;
         
-        title = ['P', num2str(p), 'M', num2str(mode), 'PolyMAX'];
+        title = ['P', num2str(p), 'M', num2str(mode), 'LMS'];
         fig = plotModShape(real(shape), title);
 %         fig0 = plotModShape(imag(shape), title);
         title2 = [title, '_complex'];
@@ -30,10 +30,10 @@ for k = 1:3
         % enregistrement figures
         savefig(fig, [directory, 'save\', title, '.fig']);
         saveas(fig, [directory, 'save\', title, '.png']);
-        saveas(fig, [directory, 'save\', title, '.eps']);
+        saveas(fig, [directory, 'save\', title, '.eps'], 'epsc');
         savefig(fig2, [directory, 'save\', title2, '.fig']);
         saveas(fig2, [directory, 'save\', title2, '.png']);
-        saveas(fig2, [directory, 'save\', title2, '.eps']);
+        saveas(fig2, [directory, 'save\', title2, '.eps'], 'epsc');
         
         mode = mode + 1;
     end

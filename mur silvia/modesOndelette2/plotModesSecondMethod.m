@@ -27,10 +27,10 @@ for k = [1, 3]
         % enregistrement figures
         savefig(fig, [directory, 'save\', title, '.fig']);
         saveas(fig, [directory, 'save\', title, '.png']);
-        saveas(fig, [directory, 'save\', title, '.eps']);
+        saveas(fig, [directory, 'save\', title, '.eps'], 'epsc');
         savefig(fig2, [directory, 'save\', title2, '.fig']);
         saveas(fig2, [directory, 'save\', title2, '.png']);
-        saveas(fig2, [directory, 'save\', title2, '.eps']);
+        saveas(fig2, [directory, 'save\', title2, '.eps'], 'epsc');
     end
     
     stringInfo = [stringInfo, 'P', num2str(p), newline];

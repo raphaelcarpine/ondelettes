@@ -15,7 +15,7 @@ noiseMean = @(x) exp( mean( log(x)));
 showTest = false;
 dashedLines = false;
 setBounds = false;
-saveFiles = true;
+saveFiles = false;
 
 %% sauvegarde
 

@@ -101,10 +101,10 @@ for indp = 1:3
             % enregistrement
             if saveFigs
                 savefig(fig, [directory, title, '.fig']);
-                saveas(fig, [directory, title, '.eps']);
+                saveas(fig, [directory, title, '.eps'], 'epsc');
                 saveas(fig, [directory, title, '.png']);
                 savefig(fig2, [directory, title2, '.fig']);
-                saveas(fig2, [directory, title2, '.eps']);
+                saveas(fig2, [directory, title2, '.eps'], 'epsc');
                 saveas(fig2, [directory, title2, '.png']);
             end
         end
