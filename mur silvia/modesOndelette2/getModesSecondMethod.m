@@ -30,7 +30,7 @@ ModesWvlt2 = struct([]);
 Transient  = struct([]);
 
 % transient 1
-Transient(1).P = 0;
+Transient(1).P = 0; % bof en fait
 Transient(1).t0 = 1267.35;
 Transient(1).tf = 1269.95;
 Transient(1).f1 = 33.93;

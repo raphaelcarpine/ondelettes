@@ -161,10 +161,10 @@ docStringFreq = [docStringFreq, '\multicolumn{1}{|c|}{Step} & ', newline];
 docStringFreq = [docStringFreq, '\multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular}} & ', newline];
 docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Number of\\ transients\\ (CWT) \end{tabular} & ', newline];
 docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (LSCF)\\ Hz \end{tabular} & ', newline];
-docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT)\\ Hz\end{tabular} & ', newline];
-docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ Hz\end{tabular} & ', newline];
+docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT)\\ Hz \end{tabular} & ', newline];
+docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ Hz \end{tabular} & ', newline];
 docStringFreq = [docStringFreq, '\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT2)\\ Hz\end{tabular}', newline];
-docStringFreq = [docStringFreq, ' \\ \hline ', newline, newline];
+docStringFreq = [docStringFreq, ' \\ \hline  \hline', newline, newline];
 
 
 lineMat = 1;
@@ -190,8 +190,10 @@ for indp = 1:3
         
         if mode ~= nbModes(indp)
             docStringFreq = [docStringFreq, ' \\ \cline{2-', num2str(size(tableMatFreq, 2)+2), '} ', newline];
+        elseif indp ~= 3
+            docStringFreq = [docStringFreq, ' \\ \hline \hline', newline, newline];
         else
-            docStringFreq = [docStringFreq, ' \\ \hline ', newline, newline];
+            docStringFreq = [docStringFreq, ' \\ \hline', newline, newline];
         end
         
         lineMat = lineMat+1;
@@ -211,7 +213,7 @@ docStringDamp = [docStringDamp, '\begin{tabular}[c]{@{}c@{}}Damping\\ (LSCF)\\ \
 docStringDamp = [docStringDamp, '\begin{tabular}[c]{@{}c@{}}Damping\\ (CWT)\\ \% \end{tabular} & ', newline];
 docStringDamp = [docStringDamp, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} & ', newline];
 docStringDamp = [docStringDamp, '\begin{tabular}[c]{@{}c@{}}Damping\\ (CWT2)\\ \% \end{tabular}', newline];
-docStringDamp = [docStringDamp, ' \\ \hline ', newline, newline];
+docStringDamp = [docStringDamp, ' \\ \hline \hline', newline, newline];
 
 
 lineMat = 1;
@@ -237,8 +239,10 @@ for indp = 1:3
         
         if mode ~= nbModes(indp)
             docStringDamp = [docStringDamp, ' \\ \cline{2-', num2str(size(tableMatDamp, 2)+2), '} ', newline];
+        elseif indp ~= 3
+            docStringDamp = [docStringDamp, ' \\ \hline \hline', newline, newline];
         else
-            docStringDamp = [docStringDamp, ' \\ \hline ', newline, newline];
+            docStringDamp = [docStringDamp, ' \\ \hline', newline, newline];
         end
         
         lineMat = lineMat+1;
@@ -261,7 +265,7 @@ docStringShape = [docStringShape, '\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ 
 docStringShape = [docStringShape, '\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT)\\ \% \end{tabular} & ', newline];
 docStringShape = [docStringShape, '\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} & ', newline];
 docStringShape = [docStringShape, '\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT2)\\ \% \end{tabular}', newline];
-docStringShape = [docStringShape, ' \\ \hline ', newline, newline];
+docStringShape = [docStringShape, ' \\ \hline \hline', newline, newline];
 
 
 lineMat = 1;
@@ -287,8 +291,10 @@ for indp = 1:3
         
         if mode ~= nbModes(indp)
             docStringShape = [docStringShape, ' \\ \cline{2-', num2str(size(tableMatShape, 2)+2), '} ', newline];
+        elseif indp ~= 3
+            docStringShape = [docStringShape, ' \\ \hline \hline', newline, newline];
         else
-            docStringShape = [docStringShape, ' \\ \hline ', newline, newline];
+            docStringShape = [docStringShape, ' \\ \hline', newline, newline];
         end
         
         lineMat = lineMat+1;

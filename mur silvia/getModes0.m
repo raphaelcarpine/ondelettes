@@ -1,7 +1,7 @@
 % close all
 
 %etape et transient
-P = 7;
+P = 0;
 transient = 0;
 
 singleRidgeMode = false;
@@ -36,7 +36,7 @@ t = t(indices);
 % X = real([shape1*X1 + shape2*X2]);
 
 
-sensors = [1:9];
+sensors = [1];
 
 %%% test %%%
 if false
