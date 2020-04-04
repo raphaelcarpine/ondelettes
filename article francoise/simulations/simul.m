@@ -4,12 +4,12 @@ close all
 
 %% système
 
-w0 = [1*2*pi, 1.3*2*pi];
-zeta = [0.01, 0.03];
+w0 = [1*2*pi, 2*2*pi];
+zeta = [1.5, 0.03];
 
-C = [1, 10];
+C = [1, 1];
 
-nbDDL = 1;
+nbDDL = 2;
 
 
 %% excitation
@@ -21,7 +21,7 @@ fe = 1/dt;
 t = 0:dt:T;
 nt = length(t);
 
-excitation = 'gaussien'; % 'bruit' 'dirac' 'gaussien'
+excitation = 'bruit'; % 'bruit' 'dirac' 'gaussien'
 
 if isequal(excitation, 'bruit')
     f = exp(2i*pi*rand(1, nt)); % bruit

@@ -1,0 +1,34 @@
+\begin{tabular}{cc|c|c|c||} 
+
+\cline{3-5} & & \multicolumn{3}{||c||}{Modal Assurance Criterion} \\ \hline 
+\multicolumn{1}{|c|}{Step} & 
+\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular} & 
+\multicolumn{1}{||c|}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT1\\ $\times$ LSCF)\\ \% \end{tabular}} & 
+\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ LSCF)\\ \% \end{tabular} & 
+\multicolumn{1}{|c||}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ CWT1)\\ \% \end{tabular}}
+ \\ \hline  \hline
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_0$}} & 1 
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 2
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 3
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \hline \hline
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_6$}} & 1 
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 2
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 3
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 4
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \hline \hline
+
+\multicolumn{1}{|c|}{\multirow{3}{*}{$P_7$}} & 1 
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 2
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \cline{2-5} 
+\multicolumn{1}{|c|}{} & 3
+ & \multicolumn{1}{||c|}{£.2f} & £.2f & £.2f \\ \hline
+
+\end{tabular}

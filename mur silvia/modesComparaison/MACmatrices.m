@@ -19,29 +19,36 @@ for indp = 1:3
     MAC13 = nan(nbModes(indp));
     MAC23 = nan(nbModes(indp));
     
+    MAC11 = nan(nbModes(indp));
+    MAC22 = nan(nbModes(indp));
+    MAC33 = nan(nbModes(indp));
+    
     for modeX = 1:nbModes(indp)
         for modeY = 1:nbModes(indp)
             
-            shapeF = ModesLMS(indp,modeX).shape;
-            meanShapeX = transpose( mean( allShapes{indp}{modeX}, 1));
-            meanShapeY = transpose( mean( allShapes{indp}{modeY}, 1));
-            if modeY <= size(ModesWvlt2, 2) && ~isempty(ModesWvlt2(indp,modeY).shape)
-                shapeCWT2 = ModesWvlt2(indp,modeY).shape;
+            shapeLSCFx = ModesLMS(indp, modeX).shape;
+            shapeLSCFy = ModesLMS(indp, modeY).shape;
+            shapeCWT1x = transpose( mean( allShapes{indp}{modeX}, 1));
+            shapeCWT1y = transpose( mean( allShapes{indp}{modeY}, 1));
+            if modeX <= size(ModesWvlt2, 2) && ~isempty(ModesWvlt2(indp, modeX).shape)
+                shapeCWT2x = ModesWvlt2(indp, modeX).shape;
             else
-                shapeCWT2 = nan(9, 1);
+                shapeCWT2x = nan(9, 1);
+            end
+            if modeY <= size(ModesWvlt2, 2) && ~isempty(ModesWvlt2(indp, modeY).shape)
+                shapeCWT2y = ModesWvlt2(indp, modeY).shape;
+            else
+                shapeCWT2y = nan(9, 1);
             end
             
-            % mac 12
-            mac = abs(meanShapeY'*shapeF)^2 / ((meanShapeY'*meanShapeY) * (shapeF'*shapeF));
-            MAC12(modeX, modeY) = mac;
+            % MACs
+            MAC12(modeX, modeY) = MACnb(shapeLSCFx, shapeCWT1y);
+            MAC13(modeX, modeY) = MACnb(shapeLSCFx, shapeCWT2y);
+            MAC23(modeX, modeY) = MACnb(shapeCWT1x, shapeCWT2y);
+            MAC11(modeX, modeY) = MACnb(shapeLSCFx, shapeLSCFy);
+            MAC22(modeX, modeY) = MACnb(shapeCWT1x, shapeCWT1y);
+            MAC33(modeX, modeY) = MACnb(shapeCWT2x, shapeCWT2y);
             
-            % mac 13
-            mac = abs(shapeCWT2'*shapeF)^2 / ((shapeCWT2'*shapeCWT2) * (shapeF'*shapeF));
-            MAC13(modeX, modeY) = mac;
-            
-            % mac 23
-            mac = abs(shapeCWT2'*meanShapeX)^2 / ((shapeCWT2'*shapeCWT2) * (meanShapeX'*meanShapeX));
-            MAC23(modeX, modeY) = mac;
         end
     end
     
@@ -52,6 +59,12 @@ for indp = 1:3
     disp(100*MAC13);
     disp('CWT CWT2')
     disp(100*MAC23);
+    disp('LSCF')
+    disp(100*MAC11);
+    disp('CWT1')
+    disp(100*MAC22);
+    disp('CWT2')
+    disp(100*MAC33);
     disp([newline, newline']);
     
     

@@ -2,6 +2,7 @@ clear all
 close all
 
 Transients = 2:3;
+Transients = 4;
 
 % choix precision
 ct = 3;
@@ -73,6 +74,23 @@ Transient(3).z1 = 0.0066;
 Transient(3).z2 = 0.0070;
 Transient(3).f3 = 11.02;
 Transient(3).noiseCoeff = 2.5;
+
+
+% transient 4
+Transient(4).P = 6;
+
+Transient(4).t0 = 239.5;
+Transient(4).tf = 241;
+
+Transient(4).t0 = 239.5;
+Transient(4).tf = 244;
+
+Transient(4).f1 = 31.32;
+Transient(4).f2 = 32.81;
+Transient(4).z1 = 0.0051;
+Transient(4).z2 = 0.0027;
+Transient(4).f3 = 37.25;
+Transient(4).noiseCoeff = 1;
 
 for kTransient = Transients
     
@@ -162,6 +180,10 @@ for kTransient = Transients
         paramValue10 = [0.02, 0.01, 1, 1, 2.9*2*pi, 0]; % a1, a2, l1, l2, dw, delta
         paramValue20 = [33.9*2*pi, 36.8*2*pi, 0]; % w1, w2, d
         paramValue30 = [0, 0]; % delta1, delta2, dw
+    elseif P == 6
+        paramValue10 = [0.02, 0.01, 1, 1, 1.5*2*pi, 0]; % a1, a2, l1, l2, dw, delta
+        paramValue20 = [31.3*2*pi, 32.8*2*pi, 0]; % w1, w2, d
+        paramValue30 = [0, 0]; % delta1, delta2
     elseif P == 7
         paramValue10 = [0.02, 0.01, 1, 1, 6*2*pi, 0]; % a1, a2, l1, l2, dw, delta
         paramValue20 = [34.2*2*pi, 28.3*2*pi, 0]; % w1, w2, d
