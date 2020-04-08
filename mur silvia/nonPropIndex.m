@@ -7,13 +7,11 @@ if dims(2) > dims(1)
     shape = transpose(shape);
 end
 
-I = sqrt(imag(shape)'*imag(shape) / (real(shape)'*real(shape))); % tan
-
-I = sqrt(imag(shape)'*imag(shape) / (shape'*shape) ); % sin
+I = norm(imag(shape)) / norm(shape); % sin
 
 % S. Adhikari, Optimal complex modes and an index of damping non-proportionality
-% shapeOpt = 
-% I = 0;
+shapeOpt = shape * (shape'*real(shape)) / (shape'*shape);
+I = norm(shapeOpt - real(shape)) / norm(real(shape));
 
 end
 

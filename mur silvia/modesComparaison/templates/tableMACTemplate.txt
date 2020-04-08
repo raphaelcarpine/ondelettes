@@ -3,9 +3,9 @@
 \cline{3-5} & & \multicolumn{3}{||c||}{Modal Assurance Criterion} \\ \hline 
 \multicolumn{1}{|c|}{Step} & 
 \begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular} & 
-\multicolumn{1}{||c|}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT1\\ $\times$ LSCF)\\ \% \end{tabular}} & 
-\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ LSCF)\\ \% \end{tabular} & 
-\multicolumn{1}{|c||}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2\\ $\times$ CWT1)\\ \% \end{tabular}}
+\multicolumn{1}{||c|}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT1$\times$LSCF)\\ \% \end{tabular}} & 
+\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2$\times$LSCF)\\ \% \end{tabular} & 
+\multicolumn{1}{|c||}{\begin{tabular}[c]{@{}c@{}}MAC\\ (CWT2$\times$CWT1)\\ \% \end{tabular}}
  \\ \hline  \hline
 
 \multicolumn{1}{|c|}{\multirow{3}{*}{$P_0$}} & 1 
