@@ -8,6 +8,7 @@ allDamps = AllModalQuantities.damps;
 
 %%
 createDoc = true;
+showStdDevInp = false;
 
 %%
 P = [0, 6, 7];
@@ -131,21 +132,34 @@ for indp = 1:3
         tableMatInp(lineMat, columnMatInp) = 100*nonPropIndex(shapeCWT2);
         columnMatInp = columnMatInp+1;
         
-        % nb transients
-        tableMatInp(lineMat, columnMatInp) = nbTransients;
-        columnMatInp = columnMatInp + 1;
-        
-        % SD I
-        allI = [];
-        for ktransient = 1:size(allShapes{indp}{mode}, 1)
-            allI = [allI, nonPropIndex( transpose( allShapes{indp}{mode}(ktransient, :)))];
+        if showStdDevInp
+            % nb transients
+            tableMatInp(lineMat, columnMatInp) = nbTransients;
+            columnMatInp = columnMatInp + 1;
+            
+            % SD I
+            % premiere methode
+            allI = [];
+            for ktransient = 1:size(allShapes{indp}{mode}, 1)
+                allI = [allI, nonPropIndex( transpose( allShapes{indp}{mode}(ktransient, :)))];
+            end
+            stdI = std(allI);
+            % deuxieme methode
+            covI = cov(imag(allShapes{indp}{mode}));
+            covR = cov(real(allShapes{indp}{mode}));
+            covI = covI .* eye(9);
+            covR = covR .* eye(9);
+            stdI = 1/(nonPropIndex(meanShape) * norm(meanShape)^4) * sqrt(...
+                norm(real(meanShape))^4 * imag(meanShape).' * covI * imag(meanShape) +...
+                norm(imag(meanShape))^4 * real(meanShape).' * covR * real(meanShape) );
+            
+            if nbTransients == 1
+                tableMatInp(lineMat, columnMatInp) = nan;
+            else
+                tableMatInp(lineMat, columnMatInp) = 100*stdI;
+            end
+            columnMatInp = columnMatInp+1;
         end
-        if nbTransients == 1
-            tableMatInp(lineMat, columnMatInp) = nan;
-        else
-            tableMatInp(lineMat, columnMatInp) = 100*std( allI);
-        end
-        columnMatInp = columnMatInp+1;
         
         %%
         columnMatFreq = 1;
@@ -216,7 +230,11 @@ docStringMAC = strrep(docStringMAC, 'NaN', '/');
 
 %% tex damp doc
 
-tableFile = fopen('mur silvia\modesComparaison\templates\tableInpTemplate.txt', 'r');
+if showStdDevInp
+    tableFile = fopen('mur silvia\modesComparaison\templates\tableInpTemplate.txt', 'r');
+else
+    tableFile = fopen('mur silvia\modesComparaison\templates\tableInpTemplate2.txt', 'r');
+end
 docStringInp = fread(tableFile);
 fclose(tableFile);
 

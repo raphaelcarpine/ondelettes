@@ -15,6 +15,7 @@ MinModuDef = 0;
 LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
 WaveletDef = nan;
+SmoothDampingDef = true;
 
 %%
 addRequired(p,'X')
@@ -30,10 +31,11 @@ addParameter(p,'ctLeft',ctLeftDef);
 addParameter(p,'ctRight',ctRightDef);
 addParameter(p,'NbMaxRidges',NbMaxRidgesDef);
 addParameter(p,'NbMaxParallelRidges',NbMaxParallelRidgesDef);
-addParameter(p,'MinModu', MinModuDef); % *noise
+addParameter(p,'MinModu', MinModuDef);
 addParameter(p,'LengthMinRidge',LengthMinRidgeDef);
 addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
+addParameter(p,'SmoothDamping', SmoothDampingDef); % spline smoothing de l'amplitude pour lisser zeta(t)
 
 parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
 
@@ -49,6 +51,7 @@ MinModu = p.Results.MinModu;
 LengthMinRidge = p.Results.LengthMinRidge;
 ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
+SmoothDamping = p.Results.SmoothDamping;
 
 %%
 if iscolumn(X)
@@ -298,9 +301,41 @@ for C_r = 1:length(ridge.time)
 end
 %% evaluation de la dissipation
 for C_r = 1:length(ridge.time)
+    % amortissement
+    logAmpl = log(abs(ridge.val{C_r}));
+%     if SmoothDamping
+%         freqmoy = mean(ridge.freq{C_r});
+%         deltaT = Q / (2*pi*freqmoy);
+%         logAmpl = gaussianSmooth(logAmpl, round(deltaT*Fs/1));
+%     end
+    ridge.damping{C_r} = -diff(logAmpl)*Fs; % -A'/A
+    ridge.damping{C_r} = ([ridge.damping{C_r}(1), ridge.damping{C_r}] + ...
+        [ridge.damping{C_r}, ridge.damping{C_r}(end)]) /2;
+    ridge.damping{C_r} = ridge.damping{C_r} ./ (2*pi*ridge.freq{C_r});
+    ridge.damping{C_r} = ridge.damping{C_r} ./ sqrt(1 + ridge.damping{C_r}.^2);
+    if SmoothDamping % gaussian filter
+        freqmoy = mean(ridge.freq{C_r});
+        deltaT = Q / (2*pi*freqmoy);
+        deltaT = deltaT/5;
+        %deltaN = round(deltaT*Fs/4);
+        Nhalf = round(length(ridge.damping{C_r})/2);
+        filterCoeffs = nan(1, 2*Nhalf+1);
+        for kfilter = 1:length(filterCoeffs)
+            filterCoeffs(kfilter) = exp( -((kfilter-1-Nhalf)/Fs)^2 / (2*deltaT^2));
+        end
+        filterCoeffs = filterCoeffs / sum(filterCoeffs);
+        dampingData = ridge.damping{C_r};
+        dampingData = [dampingData(1)*ones(1, Nhalf), dampingData, dampingData(end)*ones(1, Nhalf)];
+        dampingData = filter(filterCoeffs, 1, dampingData);
+        ridge.damping{C_r} = dampingData(2*Nhalf+1:end);
+    end
+    
     % Si mesure de vitesse
     ridge.bandwidth{C_r} = -diff(log(abs(ridge.val{C_r})))*Fs; % -A'/A
-    ridge.bandwidth{C_r} = [ridge.bandwidth{C_r}(1),ridge.bandwidth{C_r}]/(2*pi); % = -A'/2*pi*A
+    ridge.bandwidth{C_r} = ([ridge.bandwidth{C_r}(1), ridge.bandwidth{C_r}] + ...
+        [ridge.bandwidth{C_r}, ridge.bandwidth{C_r}(end)]) /2;
+    ridge.bandwidth{C_r} = ridge.bandwidth{C_r}/(2*pi); % = -A'/2*pi*A
+    
     ridge.inv2Q{C_r} = ridge.bandwidth{C_r}./(ridge.freq3{C_r}); % = -A'/2*pi*f*A
     
     % Si mesure d'acceleration et frequence variable

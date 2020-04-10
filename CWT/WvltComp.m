@@ -23,7 +23,7 @@ ct = p.Results.ct;
 %%
 if length(WvltFreq) > 500
     str = input('length(WvltFreq) > 500, continue ? ', 's');
-    if ~any(validatestring(str, {'y', 'yes', 'oui', 'true'}))
+    if ~ismember(str, {'', 'y', 'yes', 'oui', 'true'})
         error('length(WvltFreq) > 500');
     end
 end

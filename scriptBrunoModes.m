@@ -10,11 +10,11 @@ zeta1 = 0.01;
 zeta2 = 0.01;
 shape1 = [1; 3; -1; 2];
 shape2 = [1; -2; -1; 1+0.1i];
-T = 10;
+T = 20;
 
 t = linspace(0, T, 10000);
-X = shape1 * exp(2i*pi*f1*t - zeta1*2*pi*f1*t);
-X = X + shape2 * exp(2i*pi*f2*t - zeta2*2*pi*f2*t);
+X = shape1 * exp(sqrt(1-zeta1^2)*2i*pi*f1*t - zeta1*2*pi*f1*t + 0.2i*pi*sin(t));
+X = X + shape2 * exp(sqrt(1-zeta2^2)*2i*pi*f2*t - zeta2*2*pi*f2*t);
 X = real(X);
 
 % choix Q
@@ -30,7 +30,7 @@ Df2 = f2-f1;
 disp('deuxième mode :');
 disp(['Qmin = ', num2str(Qmin), ' ; Qmax = ', num2str(Qmax), ' ; Qz = ', num2str(Qz)]);
 
-Q = 30;
+Q = 40;
 disp(' ');
 disp(['Q = ', num2str(Q)]);
 disp(' ');
@@ -39,9 +39,20 @@ disp(' ');
 NbMaxRidges = 2;
 NbMaxParallelRidges = inf;
 fmin = 8;
-fmax = 114;
+fmax = 14;
 nbFreqs = 300;
 
+plotX = [];
+figure;
+hold on
+for k = 1:size(X, 1)
+    plotX(end+1) = plot(t, X(k, :));
+end
+
+WaveletMenu('WaveletPlot', plotX, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'NbFreq', nbFreqs, 'MultiSignalMode', true,...
+    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges);
+
+%% modes
 [time, freq, shapes, amplitudes] = getModesSingleRidge(t, X, Q, fmin, fmax, nbFreqs,... % attention t et time sont différents ! time est le vecteur de temps du ridge uniquement
     'NbMaxRidges', NbMaxRidges, 'NbMaxParallelRidges', NbMaxParallelRidges);
 
