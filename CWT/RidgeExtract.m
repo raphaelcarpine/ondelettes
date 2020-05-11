@@ -308,11 +308,9 @@ for C_r = 1:length(ridge.time)
 %         deltaT = Q / (2*pi*freqmoy);
 %         logAmpl = gaussianSmooth(logAmpl, round(deltaT*Fs/1));
 %     end
-    ridge.damping{C_r} = -diff(logAmpl)*Fs; % -A'/A
+    ridge.damping{C_r} = -diff(logAmpl)*Fs; % -A'/A = lambda
     ridge.damping{C_r} = ([ridge.damping{C_r}(1), ridge.damping{C_r}] + ...
         [ridge.damping{C_r}, ridge.damping{C_r}(end)]) /2;
-    ridge.damping{C_r} = ridge.damping{C_r} ./ (2*pi*ridge.freq{C_r});
-    ridge.damping{C_r} = ridge.damping{C_r} ./ sqrt(1 + ridge.damping{C_r}.^2);
     if SmoothDamping % gaussian filter
         freqmoy = mean(ridge.freq{C_r});
         deltaT = Q / (2*pi*freqmoy);
@@ -329,6 +327,8 @@ for C_r = 1:length(ridge.time)
         dampingData = filter(filterCoeffs, 1, dampingData);
         ridge.damping{C_r} = dampingData(2*Nhalf+1:end);
     end
+    ridge.damping2{C_r} = ridge.damping{C_r} ./ (2*pi*ridge.freq{C_r}); % lambda/omega_d
+    ridge.damping3{C_r} = ridge.damping2{C_r} ./ sqrt(1 + ridge.damping2{C_r}.^2); % lambda/omega_n
     
     % Si mesure de vitesse
     ridge.bandwidth{C_r} = -diff(log(abs(ridge.val{C_r})))*Fs; % -A'/A

@@ -1,19 +1,36 @@
 %% levure
 
-clear all
-close all
-load("article francoise/data/levure.mat");
+% clear all
+% close all
 
+
+% load("article francoise/data/levure.mat");
+% x = Vert_defl;
+% t = dt * (0:(length(x)-1));
+
+% load("article francoise/data/micropoutre_en_contact.mat");
+% x = Vert_defl;
+% t = dt * (0:(length(x)-1));
+
+load("article francoise/data/micropoutre_100microns2.mat");
 x = Vert_defl;
 t = dt * (0:(length(x)-1));
 
+% load("article francoise/data/bruit_acoustique.mat");
+% x = S0;
+% t = dt * (0:(length(x)-1));
+
+
+filtrage = true;
+autocorrelation = false;
+
+
+%%
+
 % filtrage
-if true
+if filtrage
     ordre = 3;
     f0 = 10;
-    f1 = 200;
-    n0 = floor(f0 * (t(end)-t(1)));
-    n1 = ceil(f1 * (t(end)-t(1)));
     Fx = fft(x);
     f = (0:length(x)-1) / (t(end)-t(1));
     for k = 1:ordre
@@ -34,9 +51,10 @@ if false % filtrage
 end
 
 
-% autocorrélation
-Rx = xcorr(x, 'biased') / var(x);
-Rx = Rx(ceil(length(Rx)/2):end);
+if autocorrelation
+    Rx = xcorr(x, 'biased') / var(x);
+    Rx = Rx(ceil(length(Rx)/2):end);
+end
 
 
 
@@ -49,9 +67,11 @@ dt = dt * deltaN;
 fe = fe0 / deltaN;
 
 
-x = x(1:deltaN:end);
-Rx = Rx(1:deltaN:end);
-t = dt * (0:(length(x)-1));
+% x = x(1:deltaN:end);
+% if autocorrelation
+%     Rx = Rx(1:deltaN:end);
+% end
+% t = dt * (0:(length(x)-1));
 
 
 % limites
@@ -69,11 +89,13 @@ plt = plot(ax, t, x);
 xlabel(ax, 't');
 ylabel(ax, 'x');
 
-fig =  figure;
-ax = axes(fig);
-plt2 = plot(ax, t, Rx);
-xlabel(ax, 't');
-ylabel(ax, 'Rx');
+if autocorrelation
+    fig =  figure;
+    ax = axes(fig);
+    plt2 = plot(ax, t, Rx);
+    xlabel(ax, 't');
+    ylabel(ax, 'Rx');
+end
 
 
 %% diagramme stabilisation
@@ -107,7 +129,9 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
     , 'CtEdgeEffects', ct);
 
-WaveletMenu('WaveletPlot', plt2, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
-    'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
-    , 'CtEdgeEffects', ct);
+if autocorrelation
+    WaveletMenu('WaveletPlot', plt2, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
+        'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
+        , 'CtEdgeEffects', ct);
+end
 

@@ -1,58 +1,82 @@
-\documentclass[11pt, landscape]{article}
+\documentclass[11pt]{article}
 
-\usepackage[margin=0.1in]{geometry}
 
+\usepackage[margin=0.5in]{geometry}
 \usepackage{multirow}
-\usepackage{graphicx}
+
+\renewcommand{\tabcolsep}{10 pt}
+\renewcommand{\arraystretch}{.6}
+
 
 \begin{document}
 
-\begin{small}
-
 \begin{table}
-\begin{tabular}{ccc|c|c|c|c|c|c|c|c|c|c|} 
-\cline{4-13} &  &  & \multicolumn{3}{c|}{Frequencies} & \multicolumn{3}{c|}{Damping coefficients}  & \multicolumn{4}{c|}{Modal shapes} \\ \hline 
-\multicolumn{1}{|c|}{Step} & 
-\multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}} Mode\\ number \end{tabular}} & 
-\begin{tabular}[c]{@{}c@{}}Number of\\ transients\\ (CWT) \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Frequency\\ (LSCF)\\ Hz \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Frequency\\ (CWT)\\ Hz\end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ Hz\end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Damping\\ (LSCF)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Damping\\ (CWT)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}MAC\\ (LMS\\ $\times$ CWT)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (LSCF)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}$\tilde I_{np}$\\ (CWT)\\ \% \end{tabular} & 
-\begin{tabular}[c]{@{}c@{}}Std Dev\\ (CWT)\\ \% \end{tabular} 
- \\ \hline 
-
-\multicolumn{1}{|c|}{\multirow{3}{*}{$P_0$}} & \multicolumn{1}{c|}{1} 
- & 1 & 8.35 & 8.37 & / & 1.64 & 1.17 & / & 99.73 & 2.46 & 1.39 & / \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
- & 3 & 33.94 & 33.93 & 0.01 & 0.43 & 0.29 & 0.15 & 99.98 & 7.10 & 7.90 & 0.81 \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
- & 2 & 36.78 & 36.76 & 0.06 & 0.57 & 0.56 & 0.32 & 98.91 & 5.50 & 3.93 & 3.50 \\ \hline 
-
-\multicolumn{1}{|c|}{\multirow{3}{*}{$P_6$}} & \multicolumn{1}{c|}{1} 
- & 2 & 11.12 & 11.05 & 0.00 & 0.64 & 0.54 & 0.08 & 100.00 & 0.23 & 0.29 & 0.26 \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
- & 1 & 31.20 & 31.32 & / & 0.36 & 0.51 & / & 99.94 & 1.34 & 1.07 & / \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
- & 2 & 32.84 & 32.81 & 0.03 & 0.66 & 0.27 & 0.03 & 99.92 & 1.09 & 1.43 & 0.04 \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{4} 
- & 1 & 37.37 & 37.25 & / & 0.60 & 0.42 & / & 98.96 & 5.75 & 5.51 & / \\ \hline 
-
-\multicolumn{1}{|c|}{\multirow{3}{*}{$P_7$}} & \multicolumn{1}{c|}{1} 
- & 3 & 10.99 & 11.02 & 0.02 & 0.61 & 0.82 & 0.25 & 99.99 & 0.46 & 0.61 & 0.39 \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{2} 
- & 5 & 28.36 & 28.23 & 0.11 & 0.67 & 0.66 & 0.19 & 99.96 & 0.65 & 1.56 & 1.78 \\ \cline{2-13} 
-\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{3} 
- & 8 & 34.20 & 34.15 & 0.09 & 0.58 & 0.70 & 0.16 & 91.08 & 31.32 & 3.86 & 2.89 \\ \hline 
-
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multirow{2}{*}{$\eta $} & \multirow{2}{*}{Frequency $f$} & 
+\multirow{2}{*}{Damping $\zeta $} & 
+\multirow{2}{*}{$I_{np}$ or $\tilde I_{np}$} \\
+ & & & \\
+\multirow{2}{*}{\%} & \multirow{2}{*}{Hz} & \multirow{2}{*}{\%} & \multirow{2}{*}{\%} \\
+ & & & \\ \hline \hline
+\multicolumn{4}{|c|}{\multirow{2}{*}{$P_0$ step}} \\
+\multicolumn{4}{|c|}{} \\ \hline
+ & \multirow{2}{*}{8.4} & \multirow{2}{*}{1.2} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{1.2} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{33.9} & \multirow{2}{*}{0.3} & \multirow{2}{*}{0.1} \\ \cline{1-1}
+\multirow{2}{*}{0.1} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{36.8} & \multirow{2}{*}{0.6} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+ & & & \\ \hline \hline
+\multicolumn{4}{|c|}{\multirow{2}{*}{$P_6$ step}} \\
+\multicolumn{4}{|c|}{} \\ \hline
+ & \multirow{2}{*}{11.0} & \multirow{2}{*}{0.5} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{1.0} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{31.3} & \multirow{2}{*}{0.5} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{0.0} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{32.8} & \multirow{2}{*}{0.3} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{0.1} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{37.3} & \multirow{2}{*}{0.4} & \multirow{2}{*}{0.1} \\ \cline{1-1}
+ & & & \\ \hline \hline
+\multicolumn{4}{|c|}{\multirow{2}{*}{$P_7$ step}} \\
+\multicolumn{4}{|c|}{} \\ \hline
+ & \multirow{2}{*}{11.0} & \multirow{2}{*}{0.8} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{0.9} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{28.2} & \multirow{2}{*}{0.7} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+\multirow{2}{*}{0.2} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{34.2} & \multirow{2}{*}{0.7} & \multirow{2}{*}{0.0} \\ \cline{1-1}
+ & & & \\ \hline \hline
+\multicolumn{4}{|c|}{\multirow{2}{*}{Adhikari et al.}} \\
+\multicolumn{4}{|c|}{} \\ \hline
+ & \multirow{2}{*}{5.2} & \multirow{2}{*}{423.1} & \multirow{2}{*}{49.3} \\ \cline{1-1}
+\multirow{2}{*}{0.0} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{5.3} & \multirow{2}{*}{781.2} & \multirow{2}{*}{51.7} \\ \cline{1-1}
+ & & & \\ \hline \hline
+\multicolumn{4}{|c|}{\multirow{2}{*}{Ericher and Argoul}} \\
+\multicolumn{4}{|c|}{} \\ \hline
+ & \multirow{2}{*}{26.9} & \multirow{2}{*}{270.0} & \multirow{2}{*}{7.2} \\ \cline{1-1}
+\multirow{2}{*}{0.3} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{35.3} & \multirow{2}{*}{300.0} & \multirow{2}{*}{30.9} \\ \cline{1-1}
+\multirow{2}{*}{0.5} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{59.5} & \multirow{2}{*}{280.0} & \multirow{2}{*}{4.9} \\ \cline{1-1}
+\multirow{2}{*}{0.1} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{65.6} & \multirow{2}{*}{310.0} & \multirow{2}{*}{4.2} \\ \cline{1-1}
+\multirow{2}{*}{0.1} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{75.9} & \multirow{2}{*}{305.0} & \multirow{2}{*}{7.7} \\ \cline{1-1}
+\multirow{2}{*}{0.3} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{107.1} & \multirow{2}{*}{295.0} & \multirow{2}{*}{17.5} \\ \cline{1-1}
+\multirow{2}{*}{0.2} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{128.0} & \multirow{2}{*}{180.0} & \multirow{2}{*}{47.1} \\ \cline{1-1}
+\multirow{2}{*}{0.0} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{129.6} & \multirow{2}{*}{290.0} & \multirow{2}{*}{33.7} \\ \cline{1-1}
+\multirow{2}{*}{0.2} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{158.6} & \multirow{2}{*}{220.0} & \multirow{2}{*}{14.6} \\ \cline{1-1}
+\multirow{2}{*}{0.1} & & & \\ \cline{2-4} 
+ & \multirow{2}{*}{179.5} & \multirow{2}{*}{235.0} & \multirow{2}{*}{10.7} \\ \cline{1-1}
+ & & & \\ \hline
 \end{tabular}
 \end{table}
 
-\end{small}
+
 
 \end{document}

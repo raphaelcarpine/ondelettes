@@ -6,6 +6,17 @@ function [t, freq, shapes, amplitudes] = getModesSingleRidge(X, Y, Q, fmin, fmax
 %   t = {t1 = [...], ...}
 %   ...
 
+if size(X, 1) ~= 1
+    X = transpose(X);
+end
+if size(X, 2) ~= size(Y, 2)
+    Y = transpose(Y);
+end
+
+if size(X, 1) ~= 1 || size(X, 2) ~= size(Y, 2)
+    error(['array size problem (', num2str(size(X)), ' & ', num2str(size(Y)), ')']);
+end
+
 
 Nddl = size(Y, 1);
 
@@ -85,9 +96,10 @@ for kr = 1:Nridges
         
         shape = shape / ampl;
         
-        if kt == 1 && real(shape(1)) < 0
-            ampl = -ampl;
-            shape = -shape;
+        if kt == 1
+            [~, indMax] = max(abs(shape));
+            ampl = ampl * sign(real(shape(indMax)));
+            shape = shape * sign(real(shape(indMax)));
         end
         
         shapes{kr}(:, kt) = shape;

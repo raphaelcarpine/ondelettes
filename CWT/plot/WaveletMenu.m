@@ -7,7 +7,7 @@ defaultX = nan;
 defaultY = nan;
 defaultFmin = 1;
 defaultFmax = 10;
-defaultNbFreq = 100;
+defaultNbFreq = 300;
 defaultParent = 0;
 defaultWaveletPlot = 0;
 defaultQ = 1;
@@ -23,6 +23,8 @@ defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
 defaultXLim = nan;
 defaultWvltAxesTitle = '';
+defaultComplexShapePlot = @complexShapePlot1;
+defaultRealShapePlot = @realShapePlot1;
 
 
 
@@ -49,6 +51,8 @@ addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
 addParameter(p,'XLim', defaultXLim);
 addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
+addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
+addParameter(p, 'RealShapePlot', defaultRealShapePlot);
 
 parse(p, varargin{:})
 
@@ -56,8 +60,8 @@ fig = p.Results.Parent;
 if fig == 0
     fig = figure('Name', 'Wavelet Menu', 'numbertitle', 'off');
     fig.Units = 'characters';
-    fig.Position(3) = 70;
-    fig.Position(4) = 25;
+    fig.Position(3) = 110;
+    fig.Position(4) = 26;
     fig.MenuBar = 'none';
 %     fig.ToolBar = 'none';
 end
@@ -79,17 +83,24 @@ end
         delete(parent);
     end
 
-if p.Results.WaveletPlot == 0
+WaveletPlot = p.Results.WaveletPlot;
+if size(WaveletPlot, 1) > size(WaveletPlot, 2)
+    WaveletPlot = transpose(WaveletPlot);
+end
+
+if WaveletPlot == 0
     getX = @() p.Results.X;
     getY = @() p.Results.Y;
     plotAxes = 0;
+    plotAxesName = '';
 else
-    getX = @() cellmat2mat (get(p.Results.WaveletPlot, 'XData'));
-    getY = @() cellmat2mat (get(p.Results.WaveletPlot, 'YData'));
-    plotAxes = cellmat2mat (get(p.Results.WaveletPlot, 'Parent'));
-    set(fig, 'Name', [get(fig, 'Name'), ' (fig', num2str(get(get(plotAxes(1), 'Parent'), 'number')), ')']);
+    getX = @() cellmat2mat (get(WaveletPlot, 'XData'));
+    getY = @() cellmat2mat (get(WaveletPlot, 'YData'));
+    plotAxes = cellmat2mat (get(WaveletPlot, 'Parent'));
+    plotAxesName = ['fig', num2str(get(get(plotAxes(1), 'Parent'), 'number'))];
+    set(fig, 'Name', [get(fig, 'Name'), ' (', plotAxesName, ')']);
     
-    for waveplt = p.Results.WaveletPlot
+    for waveplt = WaveletPlot
         parent = waveplt;
         while ~isa(parent, 'matlab.ui.Figure')
             parent = get(parent, 'Parent');
@@ -116,6 +127,8 @@ WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
 wvltAxesTitle = p.Results.WvltAxesTitle;
+ComplexShapePlot = p.Results.ComplexShapePlot;
+RealShapePlot = p.Results.RealShapePlot;
 
 x0 = getX();
 if isnan(XLim)
@@ -152,12 +165,17 @@ waveletPan.Position = [0 0.15 1 0.85];
 
 buttonWavelet = uicontrol('Parent',waveletPan, 'Units', 'normalized','Style','pushbutton',...
     'String', 'wavelet');
-paramPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
-plotPan = uipanel('Parent',waveletPan, 'Units', 'normalized');
+paramPan = uipanel('Parent',waveletPan, 'Units', 'normalized', 'Title', 'parameters');
+plotPan = uipanel('Parent',waveletPan, 'Units', 'normalized', 'Title', 'plots');
+shapesPan = uipanel('Parent',waveletPan, 'Units', 'normalized', 'Title', 'mode shapes');
 
-buttonWavelet.Position = [0.02 0.02 0.96 0.13];
-paramPan.Position = [0.02 0.16 0.4 0.81];
-plotPan.Position = [0.44 0.16 0.54 0.81];
+margin = 0.005;
+vertProp = 0.15; % vertical proporitons
+horProp = [0.25, 0.625]; % horizontal proportions
+buttonWavelet.Position = [margin, margin, 1-2*margin, vertProp - 1.5*margin];
+paramPan.Position = [margin, vertProp+0.5*margin, horProp(1)-1.5*margin, 1-vertProp-1.5*margin];
+plotPan.Position = [horProp(1)+0.5*margin, vertProp+0.5*margin, horProp(2)-horProp(1)-margin, 1-vertProp-1.5*margin];
+shapesPan.Position = [horProp(2)+0.5*margin, vertProp+0.5*margin, 1-horProp(2)-1.5*margin, 1-vertProp-1.5*margin];
 
 %autres transformees
 transformPan = uipanel('Parent',fig, 'Units', 'normalized');
@@ -325,20 +343,85 @@ end
 
 
 
+
+%% sorties mode shapes
+
+strxAxisShapes = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
+    'String', 'x-axis:', 'HorizontalAlignment', 'left');
+xAxisShapesnames = {'time', 'ampl', 'log(ampl)', 'freq'};
+xAxisShapes = uicontrol('Parent', shapesPan, 'Units', 'normalized','Style', 'popupmenu',...
+    'String', xAxisShapesnames);
+
+
+
+stryAxisShapes = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
+    'String', 'y-axis:', 'HorizontalAlignment', 'left');
+
+checkboxRealShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'real part', 'Value', false);
+checkboxImagShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'imag. part', 'Value', false);
+checkboxModuleShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'module', 'Value', false);
+checkboxPhaseShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'angle', 'Value', false);
+Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes, checkboxPhaseShapes];
+
+
+
+strShapesMean = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
+    'String', 'average:', 'HorizontalAlignment', 'left');
+weightOptionShapesMean = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style','togglebutton',...
+    'String', 'weighted (ampl)', 'Value', false);
+
+checkboxRealShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'plot real', 'Value', false);
+checkboxComplexShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'plot complex', 'Value', false);
+checkboxDispShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'disp complex', 'Value', false);
+checkboxDispFreqsMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'frequency', 'Value', false);
+Checkboxs4 = [checkboxRealShapesMean, checkboxComplexShapesMean, checkboxDispShapesMean, checkboxDispFreqsMean];
+
+
+
+n3 = ceil(length(Checkboxs3)/2);
+n4 = ceil(length(Checkboxs4)/2);
+n = n3 + n4 + 5.5;
+
+strxAxisShapes.Position = [0.05, (n-1.5)/n, 0.94, 1/n-0.02];
+xAxisShapes.Position = [0.01, (n-2.5)/n+0.01, 0.48, 1/n-0.02];
+
+stryAxisShapes.Position = [0.05, (n-4)/n, 0.94, 1/n-0.02];
+for k=1:length(Checkboxs3)
+    Checkboxs3(k).Position = [0.5*mod(k-1, 2)+0.01, 0.01+(n-floor((k-1)/2)-5)/n, 0.48, 1/n-0.02];
+end
+
+strShapesMean.Position = [0.05, (n-5.5-n3)/n, 0.35, 1/n-0.02];
+weightOptionShapesMean.Position = [0.37, (n-5.5-n3)/n, 0.52, 1/n-0.01];
+for k=1:length(Checkboxs4)
+    Checkboxs4(k).Position = [0.5*mod(k-1, 2)+0.01, 0.01+(n-floor((k-1)/2)-6.5-n3)/n, 0.48, 1/n-0.02];
+end
+
+
+
 %% menu (autres paramètres)
 
 %autres valeurs par défault
 freqRidgeName = 'freq';
 phaseRidgeName = 'pha2';
+dampingRidgeName = 'damping3';
 
 freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
+dampingRidgeNames = {'damping', 'damping2', 'damping3'};
 WvltScaleNames = {'lin', 'log10'};
 FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
 
 fig.MenuBar = 'none';
 
-paramMenu = uimenu(fig,'Text','Paramètres');
+paramMenu = uimenu(fig,'Text','Options');
 
 %freq
 freqMenu = uimenu(paramMenu, 'Text','Frequence');
@@ -369,6 +452,23 @@ phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continue', 'Checked' ,'on');
     end
 set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
 set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
+
+% damping
+dampingMenu = uimenu(paramMenu, 'Text','Damping');
+dampingMenuChoices(1) = uimenu(dampingMenu, 'Text', 'lambda');
+dampingMenuChoices(2) = uimenu(dampingMenu, 'Text', 'lambda/omega_d');
+dampingMenuChoices(3) = uimenu(dampingMenu, 'Text', 'lambda/omega_n', 'Checked' ,'on');
+    function selectDampingMenu(kchoice)
+        for kchoices = 1:length(dampingMenuChoices)
+            set(dampingMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(dampingMenuChoices(kchoice), 'Checked', 'on');
+        
+        dampingRidgeName = dampingRidgeNames{kchoice};
+    end
+set(dampingMenuChoices(1), 'CallBack', @(~,~) selectDampingMenu(1));
+set(dampingMenuChoices(2), 'CallBack', @(~,~) selectDampingMenu(2));
+set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
 
 % wavelet scale
 WvltScaleMenu = uimenu(paramMenu, 'Text','Wavelet Scale');
@@ -470,6 +570,17 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', m
 
 multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
+%% menu regression
+
+regMenu = uimenu(fig,'Text','Regression');
+
+regConstant = uimenu(regMenu, 'Text','Constant');
+regExp = uimenu(regMenu, 'Text','Exp');
+
+regConstant.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'c', 'Param', 'c', 'Param0', 0);
+regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 'Param', 'a  lambda',...
+    'Param0', [1 1], 'Fit', 'log(y)');
+
 
 %%
 
@@ -499,7 +610,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
         slopeRidge = eval(get(editSL, 'String')); %max slope ridge
         [x, y] = getXY();
         
-        % plot de la transformee
+        %% plot de la transformee
         if checkboxGeneral.Value
             if ~multiSignalMode
                 for kPlot = 1:nbPlots
@@ -543,8 +654,8 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
             end
         end
         
-        % calcul des ridges
-        if checkboxTimeAmplPlot.Value || any([Checkboxs2.Value])
+        %% calcul des ridges
+        if any([Checkboxs2.Value]) || (exist('checkboxTimeAmplPlot', 'var') && checkboxTimeAmplPlot.Value)
             
             if ~multiSignalMode
                 ridges = cell(1, nbPlots);
@@ -563,7 +674,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                 ridges = cell(1, 1);
                 ridges{1} = RidgeExtract(x(kPlot,:), nan, Q, fmin, fmax, NbFreq,...
                     'Wavelet', wavelet,...
-                    'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                    'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
             end
             
@@ -616,13 +727,13 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
-                    RidgeQtyPlot2(ridge, 'time', 'damping',...
+                    RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(4, kPlot),...
                         'XLim', [x(kPlot,1), x(kPlot,end)], 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
-                    RidgeQtyPlot2(ridge, 'val', 'damping', 'EvaluationFunctionX', 'abs',...
+                    RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(5, kPlot), 'SquaredCWT', multiSignalMode);
                 end
@@ -635,6 +746,119 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
             end
         end
         
+        %% calcul des deformees
+        if any([Checkboxs3.Value]) || any([Checkboxs4.Value])
+            if multiSignalMode
+                [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
+                    getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
+                        'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                absAmplitudesShapes = {};
+                for kridge = 1:length(amplitudesShapes)
+                    absAmplitudesShapes{end+1} = abs(amplitudesShapes{kridge});
+                end
+                
+                % axe x
+                XquantName = xAxisShapesnames{get(xAxisShapes, 'Value')};
+                if isequal(XquantName, 'time')
+                    XquantLabel = 'time';
+                    XquantScale = 'lin';
+                    Xquantity = timeShapes;
+                elseif isequal(XquantName, 'ampl')
+                    XquantLabel = 'amplitude';
+                    XquantScale = 'lin';
+                    Xquantity = absAmplitudesShapes;
+                elseif isequal(XquantName, 'log(ampl)')
+                    XquantLabel = 'amplitude';
+                    XquantScale = 'log';
+                    Xquantity = absAmplitudesShapes;
+                elseif isequal(XquantName, 'freq')
+                    XquantLabel = 'frequence';
+                    XquantScale = 'lin';
+                    Xquantity = freqsShapes;
+                end
+                
+                % classment ordre modes
+                meanFreqsModes = nan(1, length(timeShapes));
+                for kridge = 1:length(timeShapes)
+                    % moyenne
+                    if get(weightOptionShapesMean, 'Value')
+                        weights = abs(amplitudesShapes{kridge});
+                    else
+                        weights = ones(size(amplitudesShapes{kridge}));
+                    end
+                    weights = weights / sum(weights);
+                    meanFreqsModes(kridge) = sum(freqsShapes{kridge} .* weights);
+                end
+                [~, modesOrder] = sort(meanFreqsModes);
+                
+                % plots
+                for kmode = 1:length(modesOrder)
+                    kridge = modesOrder(kmode);
+                    figuresName = ['mode ', num2str(kmode), ' (', plotAxesName, ')'];
+                    if checkboxRealShapes.Value
+                        figShape = figure('Name', figuresName);
+                        ax = axes(figShape);
+                        plot(ax, Xquantity{kridge}, real(shapesShapes{kridge}));
+                        xlabel(ax, XquantLabel);
+                        ylabel(ax, 'real part');
+                        set(ax, 'XScale', XquantScale);
+                    end
+                    if checkboxImagShapes.Value
+                        figShape = figure('Name', figuresName);
+                        ax = axes(figShape);
+                        plot(ax, Xquantity{kridge}, imag(shapesShapes{kridge}));
+                        xlabel(ax, XquantLabel);
+                        ylabel(ax, 'imaginary part');
+                        set(ax, 'XScale', XquantScale);
+                    end
+                    if checkboxModuleShapes.Value
+                        figShape = figure('Name', figuresName);
+                        ax = axes(figShape);
+                        plot(ax, Xquantity{kridge}, abs(shapesShapes{kridge}));
+                        xlabel(ax, XquantLabel);
+                        ylabel(ax, 'module');
+                        set(ax, 'XScale', XquantScale);
+                    end
+                    if checkboxPhaseShapes.Value
+                        figShape = figure('Name', figuresName);
+                        ax = axes(figShape);
+                        plot(ax, Xquantity{kridge}, angle(shapesShapes{kridge}));
+                        xlabel(ax, XquantLabel);
+                        ylabel(ax, 'phase');
+                        set(ax, 'XScale', XquantScale);
+                    end
+                    
+                    % moyenne
+                    if get(weightOptionShapesMean, 'Value')
+                        weights = abs(amplitudesShapes{kridge});
+                    else
+                        weights = ones(size(amplitudesShapes{kridge}));
+                    end
+                    weights = weights / sum(weights);
+                    meanShape = sum(shapesShapes{kridge} .* weights, 2);
+                    meanFreq = sum(freqsShapes{kridge} .* weights);
+                    
+                    if checkboxRealShapesMean.Value
+                        RealShapePlot(real(meanShape), figuresName)
+                    end
+                    if checkboxComplexShapesMean.Value
+                        ComplexShapePlot(meanShape, figuresName)
+                    end
+                    if checkboxDispShapesMean.Value
+                        disp(['mean shape, ', figuresName]);
+                        disp(meanShape);
+                    end
+                    if checkboxDispFreqsMean.Value
+                        disp(['mean frequency, ', figuresName]);
+                        disp(meanFreq);
+                    end
+                end
+            else
+                warning('! multi signal mode only !');
+            end
+        end
+        
         % changement du curseur
         set(fig, 'pointer', 'arrow');
         drawnow;
@@ -642,7 +866,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
     end
 
 
-
+%%
 
     function deletePlots()
         try
@@ -653,7 +877,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
     end
 
 
-
+%%
 
 
     function hilbertTransform()
@@ -682,7 +906,7 @@ multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
     end
 
 
-
+%%
 
 
     function fourierTransform()

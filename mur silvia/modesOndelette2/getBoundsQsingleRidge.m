@@ -16,6 +16,6 @@ Qmin = cf * f2/(2*Df);
 mu_psi = 1/2; % Q >> 1  =>  mu_psi \simeq 1/2
 Qmax = 2*pi*f1*T / (4*ct*mu_psi);
 
-Qa = 1/(2*mu_psi*ct) * 2*pi*f1/(Df + lambda1 + lambda2);
+Qa = 1/(2*mu_psi*ct) * 2*pi*f1/(2*pi*(f2-f1) + lambda1 + lambda2);
 end
 

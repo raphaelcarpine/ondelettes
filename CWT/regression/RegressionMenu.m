@@ -63,7 +63,7 @@ parameters = [];
 %% fig
 
 % lignes pans
-Hpans = [4, 17, 5, 3];
+Hpans = [4, 17, 5, 3, 3];
 
 fig = figure('Name', figureName);
 fig.Units = 'characters';
@@ -81,6 +81,8 @@ linePan = uipanel('Parent',fig, 'Units', 'normalized');
 optionsPan = uipanel('Parent',fig, 'Units', 'normalized');
 buttonReg = uicontrol('Parent',fig, 'Units', 'normalized','Style','pushbutton',...
     'String', 'regression');
+buttonMean = uicontrol('Parent',fig, 'Units', 'normalized','Style','pushbutton',...
+    'String', 'mean');
 
 margin = 0.02;
 hpans = (1 - margin*(length(Hpans)+1)) * Hpans/sum(Hpans);
@@ -93,6 +95,7 @@ linePan.Position = [0.02, zpans(1), 0.96, hpans(1)];
 eqPan.Position = [0.02, zpans(2), 0.96, hpans(2)];
 optionsPan.Position = [0.02, zpans(3), 0.96, hpans(3)];
 buttonReg.Position = [0.02, zpans(4), 0.96, hpans(4)];
+buttonMean.Position = [0.02, zpans(5), 0.96, hpans(5)];
 
 
 
@@ -205,8 +208,8 @@ options = {'plot', 'onaxes'};
 nopt = length(options);
 
 optionsStr = struct;
-optionsStr.plot = 'afficher';
-optionsStr.onaxes = 'sur les axes';
+optionsStr.plot = 'plot';
+optionsStr.onaxes = 'current axes';
 
 optBut = struct;
 for kopt = 1:length(options)
@@ -231,7 +234,7 @@ deleteBut.Callback = @(~,~) deletePlots();
 
 % plot button
 plotBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushbutton',...
-    'String', 'plot', 'Position', [0.5, (nopt-2)/nopt, 0.19, 1/nopt]);
+    'String', 'show', 'Position', [0.5, (nopt-2)/nopt, 0.19, 1/nopt]);
 
     function plotFunc()
         if ~updateXYAxes()
@@ -281,9 +284,9 @@ ax = 0;
 dimension = nan;
 
     function ok = updateXYAxes()
-%         line = findobj('Type', 'line');
+        %         line = findobj('Type', 'line');
         if ~isempty(line)
-%             line = line(1);
+            %             line = line(1);
             X = get(line, 'XData');
             Y = get(line, 'YData');
             Z = get(line, 'ZData');
@@ -359,7 +362,7 @@ dimension = nan;
 %% regression
 
 
-    function computeReg()
+    function computeReg(mode)
         if ~updateXYAxes()
             warning('no line selected');
             return;
@@ -377,58 +380,69 @@ dimension = nan;
         set(fig, 'pointer', 'watch');
         drawnow;
         
-        % conditionnement
-        Param = strsplit2(Param);
-        
-        Param0 = strsplit2(Param0);
-        for ip = 1:length(Param0)
-            Param0{ip} = eval(Param0{ip});
-        end
-        Param0 = [Param0{:}];
-        LowerBoundsParams = strsplit2(LowerBoundsParams);
-        if isempty(LowerBoundsParams{1})
-            LowerBoundsParams = {};
-        end
-        for ip = 1:length(LowerBoundsParams)
-            LowerBoundsParams{ip} = eval(LowerBoundsParams{ip});
-        end
-        LowerBoundsParams = [LowerBoundsParams{:}];
+        if isequal(mode, 'reg')
+            % conditionnement
+            Param = strsplit2(Param);
             
-        UpperBoundsParams = strsplit2(UpperBoundsParams);
-        if isempty(UpperBoundsParams{1})
-            UpperBoundsParams = {};
-        end
-        for ip = 1:length(UpperBoundsParams)
-            UpperBoundsParams{ip} = eval(UpperBoundsParams{ip});
-        end
-        UpperBoundsParams = [UpperBoundsParams{:}];
-        
-        
-        % regression
-        Fstring = Eq;
-        for ip = 1:length(Param)
-            Fstring = varNameRep(Fstring, Param{ip}, ['P(' num2str(ip) ')']);
-        end
-        Fstring = strrep(Fstring, '*', '.*');
-        Fstring = strrep(Fstring, '/', './');
-        Fstring = strrep(Fstring, '^', '.^');
-        
-        F = @(P) 0;        
-        eval(['F = @(P, x) ' Fstring ';']); 
-        
-        fitFunction = @(y) y;
-        eval(['fitFunction = @(y)' get(fitEdit, 'String') ';']);
-        
-        S = @(P) fitFunction(F(P, X)) - fitFunction(Y);
-        
-        try
-            Param1 = lsqnonlin(S, Param0, LowerBoundsParams, UpperBoundsParams, optionsReg);
+            Param0 = strsplit2(Param0);
+            for ip = 1:length(Param0)
+                Param0{ip} = eval(Param0{ip});
+            end
+            Param0 = [Param0{:}];
+            LowerBoundsParams = strsplit2(LowerBoundsParams);
+            if isempty(LowerBoundsParams{1})
+                LowerBoundsParams = {};
+            end
+            for ip = 1:length(LowerBoundsParams)
+                LowerBoundsParams{ip} = eval(LowerBoundsParams{ip});
+            end
+            LowerBoundsParams = [LowerBoundsParams{:}];
+            
+            UpperBoundsParams = strsplit2(UpperBoundsParams);
+            if isempty(UpperBoundsParams{1})
+                UpperBoundsParams = {};
+            end
+            for ip = 1:length(UpperBoundsParams)
+                UpperBoundsParams{ip} = eval(UpperBoundsParams{ip});
+            end
+            UpperBoundsParams = [UpperBoundsParams{:}];
+            
+            
+            % regression
+            Fstring = Eq;
+            for ip = 1:length(Param)
+                Fstring = varNameRep(Fstring, Param{ip}, ['P(' num2str(ip) ')']);
+            end
+            Fstring = strrep(Fstring, '*', '.*');
+            Fstring = strrep(Fstring, '/', './');
+            Fstring = strrep(Fstring, '^', '.^');
+            
+            F = @(P) 0;
+            eval(['F = @(P, x) ' Fstring ';']);
+            
+            fitFunction = @(y) y;
+            eval(['fitFunction = @(y)' get(fitEdit, 'String') ';']);
+            
+            S = @(P) fitFunction(F(P, X)) - fitFunction(Y);
+            
+            try
+                Param1 = lsqnonlin(S, Param0, LowerBoundsParams, UpperBoundsParams, optionsReg);
+                parameters = Param1;
+            catch error
+                warning('did not fit');
+                warning(error.message);
+                set(param0Edit, 'ForegroundColor', [0 0 0]);
+                return
+            end
+            
+        elseif isequal(mode, 'mean')
+            set(eqEdit, 'String', 'mean');
+            set(paramEdit, 'String', 'mean');
+            
+            Param1 = sum(1/2*(Y(1:end-1)+Y(2:end)) .* diff(X)) / (X(end)-X(1));
             parameters = Param1;
-        catch error
-            warning('did not fit');
-            warning(error.message);
-            set(param0Edit, 'ForegroundColor', [0 0 0]);
-            return
+            
+            F = @(P, x) P;
         end
         
         set(param0Edit, 'String', num2str(Param1, numericPrecision));
@@ -489,14 +503,16 @@ dimension = nan;
 
 
 
-buttonReg.Callback = @(~,~) computeReg();
+buttonReg.Callback = @(~,~) computeReg('reg');
+
+buttonMean.Callback = @(~,~) computeReg('mean');
 
 
 %% raccourcis
 
     function keyboardShortcuts(~, event)
         if isequal(event.Key, 'return') || isequal(event.Key, 'space')
-            computeReg();
+            computeReg('reg');
         elseif isequal(event.Key, 'shift') || isequal(event.Key, 's')
             lineSelect.Value = ~ lineSelect.Value;
             selectFunction(lineSelect.Value);

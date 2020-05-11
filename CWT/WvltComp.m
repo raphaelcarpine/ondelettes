@@ -1,5 +1,6 @@
 
 function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
+
 p = inputParser ;
 %% parametres par defaut
 ZeroPaddingDef = true;
@@ -37,9 +38,22 @@ if max(abs(Diff-1)) > 1e-5
     warning(['pas de temps non constant, erreur : ', num2str(max(abs(Diff-1)))]);
 end
 
-if ~iscolumn(Y)
-    Y =transpose(Y); %Y en colonne
+% vecteurs colone
+if size(X, 2) ~= 1
+    X = transpose(X);
 end
+if size(Y, 2) ~= 1
+    Y = transpose(Y);
+end
+
+if size(X, 2) ~= 1 || size(Y, 2) ~= 1 || ~isequal(size(X), size(Y))
+    error(['array size problem (', num2str(size(X)), ' & ', num2str(size(Y)), ')']);
+end
+%% shanon
+if max(WvltFreq) > Fs/2
+    warning('Shanon');
+end
+
 %%
 if CenterSignal
     Y = Y-mean(Y);
