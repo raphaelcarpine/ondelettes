@@ -424,9 +424,9 @@ fig.MenuBar = 'none';
 paramMenu = uimenu(fig,'Text','Options');
 
 %freq
-freqMenu = uimenu(paramMenu, 'Text','Frequence');
-freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'maximum module', 'Checked' ,'on');
-freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'derivée phase');
+freqMenu = uimenu(paramMenu, 'Text','Frequency');
+freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'max module', 'Checked' ,'on');
+freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'phase derivative');
     function selectFreqMenu(kchoice)
         for kchoices = 1:length(freqMenuChoices)
             set(freqMenuChoices(kchoices), 'Checked', 'off');
@@ -440,8 +440,8 @@ set(freqMenuChoices(2), 'CallBack', @(~,~) selectFreqMenu(2));
 
 %phase
 phaseMenu = uimenu(paramMenu, 'Text','Phase');
-phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bornée');
-phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continue', 'Checked' ,'on');
+phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bounded');
+phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continuous', 'Checked' ,'on');
     function selectPhaseMenu(kchoice)
         for kchoices = 1:length(phaseMenuChoices)
             set(phaseMenuChoices(kchoices), 'Checked', 'off');
@@ -570,7 +570,9 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', m
 
 multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
 
-%% menu regression
+%% menus regression et plot extract
+
+% regressions
 
 regMenu = uimenu(fig,'Text','Regression');
 
@@ -581,6 +583,29 @@ regConstant.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'c', 'Param', '
 regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 'Param', 'a  lambda',...
     'Param0', [1 1], 'Fit', 'log(y)');
 
+% plot extract
+
+plotExtractMenu = uimenu(fig,'Text','Plot Extract');
+
+    function plotExtractCallback(~, ~)
+        prompt = {'Enter x-axis var name:', 'Enter y-axis var name:'};
+        dlgtitle = 'Input var names';
+        dims = [1 35];
+        definput = {'', ''};
+        answer = inputdlg(prompt, dlgtitle, dims, definput);
+        
+        if isempty(answer) % cancel button
+            return
+        end
+        
+        try
+            evalin('base', ['[', answer{1}, ',', answer{2}, ']=PlotExtract();']);
+        catch e
+            warning(e.message);
+        end
+    end
+
+plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 %%
 
@@ -790,12 +815,17 @@ regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 
                     weights = weights / sum(weights);
                     meanFreqsModes(kridge) = sum(freqsShapes{kridge} .* weights);
                 end
-                [~, modesOrder] = sort(meanFreqsModes);
+                
+                if false % tri des freqs
+                    [meanFreqsModes, modesOrder] = sort(meanFreqsModes);
+                else
+                    modesOrder = 1:length(timeShapes);
+                end
                 
                 % plots
                 for kmode = 1:length(modesOrder)
                     kridge = modesOrder(kmode);
-                    figuresName = ['mode ', num2str(kmode), ' (', plotAxesName, ')'];
+                    figuresName = ['mode ', num2str(meanFreqsModes(kmode)), 'Hz (', plotAxesName, ')'];
                     if checkboxRealShapes.Value
                         figShape = figure('Name', figuresName);
                         ax = axes(figShape);

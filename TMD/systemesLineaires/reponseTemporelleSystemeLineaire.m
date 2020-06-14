@@ -9,7 +9,7 @@ C = 2*mu*[lambda0/mu + lambda1, -lambda1; -lambda1, lambda1];
 K = mu*[omega0^2/mu + omega1^2, -omega1^2; -omega1^2, omega1^2];
 
 Mat = [-M\C, -M\K; eye(2), zeros(2)];
-[V,D] = eig(Mat);
+[V, D] = eig(Mat);
 
 X0 = [v0(1); v0(2); x0(1); x0(2)];
 coeffs = V\X0;

@@ -12,9 +12,9 @@
 % x = Vert_defl;
 % t = dt * (0:(length(x)-1));
 
-load("article francoise/data/micropoutre_100microns2.mat");
-x = Vert_defl;
-t = dt * (0:(length(x)-1));
+% load("article francoise/data/micropoutre_100microns2.mat");
+% x = Vert_defl;
+% t = dt * (0:(length(x)-1));
 
 % load("article francoise/data/bruit_acoustique.mat");
 % x = S0;

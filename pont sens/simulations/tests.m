@@ -2,19 +2,25 @@ close all
 clear all
 
 % param
-freq = @(x) 6 - abs(x);
-freq = @(x) min(5 - 0.1*log(abs(x)), 7);
+% freq = @(x) 6 - abs(x);
+% freq = @(x) min(5 - 0.1*log(abs(x)), 7);
+freq = 6;
 
-M = 1;
-K = @(x) M* (2*pi*freq(x)).^2;
-C = 0.03 * 2 * sqrt(K(0)/M);
+m_pont = 1;
+m_train = 0.1;
+zeta = 0.03;
 
-% excitation
+T = 20;
+t1 = 3;
+
+nb_wagons = 20;
+
+%% excitation
 Cf = 400;
 
 Lbogies = 18.70;
 lbogies = 4;
-essieux = Lbogies * (0:10);
+essieux = Lbogies * (0:nb_wagons);
 essieux = [essieux, essieux + lbogies];
 
 v = 78.47;
@@ -24,7 +30,7 @@ F = @(x) 0;
 for k = 1:length(essieux)
     F = @(x) F(x) + deformee(x-essieux(k));
 end
-F = @(t) Cf * F(v*(t - 3));
+F = @(t) Cf * F(v*(t - t1));
 
 % F = @(t) Cf * sin(0.42*2*pi*t);
 % F = @(t) Cf * sin(4.2*2*pi*t);
@@ -32,8 +38,13 @@ F = @(t) Cf * F(v*(t - 3));
 % F = @(t) 1/eps * (mod(4.2*t+eps/2, 1) <= eps);
 % F = @(~) 0;
 
-% eq diff
-T = 20;
+%% eq diff
+
+
+M = @(t) m_pont + m_train*(F(t)>0);
+K = @(x) m_pont * (2*pi*freq).^2 *(1 + 50000*x.^2);
+C = zeta * 2 * sqrt(K(0)/m_pont);
+
 x0 = 0;
 v0 = 0;
 
@@ -51,7 +62,7 @@ if true
 end
 
 
-D = @(t, X) [X(2); -1/M * (K(X(1))*X(1) + C*X(2) - F(t))];
+D = @(t, X) [X(2); -1/M(t) * (K(X(1))*X(1) + C*X(2) - F(t))];
 
 [t0, X] = ode45(D, [0, T], [x0; v0]);
 t = 0:0.01:T;
@@ -69,9 +80,9 @@ a = V(2, :);
 
 
 figure;
-plt = plot(t, a);
+plt = plot(t, x);
 xlabel('t');
-ylabel('a');
+ylabel('x');
 
 %% ondelette
 Q = 10;
