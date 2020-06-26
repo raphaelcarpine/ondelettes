@@ -2,13 +2,48 @@ clear all
 
 %% data
 bridge = 'trilbardou';
-Fs = 200;
-load('ponts marne/data/tests/test3');
+Fs = 50;
+load('ponts marne/data/trilbardou1506/ambiant1_10min50Hz26C');
 meanToZero = true;
 autocorrelation = false;
+correctClipping = true;
 
 dt = 1/Fs;
 t = dt * (0:size(X, 2)-1);
+
+% X = X([6], :);
+
+%% sensors bugs
+
+boundsX = [-20, 0];
+
+if correctClipping
+    clippingChanels = [];
+    for dof = 1:size(X, 1)
+        clippingInds = X(dof, :) < boundsX(1) | X(dof, :) > boundsX(2);
+        if any(clippingInds)
+            clippingChanels = [clippingChanels, dof];
+            X(dof, clippingInds) = nan;
+        end
+    end
+    
+    for dof = clippingChanels
+        for kt = 2:size(X, 2)
+            if isnan(X(dof, kt))
+                X(dof, kt) = X(dof, kt-1);
+            end
+        end
+        for kt = size(X, 2)-1:-1:1
+            if isnan(X(dof, kt))
+                X(dof, kt) = X(dof, kt+1);
+            end
+        end
+    end
+    
+    if ~isempty(clippingChanels)
+        warning(['clipping in channels ', num2str(clippingChanels)]);
+    end
+end
 
 %%
 
@@ -51,8 +86,8 @@ dimensionsShapes
 Q = 10;
 NbMaxRidges = 1;
 NbMaxParallelRidges = 1;
-fmin = 1;
-fmax = 100;
+fmin = 0.5;
+fmax = 5;
 
 WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
     'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);

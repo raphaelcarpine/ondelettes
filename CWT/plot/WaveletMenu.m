@@ -19,6 +19,7 @@ defaultRidgeMinModu = 0;
 defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
+defaultAutocorrelationMode = false;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
 defaultXLim = nan;
@@ -47,6 +48,7 @@ addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
+addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
 addParameter(p,'XLim', defaultXLim);
@@ -123,6 +125,7 @@ RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 multiSignalMode = p.Results.MultiSignalMode;
+autocorrelationMode = p.Results.AutocorrelationMode;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
@@ -569,6 +572,21 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', m
     end
 
 multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
+
+%autocorrelationMode
+
+autocorrelationModeMenu = uimenu(paramMenu, 'Text','Autocorrelation mode', 'Checked', autocorrelationMode);
+    function switchAutocorrelationModeDisplay(~, ~)
+        if strcmp(autocorrelationModeMenu.Checked, 'on')
+            autocorrelationModeMenu.Checked = false;
+            autocorrelationMode = false;
+        else
+            autocorrelationModeMenu.Checked = true;
+            autocorrelationMode = true;
+        end
+    end
+
+autocorrelationModeMenu.MenuSelectedFcn = @switchAutocorrelationModeDisplay;
 
 %% menus regression et plot extract
 

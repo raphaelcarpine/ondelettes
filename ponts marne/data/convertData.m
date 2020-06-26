@@ -1,4 +1,4 @@
-folderName = 'ponts marne/data/tests';
+folderName = 'ponts marne/data/trilbardou1506';
 
 % try
 %     delete([folderName, '/mData.mat']); % écrasement de l'ancien fichier .mat

@@ -90,16 +90,19 @@ for kr = 1:Nridges
         
         ampl = sqrt(transpose(shape) * shape);
         
-        if kt > 1 && abs(-ampl-amplitudes{kr}(kt-1)) < abs(ampl-amplitudes{kr}(kt-1))
+        if kt > 1 && abs(-ampl-amplitudes{kr}(kt-1)) < abs(ampl-amplitudes{kr}(kt-1)) % phase continuity
             ampl = -ampl;
         end
         
         shape = shape / ampl;
         
-        if kt == 1
+        if kt == 1 % shape orientation
             [~, indMax] = max(abs(shape));
-            ampl = ampl * sign(real(shape(indMax)));
-            shape = shape * sign(real(shape(indMax)));
+            
+            indOrientation = 1; %indMax
+            
+            ampl = ampl * sign(real(shape(indOrientation)));
+            shape = shape * sign(real(shape(indOrientation)));
         end
         
         shapes{kr}(:, kt) = shape;
