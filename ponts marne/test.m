@@ -6,12 +6,13 @@ Fs = 50;
 load('ponts marne/data/trilbardou1506/ambiant1_10min50Hz26C');
 meanToZero = true;
 autocorrelation = false;
-correctClipping = true;
+correctClipping = 0;
 
 dt = 1/Fs;
 t = dt * (0:size(X, 2)-1);
 
-% X = X([6], :);
+
+% X = X([2], :);
 
 %% sensors bugs
 

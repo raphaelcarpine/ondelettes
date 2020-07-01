@@ -9,14 +9,14 @@ zeta = [0.01, 0.03];
 
 C = [1, 1;
     0.5, -2];
-C = [1, 3];
+% C = [1, 3];
 
 nbDDL = 2;
 
 
 %% excitation
 
-T = 1000;
+T = 100;
 dt = 0.01;
 fe = 1/dt;
 
@@ -45,12 +45,16 @@ end
 
 %% reponse
 
+x = reponseSystNddl(t, f, nbDDL, w0, zeta, C);
+x = x + 0;
+
+
 % ondelette
-Q = 30;
+Q = 5;
 MaxRidges = 1;
 MaxParallelRidges = 1;
-fmin = 0.1;
-fmax = 2;
+fmin = 0.5;
+fmax = 3;
 NbFreq = 300;
 
 ct = 3;
@@ -73,10 +77,6 @@ end
 
 
 
-x = reponseSystNddl(t, f, nbDDL, w0, zeta, C);
-
-x = x + 0;
-
 fig = figure('Name', ['zeta=', num2str(zeta)]);
 ax = axes(fig);
 plt = plot(ax, t, x);
@@ -87,6 +87,18 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
     , 'CtEdgeEffects', ct);
 
+%% test
+
+
+Rx = crossCorrelation(x);
+
+Nsv = 2;
+[SVrx, SVvectrx] = svdCWT(t, Rx, fmin, fmax, NbFreq, Q, Nsv);
+
+WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{1}, 'module', Q, ct, 'log10');
+WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{2}, 'module', Q, ct, 'log10');
+
+return
 
 %% autocorrelation
 
