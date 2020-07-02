@@ -5,6 +5,8 @@ function [SVrx, SVvectrx] = svdCWT(t, Rx, fmin, fmax, NbFreq, Q, Nsv)
 %   SVrx{k}(kf, kt) : k^th singular values of CWT(Rx) for each time and freq
 %   SVvectrx{k}(:, kf, kt) : k^th singular vectors of CWT(Rx) for each time and freq
 
+showWaitBar = true;
+
 if nargin < 6
     Nsv = 1;
 end
@@ -30,6 +32,11 @@ for ksv = 1:Nsv %
     SVvectrx{ksv} = nan(Ndof, NbFreq, Nt);
 end
 
+
+if showWaitBar
+    w = waitbar(0, '0%', 'Name', 'computing SVD');
+end
+
 for kfreq = 1:NbFreq
     for kt = 1:Nt
         [U, S, ~] = svd(CWTrx(:, :, kfreq, kt));
@@ -38,6 +45,14 @@ for kfreq = 1:NbFreq
             SVvectrx{ksv}(:, kfreq, kt) = U(:, ksv);
         end
     end
+    
+    if showWaitBar
+        waitbar(kfreq/NbFreq, w, [num2str(round(100*kfreq/NbFreq)), '%']);
+    end
+end
+
+if showWaitBar
+    close(w);
 end
 
 end

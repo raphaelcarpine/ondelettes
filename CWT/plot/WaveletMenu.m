@@ -20,6 +20,7 @@ defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
 defaultAutocorrelationMode = false;
+defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
 defaultXLim = nan;
@@ -49,6 +50,7 @@ addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
+addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
 addParameter(p,'XLim', defaultXLim);
@@ -126,6 +128,8 @@ ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 multiSignalMode = p.Results.MultiSignalMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
+multiSignalMode = multiSignalMode & ~autocorrelationMode;
+autocorrelationNsvd = p.Results.AutocorrelationNsvd;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
@@ -549,8 +553,11 @@ multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','Multiple axes', 'Checked', m
         else
             multipleAxesDisplayMenu.Checked = true;
             setMultipleAxesDisplay(true);
+            
             multiSignalModeMenu.Checked = false;
             multiSignalMode = false;
+            autocorrelationModeMenu.Checked = false;
+            autocorrelationMode = false;
         end
     end
 
@@ -565,9 +572,12 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', m
             multiSignalMode = false;
         else
             multiSignalModeMenu.Checked = true;
+            multiSignalMode = true;
+            
             multipleAxesDisplayMenu.Checked = false;
             setMultipleAxesDisplay(false);
-            multiSignalMode = true;
+            autocorrelationModeMenu.Checked = false;
+            autocorrelationMode = false;
         end
     end
 
@@ -583,6 +593,11 @@ autocorrelationModeMenu = uimenu(paramMenu, 'Text','Autocorrelation mode', 'Chec
         else
             autocorrelationModeMenu.Checked = true;
             autocorrelationMode = true;
+            
+            multipleAxesDisplayMenu.Checked = false;
+            setMultipleAxesDisplay(false);
+            multiSignalModeMenu.Checked = false;
+            multiSignalMode = false;
         end
     end
 
@@ -630,6 +645,9 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
     function [X, Y] = getXY()
         X = getX();
         Y = getY();
+        %%%
+        %test X identique
+        %%%
         for line = 1:size(X, 1)
             Y2(line, :) = Y(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
             X2(line, :) = X(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
@@ -652,6 +670,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         PR = eval(get(editPR, 'String')); %nombre max de ridges parallèles
         slopeRidge = eval(get(editSL, 'String')); %max slope ridge
         [x, y] = getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        
+        % cross corr
+        if autocorrelationMode
+            maxLagCorr = 100;
+            NmaxLagCorr = floor(maxLagCorr/Dx);
+            [tRy, Ry] = plotCrossCorr(Dx, y, NmaxLagCorr);
+            [SVry, SVvectry] = svdCWT(tRy, Ry, fmin, fmax, NbFreq, Q, autocorrelationNsvd);
+        end
         
         %% plot de la transformee
         if checkboxGeneral.Value
@@ -664,7 +691,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         end
         
         if checkboxModule.Value || checkboxPhase.Value
-            if ~multiSignalMode
+            if ~multiSignalMode && ~autocorrelationMode
                 for kPlot = 1:nbPlots
                     wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
                     if checkboxModule.Value
@@ -676,7 +703,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                             WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                     end
                 end
-            else
+                
+            elseif multiSignalMode
                 wavelet = 0; % calcul de la somme des carrés de transformées
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
@@ -694,20 +722,35 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         'phase', Q, ctEdgeEffects, WvltScale,...
                         ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
                 end
+                
+            elseif autocorrelationMode
+                for ksvd = 1:autocorrelationNsvd
+                    if checkboxModule.Value
+                        WvltPlot2(tRy, linspace(fmin,fmax,NbFreq), SVry{ksvd},...
+                            'module', Q, ctEdgeEffects, WvltScale,...
+                            ['xcorr->CWT->SVD;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                    end
+                    if checkboxPhase.Value
+                        WvltPlot2(tRy, linspace(fmin,fmax,NbFreq), SVry{ksvd},...
+                            'phase', Q, ctEdgeEffects, WvltScale,...
+                            ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                    end
+                end
             end
         end
         
         %% calcul des ridges
         if any([Checkboxs2.Value]) || (exist('checkboxTimeAmplPlot', 'var') && checkboxTimeAmplPlot.Value)
             
-            if ~multiSignalMode
+            if ~multiSignalMode && ~autocorrelationMode
                 ridges = cell(1, nbPlots);
                 for kPlot = 1:nbPlots
                     ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
                 end
-            else
+                
+            elseif multiSignalMode
                 wavelet = 0;
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
@@ -719,6 +762,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+            
+            elseif autocorrelationMode
+                ridges = cell(1, autocorrelationNsvd);
+                for ksvd = 1:autocorrelationNsvd
+                    ridges{1} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
+                        'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                end
             end
             
             % preparation des axes
@@ -791,119 +842,146 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         
         %% calcul des deformees
         if any([Checkboxs3.Value]) || any([Checkboxs4.Value])
-            if multiSignalMode
-                [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
-                    getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
+            if multiSignalMode || autocorrelationMode
+                if multiSignalMode
+                    [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
+                        getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
-                absAmplitudesShapes = {};
-                for kridge = 1:length(amplitudesShapes)
-                    absAmplitudesShapes{end+1} = abs(amplitudesShapes{kridge});
+                elseif autocorrelationMode
+                    [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
+                        getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
+                        'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
                 end
                 
-                % axe x
-                XquantName = xAxisShapesnames{get(xAxisShapes, 'Value')};
-                if isequal(XquantName, 'time')
-                    XquantLabel = 'time';
-                    XquantScale = 'lin';
-                    Xquantity = timeShapes;
-                elseif isequal(XquantName, 'ampl')
-                    XquantLabel = 'amplitude';
-                    XquantScale = 'lin';
-                    Xquantity = absAmplitudesShapes;
-                elseif isequal(XquantName, 'log(ampl)')
-                    XquantLabel = 'amplitude';
-                    XquantScale = 'log';
-                    Xquantity = absAmplitudesShapes;
-                elseif isequal(XquantName, 'freq')
-                    XquantLabel = 'frequence';
-                    XquantScale = 'lin';
-                    Xquantity = freqsShapes;
-                end
-                
-                % classment ordre modes
-                meanFreqsModes = nan(1, length(timeShapes));
-                for kridge = 1:length(timeShapes)
-                    % moyenne
-                    if get(weightOptionShapesMean, 'Value')
-                        weights = abs(amplitudesShapes{kridge});
-                    else
-                        weights = ones(size(amplitudesShapes{kridge}));
-                    end
-                    weights = weights / sum(weights);
-                    meanFreqsModes(kridge) = sum(freqsShapes{kridge} .* weights);
-                end
-                
-                if false % tri des freqs
-                    [meanFreqsModes, modesOrder] = sort(meanFreqsModes);
+                if autocorrelationMode
+                    Nsvd = autocorrelationNsvd;
                 else
-                    modesOrder = 1:length(timeShapes);
+                    Nsvd = 1;
                 end
                 
-                % plots
-                for kmode = 1:length(modesOrder)
-                    kridge = modesOrder(kmode);
-                    figuresName = ['mode ', num2str(meanFreqsModes(kmode)), 'Hz (', plotAxesName, ')'];
-                    if checkboxRealShapes.Value
-                        figShape = figure('Name', figuresName);
-                        ax = axes(figShape);
-                        plot(ax, Xquantity{kridge}, real(shapesShapes{kridge}));
-                        xlabel(ax, XquantLabel);
-                        ylabel(ax, 'real part');
-                        set(ax, 'XScale', XquantScale);
-                    end
-                    if checkboxImagShapes.Value
-                        figShape = figure('Name', figuresName);
-                        ax = axes(figShape);
-                        plot(ax, Xquantity{kridge}, imag(shapesShapes{kridge}));
-                        xlabel(ax, XquantLabel);
-                        ylabel(ax, 'imaginary part');
-                        set(ax, 'XScale', XquantScale);
-                    end
-                    if checkboxModuleShapes.Value
-                        figShape = figure('Name', figuresName);
-                        ax = axes(figShape);
-                        plot(ax, Xquantity{kridge}, abs(shapesShapes{kridge}));
-                        xlabel(ax, XquantLabel);
-                        ylabel(ax, 'module');
-                        set(ax, 'XScale', XquantScale);
-                    end
-                    if checkboxPhaseShapes.Value
-                        figShape = figure('Name', figuresName);
-                        ax = axes(figShape);
-                        plot(ax, Xquantity{kridge}, angle(shapesShapes{kridge}));
-                        xlabel(ax, XquantLabel);
-                        ylabel(ax, 'phase');
-                        set(ax, 'XScale', XquantScale);
+                for ksvd = 1:Nsvd
+                    if autocorrelationMode
+                        timeShapes = timeShapesSVD{ksvd};
+                        freqsShapes = freqsShapesSVD{ksvd};
+                        shapesShapes = shapesShapesSVD{ksvd};
+                        amplitudesShapes = amplitudesShapesSVD{ksvd};
                     end
                     
-                    % moyenne
-                    if get(weightOptionShapesMean, 'Value')
-                        weights = abs(amplitudesShapes{kridge});
+                    
+                    absAmplitudesShapes = {};
+                    for kridge = 1:length(amplitudesShapes)
+                        absAmplitudesShapes{end+1} = abs(amplitudesShapes{kridge});
+                    end
+                    
+                    % axe x
+                    XquantName = xAxisShapesnames{get(xAxisShapes, 'Value')};
+                    if isequal(XquantName, 'time')
+                        XquantLabel = 'time';
+                        XquantScale = 'lin';
+                        Xquantity = timeShapes;
+                    elseif isequal(XquantName, 'ampl')
+                        XquantLabel = 'amplitude';
+                        XquantScale = 'lin';
+                        Xquantity = absAmplitudesShapes;
+                    elseif isequal(XquantName, 'log(ampl)')
+                        XquantLabel = 'amplitude';
+                        XquantScale = 'log';
+                        Xquantity = absAmplitudesShapes;
+                    elseif isequal(XquantName, 'freq')
+                        XquantLabel = 'frequence';
+                        XquantScale = 'lin';
+                        Xquantity = freqsShapes;
+                    end
+                    
+                    % classment ordre modes
+                    meanFreqsModes = nan(1, length(timeShapes));
+                    for kridge = 1:length(timeShapes)
+                        % moyenne
+                        if get(weightOptionShapesMean, 'Value')
+                            weights = abs(amplitudesShapes{kridge});
+                        else
+                            weights = ones(size(amplitudesShapes{kridge}));
+                        end
+                        weights = weights / sum(weights);
+                        meanFreqsModes(kridge) = sum(freqsShapes{kridge} .* weights);
+                    end
+                    
+                    if false % tri des freqs
+                        [meanFreqsModes, modesOrder] = sort(meanFreqsModes);
                     else
-                        weights = ones(size(amplitudesShapes{kridge}));
+                        modesOrder = 1:length(timeShapes);
                     end
-                    weights = weights / sum(weights);
-                    meanShape = sum(shapesShapes{kridge} .* weights, 2);
-                    meanFreq = sum(freqsShapes{kridge} .* weights);
                     
-                    if checkboxRealShapesMean.Value
-                        RealShapePlot(real(meanShape), figuresName)
-                    end
-                    if checkboxComplexShapesMean.Value
-                        ComplexShapePlot(meanShape, figuresName)
-                    end
-                    if checkboxDispShapesMean.Value
-                        disp(['mean shape, ', figuresName]);
-                        disp(meanShape);
-                    end
-                    if checkboxDispFreqsMean.Value
-                        disp(['mean frequency, ', figuresName]);
-                        disp(meanFreq);
+                    % plots
+                    for kmode = 1:length(modesOrder)
+                        kridge = modesOrder(kmode);
+                        figuresName = ['mode ', num2str(meanFreqsModes(kmode)), 'Hz (', plotAxesName, ')'];
+                        if autocorrelationMode
+                            figuresName = ['SVD', num2str(ksvd), ' ', figuresName];
+                        end
+                        if checkboxRealShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, real(shapesShapes{kridge}));
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'real part');
+                            set(ax, 'XScale', XquantScale);
+                        end
+                        if checkboxImagShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, imag(shapesShapes{kridge}));
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'imaginary part');
+                            set(ax, 'XScale', XquantScale);
+                        end
+                        if checkboxModuleShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, abs(shapesShapes{kridge}));
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'module');
+                            set(ax, 'XScale', XquantScale);
+                        end
+                        if checkboxPhaseShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, angle(shapesShapes{kridge}));
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'phase');
+                            set(ax, 'XScale', XquantScale);
+                        end
+                        
+                        % moyenne
+                        if get(weightOptionShapesMean, 'Value')
+                            weights = abs(amplitudesShapes{kridge});
+                        else
+                            weights = ones(size(amplitudesShapes{kridge}));
+                        end
+                        weights = weights / sum(weights);
+                        meanShape = sum(shapesShapes{kridge} .* weights, 2);
+                        meanFreq = sum(freqsShapes{kridge} .* weights);
+                        
+                        if checkboxRealShapesMean.Value
+                            RealShapePlot(real(meanShape), figuresName)
+                        end
+                        if checkboxComplexShapesMean.Value
+                            ComplexShapePlot(meanShape, figuresName)
+                        end
+                        if checkboxDispShapesMean.Value
+                            disp(['mean shape, ', figuresName]);
+                            disp(meanShape);
+                        end
+                        if checkboxDispFreqsMean.Value
+                            disp(['mean frequency, ', figuresName]);
+                            disp(meanFreq);
+                        end
                     end
                 end
             else
-                warning('! multi signal mode only !');
+                warning('! multi signal or autocorrelation modes only !');
             end
         end
         
@@ -911,6 +989,29 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         set(fig, 'pointer', 'arrow');
         drawnow;
         
+    end
+
+%%
+
+    function [tRy, Ry] = plotCrossCorr(Dx, y, NmaxLagCorr)
+        tRy = Dx * (0:NmaxLagCorr);
+        Ry = crossCorrelation(y, NmaxLagCorr);
+        
+        figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
+        axRy = axes(figRy);
+        hold (axRy, 'on');
+        
+        for i = 1:size(y, 1)
+            for j = 1:size(y, 1)
+                if i == j
+                    plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]));
+                else
+                    plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
+                end
+            end
+        end
+        
+        xlim(axRy, [tRy(1), tRy(end)]);
     end
 
 
@@ -925,8 +1026,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
     end
 
 
-%%
-
+%% hilbert
 
     function hilbertTransform()
         [x, y] = getXY();
@@ -954,8 +1054,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
     end
 
 
-%%
-
+%% fourier
 
     function fourierTransform()
         [x, y] = getXY();

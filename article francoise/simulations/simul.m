@@ -89,14 +89,14 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
 
 %% test
 
-
-Rx = crossCorrelation(x);
-
-Nsv = 2;
-[SVrx, SVvectrx] = svdCWT(t, Rx, fmin, fmax, NbFreq, Q, Nsv);
-
-WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{1}, 'module', Q, ct, 'log10');
-WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{2}, 'module', Q, ct, 'log10');
+% 
+% Rx = crossCorrelation(x);
+% 
+% Nsv = 2;
+% [SVrx, SVvectrx] = svdCWT(t, Rx, fmin, fmax, NbFreq, Q, Nsv);
+% 
+% WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{1}, 'module', Q, ct, 'log10');
+% WvltPlot2(t, linspace(fmin, fmax, NbFreq), SVrx{2}, 'module', Q, ct, 'log10');
 
 return
 

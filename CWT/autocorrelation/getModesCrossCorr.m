@@ -1,8 +1,6 @@
-function [t, freqs, shapes, amplitudes] = getModesCrossCorr(T, X, Q, fmin, fmax, NbFreq, Nsv, varargin)
+function [t, freqs, shapes, amplitudes] = getModesCrossCorr(T, SVrx, SVvectrx, Q, fmin, fmax, NbFreq, Nsv, varargin)
 %GETMODES Summary of this function goes here
-%   X = t
-%   Y(ddl, kt)
-%
+%   
 %   Nsv : nb singular values
 %
 %   varargin -> ridgeExtract
@@ -14,26 +12,14 @@ function [t, freqs, shapes, amplitudes] = getModesCrossCorr(T, X, Q, fmin, fmax,
 if size(T, 1) ~= 1
     T = transpose(T);
 end
-if size(T, 2) ~= size(X, 2)
-    X = transpose(X);
-end
 
-if size(T, 1) ~= 1 || size(T, 2) ~= size(X, 2)
-    error(['array size problem (', num2str(size(T)), ' & ', num2str(size(X)), ')']);
+if size(T, 1) ~= 1
+    error(['array size problem (', num2str(size(T)), ')']);
 end
 
 
-Ndof = size(X, 1);
+Ndof = size(SVvectrx{1}, 1);
 
-%% high pass filtering
-
-% TODO
-
-%% cross correlation & wvlt & SVD
-
-Rx = crossCorrelation(X);
-
-[SVrx, SVvectrx] = svdCWT(T, Rx, fmin, fmax, NbFreq, Q, Nsv);
 
 %%
 
@@ -53,30 +39,30 @@ for ksv = 1:Nsv
     %%
     Nridges = length(Ridges.time);
     
-    t{sv} = cell(1, Nridges);
-    freqs{sv} = cell(1, Nridges);
-    shapes{sv} = cell(1, Nridges);
-    amplitudes{sv} = cell(1, Nridges);
+    t{ksv} = cell(1, Nridges);
+    freqs{ksv} = cell(1, Nridges);
+    shapes{ksv} = cell(1, Nridges);
+    amplitudes{ksv} = cell(1, Nridges);
     
     
     for kr = 1:Nridges
-        t{sv}{kr} = Ridges.time{kr};
-        freqs{sv}{kr} = Ridges.freq{kr};
-        amplitudes{sv}{kr} = Ridges.val{kr};
+        t{ksv}{kr} = Ridges.time{kr};
+        freqs{ksv}{kr} = Ridges.freq{kr};
+        amplitudes{ksv}{kr} = Ridges.val{kr};
         
-        Nt = length(t{sv}{kr}); % time indexes
+        Nt = length(t{ksv}{kr}); % time indexes
         kt0 = 1;
-        while kt0 <= length(X) && X(kt0) < t{sv}{kr}(1)
+        while kt0 <= length(T) && T(kt0) < t{ksv}{kr}(1)
             kt0 = kt0+1;
         end
         timeInd = kt0:(kt0 + Nt);
         
-        shapes{sv}{kr} = nan(Ndof, Nt);
+        shapes{ksv}{kr} = nan(Ndof, Nt);
         
         for kt = 1:Nt
             kt0 = timeInd(kt); % indice sur l'échelle de temps originale
             
-            f = freqs{kr}(kt);
+            f = freqs{ksv}{kr}(kt);
             
             if f < fmin
                 warning('frequence out of bounds');
@@ -101,7 +87,7 @@ for ksv = 1:Nsv
             shape = c1*SVvectrx{ksv}(:, kf1, kt0) + c2*SVvectrx{ksv}(:, kf2, kt0);
             
             ampl = sqrt(transpose(shape) * shape);
-            if kt > 1 && norm(-shape-shapes{ksv}{kr}(:, kt-1)) < norm(-shape-shapes{ksv}{kr}(:, kt-1)) % shape continuity
+            if kt > 1 && norm(-shape-shapes{ksv}{kr}(:, kt-1)) < norm(shape-shapes{ksv}{kr}(:, kt-1)) % shape continuity
                 ampl = -ampl;
             end
             

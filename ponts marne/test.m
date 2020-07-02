@@ -3,10 +3,9 @@ clear all
 %% data
 bridge = 'trilbardou';
 Fs = 50;
-load('ponts marne/data/trilbardou1506/ambiant1_10min50Hz26C');
+load('ponts marne/data/trilbardou1506/ambiant4_10min50Hz26C');
 meanToZero = true;
-autocorrelation = false;
-correctClipping = 0;
+correctClipping = true;
 
 dt = 1/Fs;
 t = dt * (0:size(X, 2)-1);
@@ -54,13 +53,6 @@ if meanToZero
     end
 end
 
-if autocorrelation
-    Rx = nan(size(X));
-    for dof = 1:size(X, 1)
-        RxDof = xcorr(X(dof, :), 'biased') / var(X(dof, :));
-        Rx(dof, :) = RxDof(ceil(length(RxDof)/2):end);
-    end
-end
 
 %% plots
 
@@ -70,13 +62,6 @@ plts = plot(t, X);
 xlabel(ax, 't');
 ylabel(ax, 'a');
 
-if autocorrelation
-    fig = figure;
-    ax = axes(fig);
-    pltsAutocorr = plot(t, Rx);
-    xlabel(ax, 't');
-    ylabel(ax, 'Ra');
-end
 
 %% shapes plot
 
@@ -90,14 +75,8 @@ NbMaxParallelRidges = 1;
 fmin = 0.5;
 fmax = 5;
 
-WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
+WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'AutocorrelationMode', true,...
     'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);
-
-
-if autocorrelation
-    WaveletMenu('WaveletPlot', pltsAutocorr, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
-    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);
-end
 
 
 

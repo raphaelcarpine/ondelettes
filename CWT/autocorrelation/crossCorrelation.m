@@ -1,13 +1,12 @@
-function Rx = crossCorrelation(x)
+function Rx = crossCorrelation(x, maxLag)
 %CROSSCORRELATION Summary of this function goes here
 %   x(kDOF, kt)
 Ndof = size(x, 1);
-Nt = size(x, 2);
-Rx = nan(Ndof, Ndof, Nt);
+Rx = nan(Ndof, Ndof, maxLag+1);
 
 for i = 1:Ndof
     for j = i:Ndof
-        Rxij = xcorr(x(i, :), x(j, :), 'biased');
+        Rxij = xcorr(x(i, :), x(j, :), maxLag, 'biased');
         Rx(i, j, :) = Rxij(ceil(length(Rxij)/2):end);
         
         Rxji = flip(Rxij);
