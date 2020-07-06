@@ -75,7 +75,7 @@ NbMaxParallelRidges = 1;
 fmin = 0.5;
 fmax = 5;
 
-WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'AutocorrelationMode', true,...
+WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'AutocorrelationMode', true, 'MaxLagCorr', 100,...
     'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);
 
 

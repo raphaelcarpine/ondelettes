@@ -16,14 +16,14 @@ nbDDL = 2;
 
 %% excitation
 
-T = 100;
-dt = 0.01;
+T = 1000;
+dt = 0.001;
 fe = 1/dt;
 
 t = 0:dt:T;
 nt = length(t);
 
-excitation = 'gaussien'; % 'bruit' 'dirac' 'gaussien'
+excitation = 'bruit'; % 'bruit' 'dirac' 'gaussien'
 
 if isequal(excitation, 'bruit')
     f = exp(2i*pi*rand(1, nt)); % bruit
@@ -75,7 +75,7 @@ if true % f plot
         , 'CtEdgeEffects', ct);
 end
 
-
+return
 
 fig = figure('Name', ['zeta=', num2str(zeta)]);
 ax = axes(fig);

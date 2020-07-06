@@ -20,6 +20,7 @@ defaultCtEdgeEffects = 3;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
 defaultAutocorrelationMode = false;
+defaultMaxLagCorr = nan;
 defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
@@ -50,6 +51,7 @@ addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
+addParameter(p,'MaxLagCorr', defaultMaxLagCorr);
 addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
@@ -126,10 +128,12 @@ multipleAxesDisplay = p.Results.MultipleAxesDisplay;
 RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
+
 multiSignalMode = p.Results.MultiSignalMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
-multiSignalMode = multiSignalMode & ~autocorrelationMode;
+
 autocorrelationNsvd = p.Results.AutocorrelationNsvd;
+maxLagCorr = p.Results.MaxLagCorr;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
@@ -144,6 +148,10 @@ if isnan(XLim)
 else
     Xmin = XLim(1);
     Xmax = XLim(2);
+end
+
+if isnan(maxLagCorr)
+    maxLagCorr = Xmax-Xmin;
 end
 
 %% reglage affichage subpolt/simple plot
@@ -546,68 +554,86 @@ set(XlimMenu, 'CallBack', @(~,~) setXlim);
 %multipleAxesDisplay
 
 multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
-    function switchMultipleAxesDisplay(~, ~)
-        if strcmp(multipleAxesDisplayMenu.Checked, 'on')
-            multipleAxesDisplayMenu.Checked = false;
-            setMultipleAxesDisplay(false);
-        else
-            multipleAxesDisplayMenu.Checked = true;
-            setMultipleAxesDisplay(true);
-            
-            multiSignalModeMenu.Checked = false;
-            multiSignalMode = false;
-            autocorrelationModeMenu.Checked = false;
-            autocorrelationMode = false;
+    function switchMultipleAxesDisplay(status)
+        multipleAxesDisplayMenu.Checked = status;
+        setMultipleAxesDisplay(status);
+        if status
+            switchMultiSignalModeDisplay(false);
+            switchAutocorrelationModeDisplay(false)
         end
     end
 
-multipleAxesDisplayMenu.MenuSelectedFcn = @switchMultipleAxesDisplay;
+multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
 
 %multiSignalMode
 
 multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', multiSignalMode);
-    function switchMultiSignalModeDisplay(~, ~)
-        if strcmp(multiSignalModeMenu.Checked, 'on')
-            multiSignalModeMenu.Checked = false;
-            multiSignalMode = false;
-        else
-            multiSignalModeMenu.Checked = true;
-            multiSignalMode = true;
-            
-            multipleAxesDisplayMenu.Checked = false;
-            setMultipleAxesDisplay(false);
-            autocorrelationModeMenu.Checked = false;
-            autocorrelationMode = false;
+    function switchMultiSignalModeDisplay(status)
+        multiSignalModeMenu.Checked = status;
+        multiSignalMode = status;
+        if status
+            switchMultipleAxesDisplay(false);
+            switchAutocorrelationModeDisplay(false);
         end
     end
 
-multiSignalModeMenu.MenuSelectedFcn = @switchMultiSignalModeDisplay;
+multiSignalModeMenu.MenuSelectedFcn = @(~, ~) switchMultiSignalModeDisplay(~strcmp(multiSignalModeMenu.Checked, 'on'));
 
 %autocorrelationMode
 
-autocorrelationModeMenu = uimenu(paramMenu, 'Text','Autocorrelation mode', 'Checked', autocorrelationMode);
-    function switchAutocorrelationModeDisplay(~, ~)
-        if strcmp(autocorrelationModeMenu.Checked, 'on')
-            autocorrelationModeMenu.Checked = false;
-            autocorrelationMode = false;
-        else
-            autocorrelationModeMenu.Checked = true;
-            autocorrelationMode = true;
-            
-            multipleAxesDisplayMenu.Checked = false;
-            setMultipleAxesDisplay(false);
-            multiSignalModeMenu.Checked = false;
-            multiSignalMode = false;
+autocorrelationModeMenu = uimenu(paramMenu, 'Text','Cross-corr mode', 'Checked', autocorrelationMode);
+
+autocorrelationParamsMenu = uimenu(paramMenu, 'Text','Cross-corr params');
+autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text','plot cross-corr');
+autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text','set max lag');
+
+    function switchAutocorrelationModeDisplay(status)
+        autocorrelationModeMenu.Checked = status;
+        autocorrelationMode = status;
+        set(autocorrelationParamsMenu, 'Enable', status);
+        
+        if status
+            switchMultipleAxesDisplay(false);
+            switchMultiSignalModeDisplay(false);
         end
     end
+autocorrelationModeMenu.MenuSelectedFcn = @(~, ~) switchAutocorrelationModeDisplay(~strcmp(autocorrelationModeMenu.Checked, 'on'));
 
-autocorrelationModeMenu.MenuSelectedFcn = @switchAutocorrelationModeDisplay;
+    function displayCrossCorr()
+        [x, y] = getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        NmaxLagCorr = floor(maxLagCorr/Dx);
+        plotCrossCorr(Dx, y, NmaxLagCorr);
+    end
+set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
 
-%% menus regression et plot extract
+    function setMaxLagCorr()
+        answer = inputdlg({'Enter max lag :'}, 'Input MaxLag', [1 35], {num2str(maxLagCorr)});
+        try
+            maxLagCorr = str2double(answer{1});
+        catch
+        end
+    end
+set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
+
+%set
+
+switchMultiSignalModeDisplay(multiSignalMode);
+switchAutocorrelationModeDisplay(autocorrelationMode);
+
+%% menus regression & plot extract
+
+toolsMenu = uimenu(fig, 'Text', 'Tools');
+
+% filtering
+
+filteringMenu = uimenu(toolsMenu,'Text','Filtering');
+
+filteringMenu.MenuSelectedFcn = @(~, ~) LinearFilterMenu(WaveletPlot);
 
 % regressions
 
-regMenu = uimenu(fig,'Text','Regression');
+regMenu = uimenu(toolsMenu,'Text','Regression');
 
 regConstant = uimenu(regMenu, 'Text','Constant');
 regExp = uimenu(regMenu, 'Text','Exp');
@@ -618,7 +644,7 @@ regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 
 
 % plot extract
 
-plotExtractMenu = uimenu(fig,'Text','Plot Extract');
+plotExtractMenu = uimenu(toolsMenu,'Text','Plot Extract');
 
     function plotExtractCallback(~, ~)
         prompt = {'Enter x-axis var name:', 'Enter y-axis var name:'};
@@ -639,6 +665,7 @@ plotExtractMenu = uimenu(fig,'Text','Plot Extract');
     end
 
 plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
+
 
 %%
 
@@ -674,7 +701,6 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         
         % cross corr
         if autocorrelationMode
-            maxLagCorr = 100;
             NmaxLagCorr = floor(maxLagCorr/Dx);
             [tRy, Ry] = plotCrossCorr(Dx, y, NmaxLagCorr);
             [SVry, SVvectry] = svdCWT(tRy, Ry, fmin, fmax, NbFreq, Q, autocorrelationNsvd);
@@ -1001,17 +1027,22 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         axRy = axes(figRy);
         hold (axRy, 'on');
         
-        for i = 1:size(y, 1)
-            for j = 1:size(y, 1)
+        Ndof = size(y, 1);
+        legendRij = cell(1, Ndof^2);
+        
+        for i = 1:Ndof
+            for j = 1:Ndof
                 if i == j
                     plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]));
                 else
                     plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
                 end
+                legendRij{(i-1)*Ndof + j} = ['R', num2str(i), num2str(j)];
             end
         end
         
         xlim(axRy, [tRy(1), tRy(end)]);
+        legend(axRy, legendRij{:});
     end
 
 
