@@ -51,7 +51,7 @@ addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
-addParameter(p,'MaxLagCorr', defaultMaxLagCorr);
+addParameter(p,'AutocorrelationMaxLag', defaultMaxLagCorr);
 addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
@@ -117,10 +117,10 @@ end
 nbPlots = size(getX(), 1);
 
 
-fmin0 = p.Results.fmin;
-fmax0 = p.Results.fmax;
-NbFreq0 = p.Results.NbFreq;
-Q0 = p.Results.Q;
+fmin = p.Results.fmin;
+fmax = p.Results.fmax;
+NbFreq = p.Results.NbFreq;
+Q = p.Results.Q;
 MaxRidges = p.Results.MaxRidges;
 MaxParallelRidges = p.Results.MaxParallelRidges;
 MaxSlopeRidge = p.Results.MaxSlopeRidge;
@@ -131,9 +131,11 @@ ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 
 multiSignalMode = p.Results.MultiSignalMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
+tRy = nan; Ry = nan; SVry = nan; SVvectry = nan;
+resetCrossCorr();
 
 autocorrelationNsvd = p.Results.AutocorrelationNsvd;
-maxLagCorr = p.Results.MaxLagCorr;
+maxLagCorr = p.Results.AutocorrelationMaxLag;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 XLim = p.Results.XLim;
@@ -153,6 +155,8 @@ end
 if isnan(maxLagCorr)
     maxLagCorr = Xmax-Xmin;
 end
+
+x = nan; y = nan;
 
 %% reglage affichage subpolt/simple plot
 
@@ -210,22 +214,22 @@ buttonHilbert.Position = [0.51, 0.01, 0.47, 0.98];
 strfmin = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
     'String', 'fmin = ');
 editfmin = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
-    'String', num2str(fmin0));
+    'String', num2str(fmin));
 
 strfmax = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
     'String', 'fmax = ');
 editfmax = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
-    'String', num2str(fmax0));
+    'String', num2str(fmax));
 
 strNbFreq = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
     'String', 'NbFreq = ');
 editNbFreq = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
-    'String', num2str(NbFreq0));
+    'String', num2str(NbFreq));
 
 strQ = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
     'String', 'Q = ');
 editQ = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
-    'String', num2str(Q0));
+    'String', num2str(Q));
 
 strmaxR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
     'String', 'max ridges');
@@ -583,9 +587,10 @@ multiSignalModeMenu.MenuSelectedFcn = @(~, ~) switchMultiSignalModeDisplay(~strc
 
 autocorrelationModeMenu = uimenu(paramMenu, 'Text','Cross-corr mode', 'Checked', autocorrelationMode);
 
-autocorrelationParamsMenu = uimenu(paramMenu, 'Text','Cross-corr params');
-autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text','plot cross-corr');
-autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text','set max lag');
+autocorrelationParamsMenu = uimenu(paramMenu, 'Text', 'Cross-corr params');
+autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'plot cross-corr');
+autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'set max lag');
+autocorrelationFourierMenu = uimenu(autocorrelationParamsMenu, 'Text', 'fourier svd', 'Checked', 'on');
 
     function switchAutocorrelationModeDisplay(status)
         autocorrelationModeMenu.Checked = status;
@@ -600,10 +605,10 @@ autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text','set max la
 autocorrelationModeMenu.MenuSelectedFcn = @(~, ~) switchAutocorrelationModeDisplay(~strcmp(autocorrelationModeMenu.Checked, 'on'));
 
     function displayCrossCorr()
-        [x, y] = getXY();
+        getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
         NmaxLagCorr = floor(maxLagCorr/Dx);
-        plotCrossCorr(Dx, y, NmaxLagCorr);
+        plotCrossCorr(Dx, y, NmaxLagCorr, true);
     end
 set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
 
@@ -612,9 +617,16 @@ set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
         try
             maxLagCorr = str2double(answer{1});
         catch
+            return
         end
+        resetCrossCorr();
     end
 set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
+
+    function switchAutocorrelationFourierMenu()
+        autocorrelationFourierMenu.Checked = ~strcmp(autocorrelationFourierMenu.Checked, 'on');
+    end
+set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierMenu());
 
 %set
 
@@ -669,18 +681,25 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 %%
 
-    function [X, Y] = getXY()
+    function getXY()
         X = getX();
         Y = getY();
-        %%%
-        %test X identique
-        %%%
+        
         for line = 1:size(X, 1)
             Y2(line, :) = Y(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
             X2(line, :) = X(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
         end
-        X = X2;
-        Y = Y2;
+        
+        %%%
+        %test X identique
+        %%%
+        
+        if ~isequal(x, X2) || ~isequal(y, Y2)
+            resetCrossCorr();
+        end
+        
+        x = X2;
+        y = Y2;
     end
 
     function show()
@@ -689,21 +708,28 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         drawnow;
         
         % evaluation des parametres
-        fmin = eval(get(editfmin, 'String'));
-        fmax = eval(get(editfmax, 'String'));
-        NbFreq = eval(get(editNbFreq, 'String'));
-        Q = eval(get(editQ, 'String'));
+        fminNew = eval(get(editfmin, 'String'));
+        fmaxNew = eval(get(editfmax, 'String'));
+        NbFreqNew = eval(get(editNbFreq, 'String'));
+        QNew = eval(get(editQ, 'String'));
+        if fminNew ~= fmin || fmaxNew ~= fmax || NbFreqNew ~= NbFreq || QNew ~= Q
+            resetCrossCorr();
+        end
+        fmin = fminNew; fmax = fmaxNew; NbFreq = NbFreqNew; Q = QNew;
+        
         maxR = eval(get(editmaxR, 'String')); %nombre max de ridges
         PR = eval(get(editPR, 'String')); %nombre max de ridges parallèles
         slopeRidge = eval(get(editSL, 'String')); %max slope ridge
-        [x, y] = getXY();
+        getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
         
         % cross corr
         if autocorrelationMode
             NmaxLagCorr = floor(maxLagCorr/Dx);
-            [tRy, Ry] = plotCrossCorr(Dx, y, NmaxLagCorr);
-            [SVry, SVvectry] = svdCWT(tRy, Ry, fmin, fmax, NbFreq, Q, autocorrelationNsvd);
+            plotCrossCorr(Dx, y, NmaxLagCorr);
+            if isempty(SVry)
+                [SVry, SVvectry] = svdCWT(tRy, Ry, fmin, fmax, NbFreq, Q, autocorrelationNsvd);
+            end
         end
         
         %% plot de la transformee
@@ -792,7 +818,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             elseif autocorrelationMode
                 ridges = cell(1, autocorrelationNsvd);
                 for ksvd = 1:autocorrelationNsvd
-                    ridges{1} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
+                    ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
                 end
@@ -819,8 +845,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 end
             end
             
+            
             % plot des ridges
             for kPlot = 1:length(ridges)
+                if autocorrelationMode
+                    XLimRidge = [tRy(1), tRy(end)];
+                else
+                    XLimRidge = [x(kPlot,1), x(kPlot,end)];
+                end
+                
                 ridge = ridges{kPlot};
                 
                 if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
@@ -833,15 +866,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                         'Axes', axesFiguresCheckboxs2(1, kPlot),...
-                        'XLim', [x(kPlot,1), x(kPlot,end)], 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(2, kPlot),...
-                        'XLim', [x(kPlot,1), x(kPlot,end)], 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
-                if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequance
+                if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'SquaredCWT', multiSignalMode);
@@ -850,7 +883,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(4, kPlot),...
-                        'XLim', [x(kPlot,1), x(kPlot,end)], 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
@@ -861,7 +894,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                         'Axes', axesFiguresCheckboxs2(6, kPlot),...
-                        'XLim', [x(kPlot,1), x(kPlot,end)], 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
             end
         end
@@ -1019,30 +1052,48 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 %%
 
-    function [tRy, Ry] = plotCrossCorr(Dx, y, NmaxLagCorr)
-        tRy = Dx * (0:NmaxLagCorr);
-        Ry = crossCorrelation(y, NmaxLagCorr);
-        
-        figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
-        axRy = axes(figRy);
-        hold (axRy, 'on');
-        
-        Ndof = size(y, 1);
-        legendRij = cell(1, Ndof^2);
-        
-        for i = 1:Ndof
-            for j = 1:Ndof
-                if i == j
-                    plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]));
-                else
-                    plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
-                end
-                legendRij{(i-1)*Ndof + j} = ['R', num2str(i), num2str(j)];
-            end
+    function plotCrossCorr(Dx, y, NmaxLagCorr, forcePlot)
+        % plot iif Ry change | forcePlot
+        if nargin < 4
+            forcePlot = isempty(tRy);
         end
         
-        xlim(axRy, [tRy(1), tRy(end)]);
-        legend(axRy, legendRij{:});
+        if isempty(tRy)
+            tRy = Dx * (0:NmaxLagCorr);
+            Ry = crossCorrelation(y, NmaxLagCorr);
+        end
+        
+        if forcePlot
+            figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
+            axRy = axes(figRy);
+            hold (axRy, 'on');
+            
+            Ndof = size(y, 1);
+            legendRij = cell(1, Ndof^2);
+            
+            for i = 1:Ndof
+                for j = 1:Ndof
+                    if i == j
+                        plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]));
+                    else
+                        plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
+                    end
+                    legendRij{(i-1)*Ndof + j} = ['R', num2str(i), num2str(j)];
+                end
+            end
+            
+            xlim(axRy, [tRy(1), tRy(end)]);
+            legend(axRy, legendRij{:});
+            drawnow;
+        end
+    end
+
+
+    function resetCrossCorr()
+        tRy = [];
+        Ry = [];
+        SVry = [];
+        SVvectry = [];
     end
 
 
@@ -1060,7 +1111,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 %% hilbert
 
     function hilbertTransform()
-        [x, y] = getXY();
+        getXY();
         
         hilbertPlotAxes = plotAxes;
         if isequal(hilbertPlotAxes, 0)
@@ -1088,38 +1139,77 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 %% fourier
 
     function fourierTransform()
-        [x, y] = getXY();
+        getXY();
         fmin = eval(get(editfmin, 'String'));
         fmax = eval(get(editfmax, 'String'));
         
-        ffourier = figure;
-        fourierPlotAxes = [];
-        if multipleAxesDisplay %création des axes où sont plot les courbes
-            for kPlot = 1:nbPlots
-                fourierPlotAxes(kPlot) = subplot0(nbPlots, 1, kPlot, axes(ffourier));
-                set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
+        if ~autocorrelationMode
+            ffourier = figure;
+            fourierPlotAxes = [];
+            
+            nbAxes = nbPlots;
+            if autocorrelationMode
+                nbAxes = nbPlots^2; % maximum
             end
-        else
-            axesffourier = axes(ffourier);
-            hold(axesffourier, 'on');
-            set(axesffourier, 'XScale', 'lin', 'YScale', 'lin');
-            for kPlot = 1:nbPlots
-                fourierPlotAxes(kPlot) = axesffourier;
-            end            
-        end
-        
-        if ~multiSignalMode % plot des courbes
-            for kPlot = 1:nbPlots
-                Xfour = x(kPlot,:);
-                Yfour = y(kPlot,:);
-                Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                Tfour = mean(diff(Xfour))*length(Yfour);
-                
-                four = fft(Yfour) / length(Yfour);
-                four = four(1:floor(end/2));
-                four(2:end) = 2*four(2:end);
-                freqs = linspace(0, length(four)/Tfour, length(four));
-                
+            
+            if multipleAxesDisplay %création des axes où sont plot les courbes
+                for kPlot = 1:nbAxes
+                    fourierPlotAxes(kPlot) = subplot0(nbAxes, 1, kPlot, axes(ffourier));
+                    set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
+                end
+            else
+                axesffourier = axes(ffourier);
+                hold(axesffourier, 'on');
+                set(axesffourier, 'XScale', 'lin', 'YScale', 'lin');
+                for kPlot = 1:nbAxes
+                    fourierPlotAxes(kPlot) = axesffourier;
+                end
+            end
+            
+            if ~multiSignalMode % plot des courbes
+                for kPlot = 1:nbAxes
+                    Xfour = x(kPlot,:);
+                    Yfour = y(kPlot,:);
+                    Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+                    Tfour = mean(diff(Xfour))*length(Yfour);
+                    
+                    four = fft(Yfour) / length(Yfour);
+                    four = four(1:floor(end/2));
+                    four(2:end) = 2*four(2:end);
+                    freqs = 1/Tfour * (0:length(four)-1);
+                    
+                    hold(fourierPlotAxes(kPlot), 'on');
+                    if isequal(FourierScale, 'lin')
+                        plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                    elseif isequal(FourierScale, 'squared')
+                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
+                    elseif isequal(FourierScale, 'log')
+                        plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                        set(fourierPlotAxes(kPlot), 'YScale', 'log');
+                    elseif isequal(FourierScale, 'phase')
+                        plot(fourierPlotAxes(kPlot), freqs, angle(four));
+                    end
+                    hold(fourierPlotAxes(kPlot), 'off');
+                    
+                    xlabel(fourierPlotAxes(kPlot), 'freq');
+                    ylabel(fourierPlotAxes(kPlot), 'fft');
+                    
+                    %                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
+                end
+            else
+                FourierTot = 0;
+                for kPlot = 1:nbAxes
+                    Xfour = x(kPlot,:);
+                    Yfour = y(kPlot,:);
+                    Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+                    Tfour = mean(diff(Xfour)) * length(Yfour);
+                    four = fft(Yfour) / length(Yfour);
+                    four = four(1:floor(end/2));
+                    four(2:end) = 2*four(2:end);
+                    FourierTot = FourierTot + four.^2;
+                end
+                freqs = 1/Tfour * (0:length(four)-1);
+                four = sqrt(FourierTot);
                 hold(fourierPlotAxes(kPlot), 'on');
                 if isequal(FourierScale, 'lin')
                     plot(fourierPlotAxes(kPlot), freqs, abs(four));
@@ -1132,42 +1222,77 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     plot(fourierPlotAxes(kPlot), freqs, angle(four));
                 end
                 hold(fourierPlotAxes(kPlot), 'off');
-                
                 xlabel(fourierPlotAxes(kPlot), 'freq');
                 ylabel(fourierPlotAxes(kPlot), 'fft');
+            end
+            
+        else % autocorr
+            Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+            NmaxLagCorr = floor(maxLagCorr/Dx);
+            plotCrossCorr(Dx, y, NmaxLagCorr);
+            
+            if strcmp(autocorrelationFourierMenu.Checked, 'on')
+                [SVfftrx, ~] = svdFFT(Ry, autocorrelationNsvd);
                 
-%                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
+                for ksv = 1:autocorrelationNsvd
+                    fourierFig = figure;
+                    fourierPlotAxes = axes(fourierFig);
+                    
+                    Tfour = (tRy(end)-tRy(1)) / (length(tRy)-1) * length(tRy);
+                    fftRx = SVfftrx{ksv}(1:floor(end/2));
+                    freqs = 1/Tfour * (0:length(fftRx)-1);
+                    
+                    if isequal(FourierScale, 'lin')
+                        plot(fourierPlotAxes, freqs, abs(fftRx));
+                    elseif isequal(FourierScale, 'squared')
+                        plot(fourierPlotAxes, freqs, abs(fftRx).^2);
+                    elseif isequal(FourierScale, 'log')
+                        plot(fourierPlotAxes, freqs, abs(fftRx));
+                        set(fourierPlotAxes, 'YScale', 'log');
+                    elseif isequal(FourierScale, 'phase')
+                        plot(fourierPlotAxes, freqs, angle(fftRx));
+                    end
+                    xlabel(fourierPlotAxes, 'freq');
+                    ylabel(fourierPlotAxes, 'fft');
+                end
+            else
+                fourierFig = figure;
+                fourierPlotAxes = axes(fourierFig);
+                hold(fourierPlotAxes, 'on');
+                
+                Tfour = (tRy(end)-tRy(1)) / (length(tRy)-1) * length(tRy);
+                
+                legendRij = cell(1, nbPlots^2);
+                for i = 1:nbPlots
+                    for j = 1:nbPlots
+                        fftRx = fft(reshape(Ry(i, j, :), [1, size(Ry, 3)]));
+                        fftRx = fftRx(1:floor(end/2));
+                        freqs = 1/Tfour * (0:length(fftRx)-1);
+                        
+                        if isequal(FourierScale, 'lin')
+                            fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx));
+                        elseif isequal(FourierScale, 'squared')
+                            fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx).^2);
+                        elseif isequal(FourierScale, 'log')
+                            fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx));
+                            set(fourierPlotAxes, 'YScale', 'log');
+                        elseif isequal(FourierScale, 'phase')
+                            fourierPlot = plot(fourierPlotAxes, freqs, angle(fftRx));
+                        end
+                        
+                        if i ~= j
+                            set(fourierPlot, 'LineStyle', ':');
+                        end
+                        
+                        legendRij{(i-1)*nbPlots + j} = ['R', num2str(i), num2str(j)];
+                    end
+                end
+                
+                hold(fourierPlotAxes, 'off');
+                xlabel(fourierPlotAxes, 'freq');
+                ylabel(fourierPlotAxes, 'fft');
             end
-        else
-            FourierTot = 0;
-            for kPlot = 1:nbPlots
-                Xfour = x(kPlot,:);
-                Yfour = y(kPlot,:);
-                Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                Tfour = mean(diff(Xfour)) * length(Yfour);
-                four = fft(Yfour) / length(Yfour);
-                four = four(1:floor(end/2));
-                four(2:end) = 2*four(2:end);
-                FourierTot = FourierTot + four.^2;
-            end
-            freqs = linspace(0, length(four)/Tfour, length(four));
-            four = sqrt(FourierTot);
-            hold(fourierPlotAxes(kPlot), 'on');
-            if isequal(FourierScale, 'lin')
-                plot(fourierPlotAxes(kPlot), freqs, abs(four));
-            elseif isequal(FourierScale, 'squared')
-                plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
-            elseif isequal(FourierScale, 'log')
-                plot(fourierPlotAxes(kPlot), freqs, abs(four));
-                set(fourierPlotAxes(kPlot), 'YScale', 'log');
-            elseif isequal(FourierScale, 'phase')
-                plot(fourierPlotAxes(kPlot), freqs, angle(four));
-            end
-            hold(fourierPlotAxes(kPlot), 'off');
-            xlabel(fourierPlotAxes(kPlot), 'freq');
-            ylabel(fourierPlotAxes(kPlot), 'fft');
         end
-        
     end
 
 

@@ -5,7 +5,8 @@ function [SVrx, SVvectrx] = svdCWT(t, Rx, fmin, fmax, NbFreq, Q, Nsv)
 %   SVrx{k}(kf, kt) : k^th singular values of CWT(Rx) for each time and freq
 %   SVvectrx{k}(:, kf, kt) : k^th singular vectors of CWT(Rx) for each time and freq
 
-timeWaitBar = 5;
+timeWaitBarSVD = 5;
+timeWaitBarCWT = 5;
 
 if nargin < 6
     Nsv = 1;
@@ -17,10 +18,25 @@ Nt = size(Rx, 3);
 %% CWT
 
 CWTrx = nan(Ndof, Ndof, NbFreq, Nt);
+
+tic;
 for iddl = 1:Ndof
     for jddl = 1:Ndof
+        r = (Ndof*(iddl-1) + jddl)/Ndof^2;
+        if ~isnan(timeWaitBarCWT) && toc > timeWaitBarCWT
+            w = waitbar(r, [num2str(round(100*r)), '%'], 'Name', 'Computing CWT');
+            timeWaitBarCWT = nan;
+        elseif isnan(timeWaitBarCWT) && isvalid(w)
+            waitbar(r, w, [num2str(round(100*r)), '%']);
+        end
+        
         CWTrx(iddl, jddl, :, :) = WvltComp(t, reshape(Rx(iddl, jddl, :), [1, Nt]), linspace(fmin, fmax, NbFreq), Q);
     end
+end
+
+if isnan(timeWaitBarCWT) && isvalid(w)
+    waitbar(1, w, '100%');
+    close(w);
 end
 
 %% SVD
@@ -36,10 +52,10 @@ end
 tic;
 for kfreq = 1:NbFreq
     r = (kfreq-1)/NbFreq;
-    if ~isnan(timeWaitBar) && toc > timeWaitBar
-        w = waitbar(r, [num2str(round(100*r)), '%'], 'Name', 'computing SVD');
-        timeWaitBar = nan;
-    elseif isnan(timeWaitBar) && isvalid(w)
+    if ~isnan(timeWaitBarSVD) && toc > timeWaitBarSVD
+        w = waitbar(r, [num2str(round(100*r)), '%'], 'Name', 'Computing SVD');
+        timeWaitBarSVD = nan;
+    elseif isnan(timeWaitBarSVD) && isvalid(w)
         waitbar(r, w, [num2str(round(100*r)), '%']);
     end
     
@@ -53,7 +69,7 @@ for kfreq = 1:NbFreq
     end
 end
 
-if isnan(timeWaitBar) && isvalid(w)
+if isnan(timeWaitBarSVD) && isvalid(w)
     waitbar(1, w, '100%');
     close(w);
 end

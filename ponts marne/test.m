@@ -4,7 +4,7 @@ clear all
 bridge = 'trilbardou';
 Fs = 50;
 load('ponts marne/data/trilbardou1506/ambiant4_10min50Hz26C');
-meanToZero = true;
+meanToZero = false;
 correctClipping = true;
 
 dt = 1/Fs;
