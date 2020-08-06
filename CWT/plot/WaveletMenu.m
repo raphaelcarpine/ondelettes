@@ -10,7 +10,7 @@ defaultFmax = 10;
 defaultNbFreq = 300;
 defaultParent = 0;
 defaultWaveletPlot = 0;
-defaultQ = 1;
+defaultQ = 10;
 defaultMaxRidges = 1;
 defaultMaxParallelRidges = 1;
 defaultMaxSlopeRidge = 1;
@@ -28,6 +28,7 @@ defaultXLim = nan;
 defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
+defaultMotherWavelet = 'cauchy';
 
 
 
@@ -59,6 +60,7 @@ addParameter(p,'XLim', defaultXLim);
 addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
 addParameter(p, 'RealShapePlot', defaultRealShapePlot);
+addParameter(p, 'MotherWavelet', defaultMotherWavelet);
 
 parse(p, varargin{:})
 
@@ -142,6 +144,7 @@ XLim = p.Results.XLim;
 wvltAxesTitle = p.Results.WvltAxesTitle;
 ComplexShapePlot = p.Results.ComplexShapePlot;
 RealShapePlot = p.Results.RealShapePlot;
+MotherWavelet = p.Results.MotherWavelet;
 
 x0 = getX();
 if isnan(XLim)
@@ -427,6 +430,27 @@ end
 
 %% menu (autres paramètres)
 
+fig.MenuBar = 'none';
+
+paramMenu = uimenu(fig,'Text','Options');
+
+% mother wavelet
+MotherWaveletNames = {'cauchy', 'littlewood-paley'};
+
+motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
+motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy', 'Checked' ,'on');
+motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
+    function selectMotherWaveletMenu(kchoice)
+        for kchoices = 1:length(motherWaveletMenuChoices)
+            set(motherWaveletMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(motherWaveletMenuChoices(kchoice), 'Checked', 'on');
+        
+        MotherWavelet = MotherWaveletNames{kchoice};
+    end
+set(motherWaveletMenuChoices(1), 'CallBack', @(~,~) selectMotherWaveletMenu(1));
+set(motherWaveletMenuChoices(2), 'CallBack', @(~,~) selectMotherWaveletMenu(2));
+
 %autres valeurs par défault
 freqRidgeName = 'freq';
 phaseRidgeName = 'pha2';
@@ -437,10 +461,6 @@ phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
 WvltScaleNames = {'lin', 'log10'};
 FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
-
-fig.MenuBar = 'none';
-
-paramMenu = uimenu(fig,'Text','Options');
 
 %freq
 freqMenu = uimenu(paramMenu, 'Text','Frequency');
@@ -745,7 +765,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if checkboxModule.Value || checkboxPhase.Value
             if ~multiSignalMode && ~autocorrelationMode
                 for kPlot = 1:nbPlots
-                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects);
+                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet);
                     if checkboxModule.Value
                         WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects,...
                             WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
@@ -760,7 +780,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 wavelet = 0; % calcul de la somme des carrés de transformées
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
                 end
                 %wavelet = sqrt(wavelet);
                 
@@ -799,28 +819,31 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 for kPlot = 1:nbPlots
                     ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
-                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
+                        'MotherWavelet', MotherWavelet);
                 end
                 
             elseif multiSignalMode
                 wavelet = 0;
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
                 end
                 
                 ridges = cell(1, 1);
                 ridges{1} = RidgeExtract(x(kPlot,:), nan, Q, fmin, fmax, NbFreq,...
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
-                    'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                    'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
+                    'MotherWavelet', MotherWavelet);
             
             elseif autocorrelationMode
                 ridges = cell(1, autocorrelationNsvd);
                 for ksvd = 1:autocorrelationNsvd
                     ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
-                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
+                        'MotherWavelet', MotherWavelet);
                 end
             end
             
@@ -906,12 +929,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
                         getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
-                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
+                        'MotherWavelet', MotherWavelet);
                 elseif autocorrelationMode
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
                         getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
-                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge);
+                        'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
+                        'MotherWavelet', MotherWavelet);
                 end
                 
                 if autocorrelationMode

@@ -16,6 +16,7 @@ LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
 WaveletDef = nan;
 SmoothDampingDef = true;
+MotherWaveletDef = 'cauchy';
 
 %%
 addRequired(p,'X')
@@ -36,6 +37,8 @@ addParameter(p,'LengthMinRidge',LengthMinRidgeDef);
 addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
 addParameter(p,'SmoothDamping', SmoothDampingDef); % spline smoothing de l'amplitude pour lisser zeta(t)
+addParameter(p,'MotherWavelet', MotherWaveletDef);
+
 
 parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
 
@@ -52,6 +55,7 @@ LengthMinRidge = p.Results.LengthMinRidge;
 ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
 SmoothDamping = p.Results.SmoothDamping;
+MotherWavelet = p.Results.MotherWavelet;
 
 %%
 if iscolumn(X)
@@ -62,7 +66,7 @@ end
 WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
 
 if isnan(wavelet)
-    wavelet= WvltComp(X, Y, WvltFreq, Q); % Calcul CWT
+    wavelet= WvltComp(X, Y, WvltFreq, Q, 'MotherWavelet', MotherWavelet); % Calcul CWT
 end
 
 % % calcul du bruit

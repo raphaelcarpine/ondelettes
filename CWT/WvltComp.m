@@ -5,6 +5,7 @@ p = inputParser ;
 %% parametres par defaut
 ZeroPaddingDef = true;
 CenterSignalDef = false;
+MotherWaveletDef = 'cauchy'; %'littlewood-paley';
 ctDef = 3;
 %%
 addRequired(p,'X')
@@ -13,6 +14,7 @@ addRequired(p,'WvltFreq')
 addRequired(p,'Qin')
 addParameter(p,'ZeroPadding',ZeroPaddingDef);
 addParameter(p,'CenterSignal',CenterSignalDef);
+addParameter(p,'MotherWavelet',MotherWaveletDef);
 addParameter(p,'ct',ctDef);
 
 parse(p,X,WvltFreq,Y,Qin,varargin{:});
@@ -20,6 +22,7 @@ parse(p,X,WvltFreq,Y,Qin,varargin{:});
 %
 ZeroPadding = p.Results.ZeroPadding;
 CenterSignal = p.Results.CenterSignal;
+MotherWavelet = p.Results.MotherWavelet;
 ct = p.Results.ct;
 %%
 if length(WvltFreq) > 500
@@ -96,13 +99,22 @@ for CQ=1:length(Qin)
         
         ftFreq=(0:N/2-1)*Fs/N; %Freq d'eval de la fft, f positif
         
-        n_cau = (2*Q.^2 - 1/2); % parametre de l'ondelette de Cauchy
-        fCau = (n_cau)/(2*pi);% freq. centrale de l'ondelette
-        scales = fCau./WvltFreq1 ; % echelles associees aux freq. de calcul
-        scaledftFreq = bsxfun(@times,scales,transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
-        
-        
-        ftWvlt{CSet} = exp(n_cau-2*pi*scaledftFreq + n_cau*log(scaledftFreq/fCau)); % Calcul Ondelettes cauchy en a * f pour f>0
+        if strcmp(MotherWavelet, 'cauchy')
+            n_cau = (2*Q.^2 - 1/2); % parametre de l'ondelette de Cauchy
+            fCau = (n_cau)/(2*pi);% freq. centrale de l'ondelette ( argmax|F(phi)| )
+            scales = fCau./WvltFreq1 ; % echelles associees aux freq. de calcul
+            scaledftFreq = bsxfun(@times,scales,transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            
+            ftWvlt{CSet} = exp(n_cau-2*pi*scaledftFreq + n_cau*log(scaledftFreq/fCau)); % Calcul Ondelettes cauchy en a * f pour f>0
+            
+        elseif strcmp(MotherWavelet, 'littlewood-paley')
+            deltaf_lil = sqrt(3)/Q; % parametre de l'ondelette de Littlewood-Paley
+            f_lil = 1;% freq. centrale de l'ondelette
+            scales = f_lil./WvltFreq1 ; % echelles associees aux freq. de calcul
+            scaledftFreq = bsxfun(@times, scales, transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            
+            ftWvlt{CSet} = (scaledftFreq >= 1-deltaf_lil/2) & (scaledftFreq <= 1+deltaf_lil/2); % Calcul Ondelettes Littlewood-Paley en a * f pour f>0
+        end
         
         WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
         
