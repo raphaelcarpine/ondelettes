@@ -435,11 +435,12 @@ fig.MenuBar = 'none';
 paramMenu = uimenu(fig,'Text','Options');
 
 % mother wavelet
-MotherWaveletNames = {'cauchy', 'littlewood-paley'};
+MotherWaveletNames = {'cauchy', 'morlet', 'littlewood-paley'};
 
 motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
 motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy', 'Checked' ,'on');
-motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
+motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Morlet');
+motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
     function selectMotherWaveletMenu(kchoice)
         for kchoices = 1:length(motherWaveletMenuChoices)
             set(motherWaveletMenuChoices(kchoices), 'Checked', 'off');
@@ -450,6 +451,7 @@ motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Pale
     end
 set(motherWaveletMenuChoices(1), 'CallBack', @(~,~) selectMotherWaveletMenu(1));
 set(motherWaveletMenuChoices(2), 'CallBack', @(~,~) selectMotherWaveletMenu(2));
+set(motherWaveletMenuChoices(3), 'CallBack', @(~,~) selectMotherWaveletMenu(3));
 
 %autres valeurs par défault
 freqRidgeName = 'freq';

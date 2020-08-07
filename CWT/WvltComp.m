@@ -107,13 +107,21 @@ for CQ=1:length(Qin)
             
             ftWvlt{CSet} = exp(n_cau-2*pi*scaledftFreq + n_cau*log(scaledftFreq/fCau)); % Calcul Ondelettes cauchy en a * f pour f>0
             
+        elseif strcmp(MotherWavelet, 'morlet')
+            deltaf_mor = 1/(sqrt(2)*Q); % parametre de l'ondelette de Morlet
+            f_mor = 1;% freq. centrale de l'ondelette
+            scales = f_mor./WvltFreq1 ; % echelles associees aux freq. de calcul
+            scaledftFreq = bsxfun(@times, scales, transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            
+            ftWvlt{CSet} = exp( -(scaledftFreq-1).^2/(2*deltaf_mor^2)); % Calcul Ondelettes Morlet en a * f pour f>0
+            
         elseif strcmp(MotherWavelet, 'littlewood-paley')
             deltaf_lil = sqrt(3)/Q; % parametre de l'ondelette de Littlewood-Paley
             f_lil = 1;% freq. centrale de l'ondelette
             scales = f_lil./WvltFreq1 ; % echelles associees aux freq. de calcul
             scaledftFreq = bsxfun(@times, scales, transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
             
-            ftWvlt{CSet} = (scaledftFreq >= 1-deltaf_lil/2) & (scaledftFreq <= 1+deltaf_lil/2); % Calcul Ondelettes Littlewood-Paley en a * f pour f>0
+            ftWvlt{CSet} = (scaledftFreq >= 1 - deltaf_lil/2) & (scaledftFreq <= 1 + deltaf_lil/2); % Calcul Ondelettes Littlewood-Paley en a * f pour f>0
         end
         
         WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
