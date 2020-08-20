@@ -484,7 +484,7 @@ dimension = nan;
                 onAxesPlots = [onAxesPlots, plot3(plotAxes, Xplot, real(F(Param, Xplot) .* ones(size(Xplot))),...
                     imag(F(Param, Xplot) .* ones(size(Xplot))), 'r', 'LineWidth', lineWidth)];
             end
-            uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
+            %uistack(onAxesPlots(end), 'bottom'); %ligne derrière/devant
             hold(plotAxes, 'off');
         else
             plotAxes = axes(figure);

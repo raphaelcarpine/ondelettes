@@ -64,7 +64,7 @@ elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
     plt = pcolor(T, Freqs, wavelet);
     colormap(ax, hsv);
     
-    ZedgeEffects = 0;
+    ZedgeEffects = 1;
 end
 
 xlabel(ax, 'time')
