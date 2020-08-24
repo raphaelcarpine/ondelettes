@@ -1,6 +1,6 @@
 % natural freqs 
 Fnat = [6, 10];
-Znat = 0.01 * [1, 0.8];
+Znat = 0.01 * [2.8, 2];
 Ampl_nat = [1, 0.8; 0.8, 1.3];
 Phi_nat = [1, 3; -3, 2];
 
@@ -14,7 +14,7 @@ Phi_train = [0, 3, -1, -1, -2];
 t0 = 0;
 tf = 10;
 t1 = 2;
-t2 = 6;
+t2 = 5;
 t = linspace(t0, tf, 10000);
 
 % signal

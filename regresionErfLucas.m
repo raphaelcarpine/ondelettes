@@ -38,8 +38,11 @@ Alphai = 1.5;
 Params0 = [C0i, Cdeltai, DeltaXi, D0i, Alphai];
 
 % regression non linéaire
-S = @(Params) sum((Creg(Params) - C).^2, 'all'); % somme des carrésà minimiser
-ParamsReg = fminsearch(S, Params0); % minimisation
+opt = optimset('MaxFunEvals', 1e6, 'MaxIter', inf, 'TolX', 1e-6, 'TolFun', 0);
+
+S = @(Params) sum(sum((Creg(Params) - C).^2)); % somme des carrés à minimiser
+[ParamsReg, fval, exitflag, output] = fminsearch(S, Params0, opt); % minimisation
+disp(output);
 
 
 % afffichage
