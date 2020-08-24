@@ -1,27 +1,49 @@
 %% données pont
 
 L = 17.5; % longueur du pont
-L = 10;
-E = 1; % module d'young du béton
-J = 1; % moment quadratique du pont
-mu = 1; % masse linéique du pont
-amort = 1;
+E = 30e9; % module d'young du béton
+rho = 2500; % masse volumique du béton
+l_pont = 4.85; % largeur du pont
+h_pont = 1;
+J = l_pont * h_pont^3 / 12; % moment quadratique du pont
+mu = l_pont * h_pont * rho; % masse linéique du pont
+amort = 4e5; % coefficient d'amortissement
+
+%% capteurs ponts
+
+pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
 
 
 %% données train
 
-mu_t = 1; % masse linéique du train
+mu_t = mu * 0.5; % masse linéique du train
 L_bogies = 18.5; % écartement entre les bogies
-l_bogies = 1; % écartement des deux essieux au sein d'un bogie
+L_bogies = 3; % écartement entre les bogies
+l_bogies = 2; % écartement des deux essieux au sein d'un bogie
+l_bogies = 10;
 N_wagons = 16; % nombre de wagons
-c_train = 100; % vitesse du train
+N_wagons = 1;
+c = 78.5; % vitesse du train
+g = 9.81;
+
+
+%% données temps
+
+ti = -2;
+tf = 10;
+% t0 = 0;
+dt = 0.01;
 
 
 %% integration spatiale
 
-N = 11; % nb de points ds l'espace
+N = 80; % nb de points ds l'espace
 dx = L / (N-1);
 %x = linspace(0, L, N);
+
+if any([l_bogies, l_bogies, l_bogies-l_bogies] <= 2*dx)
+    warning('');
+end
 
 
 %% matrices
@@ -79,16 +101,53 @@ essieux = essieux - max(essieux);
 essieux = sort(essieux);
 
 % masse ajoutée
-M_ajout = @(t) mu_t * diag( influence_train(essieux - c*t, dx, N));
+M_ajout = @(t) mu_t * L_bogies/2 * diag( influence_train(essieux + c*t, dx, N));
 
 % excitation pesanteur
-F = @(t) -g*mu_t * transpose( influence_train(essieux - c*t, dx, N));
+F = @(t) -g*mu_t * L_bogies/2  * transpose( influence_train(essieux + c*t, dx, N));
 
 
 %% integration numerique
 
 D = @(t, YdY) [ YdY(N-3:end);
     (Mr + M_ajout(t)) \ (-Kr * YdY(1:N-4) - Cr * YdY(N-3:end) + F(t))];
+
+X0 = zeros(N-4, 1);
+V0 = zeros(N-4, 1);
+XV0 = [X0; V0];
+
+[t, XV] = ode45(D, [ti, tf], XV0);
+t = t';
+XV = XV';
+X = XV(1:N-4, :);
+
+Xtot = getXtot(X);
+
+
+%% interpolation
+
+t_interp = ti:dt:tf;
+Xtot_interp = interp1(t, Xtot', t_interp)';
+
+%% affichage
+
+% animation
+movingPlot(Xtot_interp, t_interp, L, essieux, c, pos_capteurs);
+
+% wavelet capteurs
+Xcapt_interp = getXcapt(Xtot_interp, pos_capteurs, N, dx);
+Xcapt_interp = Xcapt_interp + 1e-6 * randn(size(Xcapt_interp));
+
+
+fig = figure;
+ax = axes(fig);
+plt = plot(ax, t_interp, Xcapt_interp);
+
+fmin = 3;
+fmax = 16;
+Q = 10;
+MaxRidges = 6;
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true, 'MaxRidges', MaxRidges);
 
 
 
@@ -102,10 +161,90 @@ influence_gauche(floor(essieux_ind)) = 1 - essieux_ind + floor(essieux_ind);
 influence_droite = zeros(1, N);
 influence_droite(floor(essieux_ind)+1) = essieux_ind - floor(essieux_ind);
 influence = influence_gauche + influence_droite;
-influence = influence(3:N-1); % supression des ddl des CL
+influence = influence(3:N-2); % supression des ddl des CL
 end
 
 
+
+%%
+
+function Xtot = getXtot(X)
+Xtot = [zeros(1, size(X, 2)); X(1, :)/2; X; X(end, :)/2; zeros(1, size(X, 2))];
+end
+
+function Xcapt = getXcapt(Xtot, pos_capt, N, dx)
+Xcapt = nan(length(pos_capt), size(Xtot, 2));
+for it = 1:size(Xtot, 2)
+    Xcapt(:, it) = transpose(...
+        Xtot( max(min( floor(pos_capt/dx) + 1, N), 1), it)' .* (1 - pos_capt/dx + floor(pos_capt/dx))...
+        + Xtot( max(min( floor(pos_capt/dx) + 2, N), 1), it)' .* (pos_capt/dx - floor(pos_capt/dx)));
+end
+end
+
+
+%% animation
+
+function movingPlot(Xtot, t, L, essieux, c, pos_capteurs)
+timeCoeff = 1.;
+
+% framerate interpolation
+framerate = 20;
+t_frames = t(1):(timeCoeff/framerate):t(end);
+Xtot = interp1(t, Xtot', t_frames)';
+t = t_frames;
+
+N = size(Xtot, 1);
+dx = L / (N-1);
+Xtot = Xtot / max(abs(Xtot), [], 'all');
+
+fig = figure;
+ax = axes(fig);
+hold(ax, 'on');
+
+xlim(ax, [-L/3, 4*L/3]);
+ylim(ax, [-5, 5]);
+xticks([0, L]);
+xticklabels({'0', 'L'});
+yticks([]);
+
+    function animation()
+        cla(ax);
+        
+        plt1 = plot(ax, linspace(0, L, N), Xtot(:, 1), '-+');
+        essieux_1 = essieux + c*t(1);
+        plt2 = scatter(ax, essieux_1,...
+            Xtot( max(min( floor(essieux_1/dx) + 1, N), 1), 1)' .* (1 - essieux_1/dx + floor(essieux_1/dx))...
+                + Xtot( max(min( floor(essieux_1/dx) + 2, N), 1), 1)' .* (essieux_1/dx - floor(essieux_1/dx)), 'r');
+        plt3 = scatter(ax, pos_capteurs,...
+            Xtot( max(min( floor(pos_capteurs/dx) + 1, N), 1), 1)' .* (1 - pos_capteurs/dx + floor(pos_capteurs/dx))...
+                + Xtot( max(min( floor(pos_capteurs/dx) + 2, N), 1), 1)' .* (pos_capteurs/dx - floor(pos_capteurs/dx)), 'dm');
+        txt = text(ax, 0, 4, ['t = ', num2str(t(1))]);
+        
+        pause(1);
+        
+        tic;
+        for it = 1:length(t)
+            set(plt1, 'YData', Xtot(:, it));
+            essieux_it = essieux + c*t(it);
+            set(plt2, 'XData', essieux_it, 'YData',...
+                Xtot( max(min( floor(essieux_it/dx) + 1, N), 1), it)' .* (1 - essieux_it/dx + floor(essieux_it/dx))...
+                + Xtot( max(min( floor(essieux_it/dx) + 2, N), 1), it)' .* (essieux_it/dx - floor(essieux_it/dx)));
+            set(plt3, 'YData',...
+                Xtot( max(min( floor(pos_capteurs/dx) + 1, N), 1), it)' .* (1 - pos_capteurs/dx + floor(pos_capteurs/dx))...
+                + Xtot( max(min( floor(pos_capteurs/dx) + 2, N), 1), it)' .* (pos_capteurs/dx - floor(pos_capteurs/dx)));
+            set(txt, 'String', ['t = ', num2str(t(it))]);
+            drawnow
+            if it < length(t)
+                pause( t(it+1) - t(1) - toc*timeCoeff);
+            end
+        end
+    end
+
+%animation();
+
+set(ax, 'ButtonDownFcn', @(~, ~) animation);
+
+end
 
 
 %%
