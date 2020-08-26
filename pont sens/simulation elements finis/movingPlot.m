@@ -64,7 +64,6 @@ yticks([]);
     end
 
 init_animation();
-animation
 
 set(ax, 'ButtonDownFcn', @(~, ~) animation);
 
