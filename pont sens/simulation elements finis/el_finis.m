@@ -1,3 +1,5 @@
+clear all
+
 %% données pont
 
 L = 17.5; % longueur du pont
@@ -9,20 +11,25 @@ J = l_pont * h_pont^3 / 12; % moment quadratique du pont
 mu = l_pont * h_pont * rho; % masse linéique du pont
 amort = 4e5; % coefficient d'amortissement
 
-%% capteurs ponts
+% frequence propre 1
+disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
+
+
+%% integration spatiale
+
+N = 19; % nb de points ds l'espace
+dx = L / (N-1);
+
+%% données capteurs ponts
 
 pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
 
 
 %% données train
 
-mu_t = mu * 0.5; % masse linéique du train
-L_bogies = 18.5; % écartement entre les bogies
-L_bogies = 3; % écartement entre les bogies
-l_bogies = 2; % écartement des deux essieux au sein d'un bogie
-l_bogies = 10;
-N_wagons = 16; % nombre de wagons
-N_wagons = 1;
+mu_t = 0.5 * mu; % masse linéique du train
+L_wagons = 14; % écart entre les wagons
+N_bogies = 1; % nombre de wagons
 c = 78.5; % vitesse du train
 g = 9.81;
 
@@ -33,17 +40,6 @@ ti = -2;
 tf = 10;
 % t0 = 0;
 dt = 0.01;
-
-
-%% integration spatiale
-
-N = 80; % nb de points ds l'espace
-dx = L / (N-1);
-%x = linspace(0, L, N);
-
-if any([l_bogies, l_bogies, l_bogies-l_bogies] <= 2*dx)
-    warning('');
-end
 
 
 %% matrices
@@ -94,17 +90,26 @@ Kr = Kr(3:N-2, 3:N-2);
 
 %% influence du train
 
+% % position des essieux
+% essieux = L_bogies * (0:N_wagons-1);
+% essieux = [essieux, essieux + l_bogies];
+% essieux = essieux - max(essieux);
+% essieux = sort(essieux);
+
 % position des essieux
-essieux = L_bogies * (0:N_wagons-1);
-essieux = [essieux, essieux + l_bogies];
+essieux = L_wagons * (0:N_bogies-1);
 essieux = essieux - max(essieux);
 essieux = sort(essieux);
 
+if any(diff(essieux) <= 2*dx)
+    warning('écart d''essieux < 2dx');
+end
+
 % masse ajoutée
-M_ajout = @(t) mu_t * L_bogies/2 * diag( influence_train(essieux + c*t, dx, N));
+M_ajout = @(t) mu_t*L_wagons/dx * diag( influence_train(essieux + c*t, dx, N));
 
 % excitation pesanteur
-F = @(t) -g*mu_t * L_bogies/2  * transpose( influence_train(essieux + c*t, dx, N));
+F = @(t) -g * mu_t*L_wagons/dx  * transpose( influence_train(essieux + c*t, dx, N));
 
 
 %% integration numerique
@@ -112,44 +117,63 @@ F = @(t) -g*mu_t * L_bogies/2  * transpose( influence_train(essieux + c*t, dx, N
 D = @(t, YdY) [ YdY(N-3:end);
     (Mr + M_ajout(t)) \ (-Kr * YdY(1:N-4) - Cr * YdY(N-3:end) + F(t))];
 
-X0 = zeros(N-4, 1);
+Y0 = zeros(N-4, 1);
 V0 = zeros(N-4, 1);
-XV0 = [X0; V0];
+YV0 = [Y0; V0];
 
-[t, XV] = ode45(D, [ti, tf], XV0);
+
+options = odeset('OutputFcn', @waitbarOutput);
+[t, YV] = ode45(D, [ti, tf], YV0, options);
+
 t = t';
-XV = XV';
-X = XV(1:N-4, :);
+YV = YV';
+Y = YV(1:N-4, :);
 
-Xtot = getXtot(X);
+Ytot = getYtot(Y);
 
 
 %% interpolation
 
 t_interp = ti:dt:tf;
-Xtot_interp = interp1(t, Xtot', t_interp)';
+Ytot_interp = interp1(t, Ytot', t_interp)';
 
 %% affichage
 
 % animation
-movingPlot(Xtot_interp, t_interp, L, essieux, c, pos_capteurs);
+moving_coeff = 1.;
+movingPlot(Ytot_interp, t_interp, L, essieux, c, pos_capteurs, moving_coeff);
 
 % wavelet capteurs
-Xcapt_interp = getXcapt(Xtot_interp, pos_capteurs, N, dx);
-Xcapt_interp = Xcapt_interp + 1e-6 * randn(size(Xcapt_interp));
+Ycapt_interp = getYcapt(Ytot_interp, pos_capteurs, dx);
+Ycapt_interp = Ycapt_interp + 1e-6 * randn(size(Ycapt_interp));
 
 
 fig = figure;
 ax = axes(fig);
-plt = plot(ax, t_interp, Xcapt_interp);
+plt = plot(ax, t_interp, Ycapt_interp);
 
 fmin = 3;
 fmax = 16;
 Q = 10;
-MaxRidges = 6;
+MaxRidges = 1;
 WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true, 'MaxRidges', MaxRidges);
 
 
+%% enregistrement
+
+listing = dir('pont sens/simulation elements finis/resultats');
+listingNames = {listing.name};
+nbSimul = 0;
+for kname = length(listingNames)
+    name1 = strsplit(listingNames{kname}, '_');
+    name1 = name1{1};
+    if length(name1) > 5 && strcmp(name1(1:5), 'simul')
+        nbSimul = max(nbSimul, str2double(name1(6:end)));
+    end
+end
+save(sprintf('pont sens/simulation elements finis/resultats/simul%d_N%d', [nbSimul+1, N]),...
+    'L', 'E', 'rho', 'l_pont', 'h_pont', 'amort', 'N', 'pos_capteurs', 'mu_t',...
+    'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't_interp', 'Ytot_interp', 'Y0', 'V0');
 
 
 %% influence des essieux
@@ -166,84 +190,49 @@ end
 
 
 
-%%
+%% interpolation etc
 
-function Xtot = getXtot(X)
-Xtot = [zeros(1, size(X, 2)); X(1, :)/2; X; X(end, :)/2; zeros(1, size(X, 2))];
-end
-
-function Xcapt = getXcapt(Xtot, pos_capt, N, dx)
-Xcapt = nan(length(pos_capt), size(Xtot, 2));
-for it = 1:size(Xtot, 2)
-    Xcapt(:, it) = transpose(...
-        Xtot( max(min( floor(pos_capt/dx) + 1, N), 1), it)' .* (1 - pos_capt/dx + floor(pos_capt/dx))...
-        + Xtot( max(min( floor(pos_capt/dx) + 2, N), 1), it)' .* (pos_capt/dx - floor(pos_capt/dx)));
-end
+function Ytot = getYtot(Y) % rajoute les DDL 1, 2, N-1 et N
+Ytot = [zeros(1, size(Y, 2)); Y(1, :)/2; Y; Y(end, :)/2; zeros(1, size(Y, 2))];
 end
 
 
-%% animation
+%% barre de chargement
 
-function movingPlot(Xtot, t, L, essieux, c, pos_capteurs)
-timeCoeff = 1.;
+function status = waitbarOutput(t, ~, flag)
+persistent ti tf f t_last t_1s T_1s
 
-% framerate interpolation
-framerate = 20;
-t_frames = t(1):(timeCoeff/framerate):t(end);
-Xtot = interp1(t, Xtot', t_frames)';
-t = t_frames;
-
-N = size(Xtot, 1);
-dx = L / (N-1);
-Xtot = Xtot / max(abs(Xtot), [], 'all');
-
-fig = figure;
-ax = axes(fig);
-hold(ax, 'on');
-
-xlim(ax, [-L/3, 4*L/3]);
-ylim(ax, [-5, 5]);
-xticks([0, L]);
-xticklabels({'0', 'L'});
-yticks([]);
-
-    function animation()
-        cla(ax);
-        
-        plt1 = plot(ax, linspace(0, L, N), Xtot(:, 1), '-+');
-        essieux_1 = essieux + c*t(1);
-        plt2 = scatter(ax, essieux_1,...
-            Xtot( max(min( floor(essieux_1/dx) + 1, N), 1), 1)' .* (1 - essieux_1/dx + floor(essieux_1/dx))...
-                + Xtot( max(min( floor(essieux_1/dx) + 2, N), 1), 1)' .* (essieux_1/dx - floor(essieux_1/dx)), 'r');
-        plt3 = scatter(ax, pos_capteurs,...
-            Xtot( max(min( floor(pos_capteurs/dx) + 1, N), 1), 1)' .* (1 - pos_capteurs/dx + floor(pos_capteurs/dx))...
-                + Xtot( max(min( floor(pos_capteurs/dx) + 2, N), 1), 1)' .* (pos_capteurs/dx - floor(pos_capteurs/dx)), 'dm');
-        txt = text(ax, 0, 4, ['t = ', num2str(t(1))]);
-        
-        pause(1);
-        
-        tic;
-        for it = 1:length(t)
-            set(plt1, 'YData', Xtot(:, it));
-            essieux_it = essieux + c*t(it);
-            set(plt2, 'XData', essieux_it, 'YData',...
-                Xtot( max(min( floor(essieux_it/dx) + 1, N), 1), it)' .* (1 - essieux_it/dx + floor(essieux_it/dx))...
-                + Xtot( max(min( floor(essieux_it/dx) + 2, N), 1), it)' .* (essieux_it/dx - floor(essieux_it/dx)));
-            set(plt3, 'YData',...
-                Xtot( max(min( floor(pos_capteurs/dx) + 1, N), 1), it)' .* (1 - pos_capteurs/dx + floor(pos_capteurs/dx))...
-                + Xtot( max(min( floor(pos_capteurs/dx) + 2, N), 1), it)' .* (pos_capteurs/dx - floor(pos_capteurs/dx)));
-            set(txt, 'String', ['t = ', num2str(t(it))]);
-            drawnow
-            if it < length(t)
-                pause( t(it+1) - t(1) - toc*timeCoeff);
-            end
+status = 0;
+if nargin < 3 || isempty(flag)
+    t_0s = 24*3600*now;
+    if t_0s - t_last > 0.1
+        t_last = t_0s;
+        x = (t(end)-ti)/(tf-ti);
+        try
+            waitbar(x, f, sprintf('t = %.2f', t(end)));
+        catch
+            status = 1;
         end
     end
-
-%animation();
-
-set(ax, 'ButtonDownFcn', @(~, ~) animation);
-
+    if t_0s - t_1s > 2
+        t_remaining = (t_0s - t_1s) * (tf-t(end))/(t(end)-T_1s);
+        set(f, 'Name', sprintf('Computing ODE (%dmin remaining)', round(t_remaining/60)));
+        t_1s = t_0s;
+        T_1s = t(end);
+    end
+elseif strcmp(flag, 'init')
+    f = waitbar(0, sprintf('t = %.2f', t(1)), 'Name', 'Computing ODE');
+    ti = t(1);
+    tf = t(end);
+    t_last = 24*3600*now;
+    t_1s = t_last;
+    T_1s = t(1);
+elseif strcmp(flag, 'done')
+    try
+        close(f);
+    catch
+    end
+end
 end
 
 

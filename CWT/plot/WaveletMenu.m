@@ -435,12 +435,13 @@ fig.MenuBar = 'none';
 paramMenu = uimenu(fig,'Text','Options');
 
 % mother wavelet
-MotherWaveletNames = {'cauchy', 'morlet', 'littlewood-paley'};
+MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley'};
 
 motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
 motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy', 'Checked' ,'on');
 motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Morlet');
-motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
+motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Harmonic');
+motherWaveletMenuChoices(4) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
     function selectMotherWaveletMenu(kchoice)
         for kchoices = 1:length(motherWaveletMenuChoices)
             set(motherWaveletMenuChoices(kchoices), 'Checked', 'off');
@@ -452,6 +453,7 @@ motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Pale
 set(motherWaveletMenuChoices(1), 'CallBack', @(~,~) selectMotherWaveletMenu(1));
 set(motherWaveletMenuChoices(2), 'CallBack', @(~,~) selectMotherWaveletMenu(2));
 set(motherWaveletMenuChoices(3), 'CallBack', @(~,~) selectMotherWaveletMenu(3));
+set(motherWaveletMenuChoices(4), 'CallBack', @(~,~) selectMotherWaveletMenu(4));
 
 %autres valeurs par défault
 freqRidgeName = 'freq';
@@ -890,35 +892,37 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 if checkboxTimeAmpl.Value % plot de l'amplitude
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(1, kPlot),...
+                        'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Amplitude (m/s^2)',...
                         'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(2, kPlot),...
+                        'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Frequency (Hz)',...
                         'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Amplitude (m/s^2)', 'NameY', 'Frequency (Hz)',...
+						'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(4, kPlot),...
+                        'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Damping',...
                         'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true, 'NameX', 'Amplitude (m/s^2)', 'NameY', 'Damping',...
+						'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimePhase.Value % plot de la phase
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(6, kPlot),...
+                        'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Phase (rad)',...
                         'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
                 end
             end
@@ -964,19 +968,19 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     % axe x
                     XquantName = xAxisShapesnames{get(xAxisShapes, 'Value')};
                     if isequal(XquantName, 'time')
-                        XquantLabel = 'time';
+                        XquantLabel = 'Time (s)';
                         XquantScale = 'lin';
                         Xquantity = timeShapes;
                     elseif isequal(XquantName, 'ampl')
-                        XquantLabel = 'amplitude';
+                        XquantLabel = 'Amplitude (m/s^2)';
                         XquantScale = 'lin';
                         Xquantity = absAmplitudesShapes;
                     elseif isequal(XquantName, 'log(ampl)')
-                        XquantLabel = 'amplitude';
+                        XquantLabel = 'Amplitude (m/s^2)';
                         XquantScale = 'log';
                         Xquantity = absAmplitudesShapes;
                     elseif isequal(XquantName, 'freq')
-                        XquantLabel = 'frequence';
+                        XquantLabel = 'Frequence (Hz)';
                         XquantScale = 'lin';
                         Xquantity = freqsShapes;
                     end
@@ -1012,7 +1016,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                             ax = axes(figShape);
                             plot(ax, Xquantity{kridge}, real(shapesShapes{kridge}));
                             xlabel(ax, XquantLabel);
-                            ylabel(ax, 'real part');
+                            ylabel(ax, 'Real part');
                             set(ax, 'XScale', XquantScale);
                         end
                         if checkboxImagShapes.Value
@@ -1020,7 +1024,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                             ax = axes(figShape);
                             plot(ax, Xquantity{kridge}, imag(shapesShapes{kridge}));
                             xlabel(ax, XquantLabel);
-                            ylabel(ax, 'imaginary part');
+                            ylabel(ax, 'Imaginary part');
                             set(ax, 'XScale', XquantScale);
                         end
                         if checkboxModuleShapes.Value
@@ -1028,7 +1032,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                             ax = axes(figShape);
                             plot(ax, Xquantity{kridge}, abs(shapesShapes{kridge}));
                             xlabel(ax, XquantLabel);
-                            ylabel(ax, 'module');
+                            ylabel(ax, 'Module');
                             set(ax, 'XScale', XquantScale);
                         end
                         if checkboxPhaseShapes.Value
@@ -1036,7 +1040,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                             ax = axes(figShape);
                             plot(ax, Xquantity{kridge}, angle(shapesShapes{kridge}));
                             xlabel(ax, XquantLabel);
-                            ylabel(ax, 'phase');
+                            ylabel(ax, 'Phase');
                             set(ax, 'XScale', XquantScale);
                         end
                         

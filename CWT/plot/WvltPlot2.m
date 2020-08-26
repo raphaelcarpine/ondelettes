@@ -67,8 +67,8 @@ elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
     ZedgeEffects = 1;
 end
 
-xlabel(ax, 'time')
-ylabel(ax, 'freq')
+xlabel(ax, 'Time (s)');
+ylabel(ax, 'Frequency (Hz)');
 title(ax, axesTitle);
 shading flat
 

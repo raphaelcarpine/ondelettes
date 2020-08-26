@@ -71,7 +71,7 @@ for CQ=1:length(Qin)
     n=length(X);
     
     if ~ZeroPadding
-        N0=2*ceil(n/2); %multiple de 2 tout juste superieur (plus facile de gerer la periodicite de la fft)
+        N0 = 2*ceil(n/2); %multiple de 2 tout juste superieur (plus facile de gerer la periodicite de la fft)
         NbSet = 1; %un seul set de calcul
         NSet = N0; %nb de points pour fft
         FreqSet{1} = true(size(WvltFreq)); %liste des indices des freq. du set associe a N0 pts pour la fft
@@ -97,36 +97,60 @@ for CQ=1:length(Qin)
         N = NSet(CSet); % Nb pts fft associe au set
         WvltFreq1 = WvltFreq(FreqSet{CSet}); % freq. associees au set
         
-        ftFreq=(0:N/2-1)*Fs/N; %Freq d'eval de la fft, f positif
+        ftFreq = (0:N/2-1)*Fs/N; %Freq d'eval de la fft, f positif
+        ftFreqNeg = (-N/2+1:-1)*Fs/N; %Freq d'eval de la fft, f negatif
         
         if strcmp(MotherWavelet, 'cauchy')
             n_cau = (2*Q.^2 - 1/2); % parametre de l'ondelette de Cauchy
             fCau = (n_cau)/(2*pi);% freq. centrale de l'ondelette ( argmax|F(phi)| )
             scales = fCau./WvltFreq1 ; % echelles associees aux freq. de calcul
-            scaledftFreq = bsxfun(@times,scales,transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            scaledftFreq = transpose(ftFreq) * scales; % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
             
             ftWvlt{CSet} = exp(n_cau-2*pi*scaledftFreq + n_cau*log(scaledftFreq/fCau)); % Calcul Ondelettes cauchy en a * f pour f>0
+            
+            ftWvlt{CSet} = [ftWvlt{CSet}; zeros(N/2,length(WvltFreq1))]; % on rajoute des zeros pour a*f<0
+            
+            WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
             
         elseif strcmp(MotherWavelet, 'morlet')
             deltaf_mor = 1/(sqrt(2)*Q); % parametre de l'ondelette de Morlet
             f_mor = 1;% freq. centrale de l'ondelette
             scales = f_mor./WvltFreq1 ; % echelles associees aux freq. de calcul
-            scaledftFreq = bsxfun(@times, scales, transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            scaledftFreq = transpose(ftFreq) * scales; % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            scaledftFreqNeg = transpose(ftFreqNeg) * scales;
             
-            ftWvlt{CSet} = exp( -(scaledftFreq-1).^2/(2*deltaf_mor^2)); % Calcul Ondelettes Morlet en a * f pour f>0
+            ftWvlt{CSet} = [exp( -(scaledftFreq-1).^2/(2*deltaf_mor^2));...
+                zeros(1, length(WvltFreq1));... % freq en N/2 inutilisable car N pair
+                exp( -(scaledftFreqNeg-1).^2/(2*deltaf_mor^2))]; % Calcul Ondelettes Morlet en a * f
+            
+            WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
+            
+        elseif strcmp(MotherWavelet, 'harmonic')
+            deltaf_lil = sqrt(3)/Q; % parametre de l'ondelette de harmonique
+            f_lil = 1;% freq. centrale de l'ondelette
+            scales = f_lil./WvltFreq1 ; % echelles associees aux freq. de calcul
+            scaledftFreq = transpose(ftFreq) * scales; % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            
+            ftWvlt{CSet} = (scaledftFreq >= 1 - deltaf_lil/2) & (scaledftFreq <= 1 + deltaf_lil/2); % Calcul Ondelettes harmonique en a * f pour f>0
+            
+            ftWvlt{CSet} = [ftWvlt{CSet}; zeros(N/2,length(WvltFreq1))]; % on rajoute des zeros pour a*f<0
+            
+            WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
             
         elseif strcmp(MotherWavelet, 'littlewood-paley')
             deltaf_lil = sqrt(3)/Q; % parametre de l'ondelette de Littlewood-Paley
             f_lil = 1;% freq. centrale de l'ondelette
             scales = f_lil./WvltFreq1 ; % echelles associees aux freq. de calcul
-            scaledftFreq = bsxfun(@times, scales, transpose(ftFreq)); % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            scaledftFreq = transpose(ftFreq) * scales; % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
+            scaledftFreqNeg = transpose(ftFreqNeg) * scales;
             
-            ftWvlt{CSet} = (scaledftFreq >= 1 - deltaf_lil/2) & (scaledftFreq <= 1 + deltaf_lil/2); % Calcul Ondelettes Littlewood-Paley en a * f pour f>0
+            ftWvlt{CSet} = [(scaledftFreq >= 1 - deltaf_lil/2) & (scaledftFreq <= 1 + deltaf_lil/2);
+                zeros(1, length(WvltFreq1));
+                (scaledftFreqNeg >= -1 - deltaf_lil/2) & (scaledftFreqNeg <= -1 + deltaf_lil/2)]; % Calcul Ondelettes Littlewood-Paley en a * f
+            
+            WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
+            
         end
-        
-        WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
-        
-        ftWvlt{CSet} = cat(1,ftWvlt{CSet},zeros(N/2,length(WvltFreq1))); % on rajoute des zeros pour a*f<0
     end
     %% integrande
     % produit de la fft des ondelettes scalees avec la fft du signal
