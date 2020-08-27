@@ -260,6 +260,7 @@ plotBut = uicontrol('Parent', optionsPan, 'Units', 'normalized','Style','pushbut
         Fstring = strrep(Fstring, '*', '.*');
         Fstring = strrep(Fstring, '/', './');
         Fstring = strrep(Fstring, '^', '.^');
+        Fstring = strrep(Fstring, '..', '.');
         
         F = @(P) 0;
         eval(['F = @(P, x) ' Fstring ';']);

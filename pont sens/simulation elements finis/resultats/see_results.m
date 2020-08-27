@@ -21,6 +21,7 @@ end
 load(['pont sens/simulation elements finis/resultats/', fileName]);
 
 %%
+
 disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
 
 % animation
@@ -40,4 +41,6 @@ fmin = 3;
 fmax = 16;
 Q = 10;
 MaxRidges = 1;
-WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true, 'MaxRidges', MaxRidges);
+RealShapePlot = deformeePont(L, pos_capteurs);
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true,...
+    'MaxRidges', MaxRidges, 'RealShapePlot', RealShapePlot);

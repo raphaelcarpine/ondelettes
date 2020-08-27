@@ -1,5 +1,7 @@
 clear all
 
+save_results = false;
+
 %% données pont
 
 L = 17.5; % longueur du pont
@@ -17,12 +19,13 @@ disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
 
 %% integration spatiale
 
-N = 19; % nb de points ds l'espace
+N = 49; % nb de points ds l'espace
 dx = L / (N-1);
 
 %% données capteurs ponts
 
 pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
+pos_capteurs = linspace(0, L, 100); pos_capteurs = pos_capteurs(2:end-1);
 
 
 %% données train
@@ -33,6 +36,9 @@ N_bogies = 1; % nombre de wagons
 c = 78.5; % vitesse du train
 g = 9.81;
 
+%test
+mu = 1e-3 * mu;
+
 
 %% données temps
 
@@ -40,6 +46,8 @@ ti = -2;
 tf = 10;
 % t0 = 0;
 dt = 0.01;
+
+t = ti:dt:tf;
 
 
 %% matrices
@@ -101,6 +109,10 @@ essieux = L_wagons * (0:N_bogies-1);
 essieux = essieux - max(essieux);
 essieux = sort(essieux);
 
+%test
+essieux = L/2;
+c = 0;
+
 if any(diff(essieux) <= 2*dx)
     warning('écart d''essieux < 2dx');
 end
@@ -123,7 +135,7 @@ YV0 = [Y0; V0];
 
 
 options = odeset('OutputFcn', @waitbarOutput);
-[t, YV] = ode45(D, [ti, tf], YV0, options);
+[t, YV] = ode45(D, t, YV0, options);
 
 t = t';
 YV = YV';
@@ -132,49 +144,48 @@ Y = YV(1:N-4, :);
 Ytot = getYtot(Y);
 
 
-%% interpolation
-
-t_interp = ti:dt:tf;
-Ytot_interp = interp1(t, Ytot', t_interp)';
-
 %% affichage
 
 % animation
 moving_coeff = 1.;
-movingPlot(Ytot_interp, t_interp, L, essieux, c, pos_capteurs, moving_coeff);
+movingPlot(Ytot, t, L, essieux, c, pos_capteurs, moving_coeff);
 
 % wavelet capteurs
-Ycapt_interp = getYcapt(Ytot_interp, pos_capteurs, dx);
-Ycapt_interp = Ycapt_interp + 1e-6 * randn(size(Ycapt_interp));
+Ycapt = getYcapt(Ytot, pos_capteurs, dx);
+Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
 
 
 fig = figure;
 ax = axes(fig);
-plt = plot(ax, t_interp, Ycapt_interp);
+plt = plot(ax, t, Ycapt);
 
 fmin = 3;
 fmax = 16;
 Q = 10;
 MaxRidges = 1;
-WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true, 'MaxRidges', MaxRidges);
+RealShapePlot = deformeePont(L, pos_capteurs);
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true,...
+    'MaxRidges', MaxRidges, 'RealShapePlot', RealShapePlot);
 
 
 %% enregistrement
 
-listing = dir('pont sens/simulation elements finis/resultats');
-listingNames = {listing.name};
-nbSimul = 0;
-for kname = length(listingNames)
-    name1 = strsplit(listingNames{kname}, '_');
-    name1 = name1{1};
-    if length(name1) > 5 && strcmp(name1(1:5), 'simul')
-        nbSimul = max(nbSimul, str2double(name1(6:end)));
+if save_results
+    listing = dir('pont sens/simulation elements finis/resultats');
+    listingNames = {listing.name};
+    nbSimul = 0;
+    for kname = length(listingNames)
+        name1 = strsplit(listingNames{kname}, '_');
+        name1 = name1{1};
+        if length(name1) > 5 && strcmp(name1(1:5), 'simul')
+            nbSimul = max(nbSimul, str2double(name1(6:end)));
+        end
     end
+    save(sprintf('pont sens/simulation elements finis/resultats/simul%d_N%d', [nbSimul+1, N]),...
+        'L', 'E', 'rho', 'l_pont', 'h_pont', 'J', 'mu', 'amort', 'N', 'dx', 'pos_capteurs', 'mu_t',...
+        'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't', 'Ytot', 'Y0', 'V0',...
+        'essieux');
 end
-save(sprintf('pont sens/simulation elements finis/resultats/simul%d_N%d', [nbSimul+1, N]),...
-    'L', 'E', 'rho', 'l_pont', 'h_pont', 'J', 'mu', 'amort', 'N', 'dx', 'pos_capteurs', 'mu_t',...
-    'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't_interp', 'Ytot_interp', 'Y0', 'V0',...
-    'essieux');
 
 
 %% influence des essieux
