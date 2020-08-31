@@ -1,8 +1,17 @@
-kSimul = 1;
+clear all
+
+%%
+kSimul = 2;
+results_folder = 'testsFreq';
+
+folder_dir = 'pont sens/simulation elements finis/resultats';
+if ~isempty(results_folder)
+    folder_dir = [folder_dir, '/', results_folder];
+end
 
 % recherche du fichier
 name0 = sprintf('simul%d', kSimul);
-listing = dir('pont sens/simulation elements finis/resultats');
+listing = dir(folder_dir);
 listingNames = {listing.name};
 fileName = [];
 for kname = length(listingNames)
@@ -24,18 +33,21 @@ load(['pont sens/simulation elements finis/resultats/', fileName]);
 
 disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
 
+% pos_capteurs = linspace(0, L, N);
+% pos_capteurs = pos_capteurs(2:end-1);
+
 % animation
 moving_coeff = 1;
-movingPlot(Ytot_interp, t_interp, L, essieux, c, pos_capteurs, moving_coeff);
+movingPlot(Ytot, t, L, essieux, c, pos_capteurs, moving_coeff);
 
 % wavelet capteurs
-Ycapt_interp = getYcapt(Ytot_interp, pos_capteurs, dx);
-Ycapt_interp = Ycapt_interp + 1e-6 * randn(size(Ycapt_interp));
+Ycapt = getYcapt(Ytot, pos_capteurs, dx);
+%Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
 
 
 fig = figure;
 ax = axes(fig);
-plt = plot(ax, t_interp, Ycapt_interp);
+plt = plot(ax, t, Ycapt);
 
 fmin = 3;
 fmax = 16;

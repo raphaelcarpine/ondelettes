@@ -1,6 +1,8 @@
 clear all
 
-save_results = false;
+save_results = 1;
+results_name = '';
+results_folder = 'testsFreq';
 
 %% données pont
 
@@ -19,35 +21,35 @@ disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
 
 %% integration spatiale
 
-N = 49; % nb de points ds l'espace
+N = 350; % nb de points ds l'espace
 dx = L / (N-1);
 
 %% données capteurs ponts
 
 pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
-pos_capteurs = linspace(0, L, 100); pos_capteurs = pos_capteurs(2:end-1);
+pos_capteurs = linspace(0, L, N); pos_capteurs = pos_capteurs(2:end-1);
 
 
 %% données train
 
-mu_t = 0.5 * mu; % masse linéique du train
-L_wagons = 14; % écart entre les wagons
-N_bogies = 1; % nombre de wagons
+mu_t = 2e3; % masse linéique du train
+L_wagons = 18.5; % écart entre les wagons
+N_bogies = 0; % nombre de bogies
 c = 78.5; % vitesse du train
 g = 9.81;
-
-%test
-mu = 1e-3 * mu;
 
 
 %% données temps
 
-ti = -2;
+ti = 0;
 tf = 10;
-% t0 = 0;
-dt = 0.01;
+dt = 0.008;
 
 t = ti:dt:tf;
+
+t1 = 0;
+t2 = ((N_bogies-1)*L_wagons + L)/c;
+disp(sprintf('t1 = %.2f, t2 = %.2f', [t1, t2]));
 
 
 %% matrices
@@ -109,10 +111,6 @@ essieux = L_wagons * (0:N_bogies-1);
 essieux = essieux - max(essieux);
 essieux = sort(essieux);
 
-%test
-essieux = L/2;
-c = 0;
-
 if any(diff(essieux) <= 2*dx)
     warning('écart d''essieux < 2dx');
 end
@@ -122,6 +120,13 @@ M_ajout = @(t) mu_t*L_wagons/dx * diag( influence_train(essieux + c*t, dx, N));
 
 % excitation pesanteur
 F = @(t) -g * mu_t*L_wagons/dx  * transpose( influence_train(essieux + c*t, dx, N));
+
+%test
+r = 0.25;
+f0 = zeros(N-4, 1);
+f0(floor(r*(N-1))+1-2) = 1 - r*(N-1) + floor(r*(N-1));
+f0(floor(r*(N-1))+1-2+1) = r*(N-1) - floor(r*(N-1));
+F = @(t) - 1e8/dx * f0;
 
 
 %% integration numerique
@@ -133,10 +138,20 @@ Y0 = zeros(N-4, 1);
 V0 = zeros(N-4, 1);
 YV0 = [Y0; V0];
 
+% temps de calcul
+computationTime = now;
 
+% integration
 options = odeset('OutputFcn', @waitbarOutput);
 [t, YV] = ode45(D, t, YV0, options);
 
+% temps de calcul
+computationTime = now - computationTime;
+computationTime = days(computationTime);
+formatsTime = {'MM:SS', 'HH:MM:SS'};
+computationTime = datestr(computationTime, formatsTime{logical(hms(computationTime))+1});
+
+% mise en forme des matrices
 t = t';
 YV = YV';
 Y = YV(1:N-4, :);
@@ -152,7 +167,7 @@ movingPlot(Ytot, t, L, essieux, c, pos_capteurs, moving_coeff);
 
 % wavelet capteurs
 Ycapt = getYcapt(Ytot, pos_capteurs, dx);
-Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
+%Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
 
 
 fig = figure;
@@ -171,20 +186,31 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignal
 %% enregistrement
 
 if save_results
-    listing = dir('pont sens/simulation elements finis/resultats');
+    folder_dir = 'pont sens/simulation elements finis/resultats';
+    if ~isempty(results_folder)
+        folder_dir = [folder_dir, '/', results_folder];
+        [~,~,~] = mkdir(folder_dir);
+    end
+    
+    listing = dir(folder_dir);
     listingNames = {listing.name};
     nbSimul = 0;
-    for kname = length(listingNames)
+    for kname = 1:length(listingNames)
         name1 = strsplit(listingNames{kname}, '_');
         name1 = name1{1};
         if length(name1) > 5 && strcmp(name1(1:5), 'simul')
             nbSimul = max(nbSimul, str2double(name1(6:end)));
         end
     end
-    save(sprintf('pont sens/simulation elements finis/resultats/simul%d_N%d', [nbSimul+1, N]),...
+    if ~isempty(results_name)
+        simul_name = [sprintf('simul%d_', nbSimul+1), results_name, sprintf('_N%d', N)];
+    else
+        simul_name = sprintf('simul%d_N%d', [nbSimul+1, N]);
+    end
+    save([folder_dir, '/', simul_name],...
         'L', 'E', 'rho', 'l_pont', 'h_pont', 'J', 'mu', 'amort', 'N', 'dx', 'pos_capteurs', 'mu_t',...
         'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't', 'Ytot', 'Y0', 'V0',...
-        'essieux');
+        'essieux', 'computationTime');
 end
 
 
@@ -212,12 +238,16 @@ end
 %% barre de chargement
 
 function status = waitbarOutput(t, ~, flag)
-persistent ti tf f t_last t_1s T_1s
+persistent ti tf f t_last t_1s T_1s t0
+
+update_waitbar_time = 0.1;
+update_remainingTime_time = 2;
+minimum_beep_time = 1*60;
 
 status = 0;
 if nargin < 3 || isempty(flag)
     t_0s = 24*3600*now;
-    if t_0s - t_last > 0.1
+    if t_0s - t_last > update_waitbar_time
         t_last = t_0s;
         x = (t(end)-ti)/(tf-ti);
         try
@@ -226,9 +256,13 @@ if nargin < 3 || isempty(flag)
             status = 1;
         end
     end
-    if t_0s - t_1s > 2
+    if t_0s - t_1s > update_remainingTime_time
         t_remaining = (t_0s - t_1s) * (tf-t(end))/(t(end)-T_1s);
-        set(f, 'Name', sprintf('Computing ODE (%dmin remaining)', round(t_remaining/60)));
+        try
+            set(f, 'Name', sprintf('Computing ODE (%dmin remaining)', round(t_remaining/60)));
+        catch
+            status = 1;
+        end
         t_1s = t_0s;
         T_1s = t(end);
     end
@@ -238,8 +272,12 @@ elseif strcmp(flag, 'init')
     tf = t(end);
     t_last = 24*3600*now;
     t_1s = t_last;
+    t0 = t_last;
     T_1s = t(1);
 elseif strcmp(flag, 'done')
+    if 24*3600*now - t0 >= minimum_beep_time
+        beep
+    end
     try
         close(f);
     catch
