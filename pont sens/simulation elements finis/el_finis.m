@@ -1,8 +1,8 @@
 clear all
 
-save_results = 1;
+save_results = 0;
 results_name = '';
-results_folder = 'testsFreq';
+results_folder = 'tests';
 
 %% données pont
 
@@ -10,40 +10,40 @@ L = 17.5; % longueur du pont
 E = 30e9; % module d'young du béton
 rho = 2500; % masse volumique du béton
 l_pont = 4.85; % largeur du pont
-h_pont = 1;
+h_pont = 1.2;
 J = l_pont * h_pont^3 / 12; % moment quadratique du pont
 mu = l_pont * h_pont * rho; % masse linéique du pont
 amort = 4e5; % coefficient d'amortissement
 
-% frequence propre 1
-disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
-
 
 %% integration spatiale
 
-N = 350; % nb de points ds l'espace
+N = 50; % nb de points ds l'espace
 dx = L / (N-1);
 
 %% données capteurs ponts
 
 pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
-pos_capteurs = linspace(0, L, N); pos_capteurs = pos_capteurs(2:end-1);
+% pos_capteurs = linspace(0, L, N); pos_capteurs = pos_capteurs(2:end-1);
 
 
 %% données train
 
 mu_t = 2e3; % masse linéique du train
 L_wagons = 18.5; % écart entre les wagons
-N_bogies = 0; % nombre de bogies
+N_bogies = 16; % nombre de bogies
 c = 78.5; % vitesse du train
 g = 9.81;
 
+%test
+L_wagons = L_wagons/20;
+N_bogies = N_bogies*20;
 
 %% données temps
 
-ti = 0;
+ti = -2;
 tf = 10;
-dt = 0.008;
+dt = 0.01;
 
 t = ti:dt:tf;
 
@@ -97,6 +97,24 @@ Mr = Mr(3:N-2, 3:N-2);
 Cr = Cr(3:N-2, 3:N-2);
 Kr = Kr(3:N-2, 3:N-2);
 
+%% calcul freq propre, freq excitation
+
+% frequences therorique, problème continu
+freqsTh = pi/(2*L^2) * sqrt(E*J/mu) * (1:N-4).^2;
+
+% frequence propre problème discrétisé
+freqs = eig(Mr\Kr);
+freqs = sqrt(freqs)/(2*pi);
+freqs = sort(freqs);
+
+% affichage
+for kfreq = 1:3
+    disp(sprintf('freq. propre %d : %.2fHz, th. %.2fHz (%.1f%% error)',...
+        [kfreq, freqs(kfreq), freqsTh(kfreq), (freqs(kfreq)-freqsTh(kfreq))/freqsTh(kfreq)*100]));
+end
+
+fprintf('freq. excitation : %.2f\n', c/L_wagons);
+
 
 %% influence du train
 
@@ -121,12 +139,12 @@ M_ajout = @(t) mu_t*L_wagons/dx * diag( influence_train(essieux + c*t, dx, N));
 % excitation pesanteur
 F = @(t) -g * mu_t*L_wagons/dx  * transpose( influence_train(essieux + c*t, dx, N));
 
-%test
-r = 0.25;
-f0 = zeros(N-4, 1);
-f0(floor(r*(N-1))+1-2) = 1 - r*(N-1) + floor(r*(N-1));
-f0(floor(r*(N-1))+1-2+1) = r*(N-1) - floor(r*(N-1));
-F = @(t) - 1e8/dx * f0;
+% %test
+% r = 0.25;
+% f0 = zeros(N-4, 1);
+% f0(floor(r*(N-1))+1-2) = 1 - r*(N-1) + floor(r*(N-1));
+% f0(floor(r*(N-1))+1-2+1) = r*(N-1) - floor(r*(N-1));
+% F = @(t) - 1e8/dx * f0;
 
 
 %% integration numerique
@@ -210,7 +228,7 @@ if save_results
     save([folder_dir, '/', simul_name],...
         'L', 'E', 'rho', 'l_pont', 'h_pont', 'J', 'mu', 'amort', 'N', 'dx', 'pos_capteurs', 'mu_t',...
         'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't', 'Ytot', 'Y0', 'V0',...
-        'essieux', 'computationTime');
+        'essieux', 'computationTime', 'freqs', 'freqsTh');
 end
 
 

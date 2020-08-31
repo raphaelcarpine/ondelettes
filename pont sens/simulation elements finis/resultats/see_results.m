@@ -1,7 +1,7 @@
 clear all
 
 %%
-kSimul = 2;
+kSimul = 10;
 results_folder = 'testsFreq';
 
 folder_dir = 'pont sens/simulation elements finis/resultats';
@@ -14,7 +14,7 @@ name0 = sprintf('simul%d', kSimul);
 listing = dir(folder_dir);
 listingNames = {listing.name};
 fileName = [];
-for kname = length(listingNames)
+for kname = 1:length(listingNames)
     name1 = strsplit(listingNames{kname}, '_');
     name1 = name1{1};
     if strcmp(name1, name0)
@@ -27,11 +27,21 @@ if isempty(fileName)
     error('file not found');
 end
 
-load(['pont sens/simulation elements finis/resultats/', fileName]);
+load([folder_dir, '/', fileName]);
 
-%%
+%% calcul freq propre, freq excitation
 
-disp(['freq propre 1 : ', num2str(pi/(2*L^2) * sqrt(E*J/mu))]);
+try
+    for kfreq = 1:3
+        fprintf('freq. propre %d : %.2fHz, th. %.2fHz (%.1f%% error)\n',...
+            [kfreq, freqs(kfreq), freqsTh(kfreq), (freqs(kfreq)-freqsTh(kfreq))/freqsTh(kfreq)*100]);
+    end
+catch
+end
+
+fprintf('freq. excitation : %.2f\n', c/L_wagons);
+
+%% resultats
 
 % pos_capteurs = linspace(0, L, N);
 % pos_capteurs = pos_capteurs(2:end-1);
