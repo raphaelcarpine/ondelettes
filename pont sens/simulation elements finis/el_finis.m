@@ -1,8 +1,8 @@
 clear all
 
-save_results = 0;
-results_name = '';
-results_folder = 'tests';
+save_results = 1;
+results_name = 'mu02Lw1';
+results_folder = 'testsMasseAjoutee';
 
 %% données pont
 
@@ -18,7 +18,7 @@ amort = 4e5; % coefficient d'amortissement
 
 %% integration spatiale
 
-N = 50; % nb de points ds l'espace
+N = 200; % nb de points ds l'espace
 dx = L / (N-1);
 
 %% données capteurs ponts
@@ -29,15 +29,15 @@ pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
 
 %% données train
 
-mu_t = 2e3; % masse linéique du train
+mu_t = 0.2*mu; % masse linéique du train
 L_wagons = 18.5; % écart entre les wagons
 N_bogies = 16; % nombre de bogies
 c = 78.5; % vitesse du train
 g = 9.81;
 
 %test
-L_wagons = L_wagons/20;
-N_bogies = N_bogies*20;
+N_bogies = ceil(N_bogies * L_wagons);
+L_wagons = 1;
 
 %% données temps
 
@@ -228,7 +228,7 @@ if save_results
     save([folder_dir, '/', simul_name],...
         'L', 'E', 'rho', 'l_pont', 'h_pont', 'J', 'mu', 'amort', 'N', 'dx', 'pos_capteurs', 'mu_t',...
         'L_wagons', 'N_bogies', 'c', 'g', 'ti', 'tf', 'dt', 't', 'Ytot', 'Y0', 'V0',...
-        'essieux', 'computationTime', 'freqs', 'freqsTh');
+        'essieux', 'computationTime', 'freqs', 'freqsTh', 't1', 't2');
 end
 
 

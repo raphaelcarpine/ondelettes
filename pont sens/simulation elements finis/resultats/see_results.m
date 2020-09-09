@@ -1,8 +1,8 @@
 clear all
 
 %%
-kSimul = 10;
-results_folder = 'testsFreq';
+kSimul = 1;
+results_folder = 'testsMasseAjoutee';
 
 folder_dir = 'pont sens/simulation elements finis/resultats';
 if ~isempty(results_folder)
@@ -32,7 +32,7 @@ load([folder_dir, '/', fileName]);
 %% calcul freq propre, freq excitation
 
 try
-    for kfreq = 1:3
+    for kfreq = 1:1
         fprintf('freq. propre %d : %.2fHz, th. %.2fHz (%.1f%% error)\n',...
             [kfreq, freqs(kfreq), freqsTh(kfreq), (freqs(kfreq)-freqsTh(kfreq))/freqsTh(kfreq)*100]);
     end
@@ -40,6 +40,14 @@ catch
 end
 
 fprintf('freq. excitation : %.2f\n', c/L_wagons);
+
+%% temps
+
+if ~exist('t1', 'var') || ~exist('t2', 'var')
+    t1 = 0;
+    t2 = ((N_bogies-1)*L_wagons + L)/c;
+end
+disp(sprintf('t1 = %.2f, t2 = %.2f', [t1, t2]));
 
 %% resultats
 

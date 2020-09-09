@@ -301,18 +301,18 @@ xscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togg
 yscaleTimeFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
-checkboxAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'ampl, freq', 'Value', false);
-xscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
-yscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
-    'String', 'linear', 'Value', false);
-
 checkboxTimeDamp = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'time, damping', 'Value', false);
 xscaleTimeDamp = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 yscaleTimeDamp = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+
+checkboxAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'ampl, freq', 'Value', false);
+xscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+yscaleAmplFreq = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
 checkboxAmplDamp = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
@@ -329,10 +329,10 @@ xscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','tog
 yscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
-Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxAmplFreq, checkboxTimeDamp, checkboxAmplDamp,...
+Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxTimeDamp, checkboxAmplFreq, checkboxAmplDamp,...
     checkboxTimePhase];
-XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleAmplFreq, xscaleTimeDamp, xscaleAmplDamp, xscaleTimePhase];
-YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleAmplFreq, yscaleTimeDamp, yscaleAmplDamp, yscaleTimePhase];
+XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleTimeDamp, xscaleAmplFreq, xscaleAmplDamp, xscaleTimePhase];
+YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleTimeDamp, yscaleAmplFreq, yscaleAmplDamp, yscaleTimePhase];
 n1 = length(Checkboxs1);
 n2 = length(Checkboxs2);
 n = n1+n2;
@@ -433,6 +433,7 @@ end
 fig.MenuBar = 'none';
 
 paramMenu = uimenu(fig,'Text','Options');
+ridgeMenu = uimenu(fig,'Text','Ridges');
 
 % mother wavelet
 MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley'};
@@ -467,7 +468,7 @@ WvltScaleNames = {'lin', 'log10'};
 FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
 
 %freq
-freqMenu = uimenu(paramMenu, 'Text','Frequency');
+freqMenu = uimenu(ridgeMenu, 'Text','Frequency');
 freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'max module', 'Checked' ,'on');
 freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'phase derivative');
     function selectFreqMenu(kchoice)
@@ -482,7 +483,7 @@ set(freqMenuChoices(1), 'CallBack', @(~,~) selectFreqMenu(1));
 set(freqMenuChoices(2), 'CallBack', @(~,~) selectFreqMenu(2));
 
 %phase
-phaseMenu = uimenu(paramMenu, 'Text','Phase');
+phaseMenu = uimenu(ridgeMenu, 'Text','Phase');
 phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bounded');
 phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continuous', 'Checked' ,'on');
     function selectPhaseMenu(kchoice)
@@ -497,7 +498,7 @@ set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
 set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
 
 % damping
-dampingMenu = uimenu(paramMenu, 'Text','Damping');
+dampingMenu = uimenu(ridgeMenu, 'Text','Damping');
 dampingMenuChoices(1) = uimenu(dampingMenu, 'Text', 'lambda');
 dampingMenuChoices(2) = uimenu(dampingMenu, 'Text', 'lambda/omega_d');
 dampingMenuChoices(3) = uimenu(dampingMenu, 'Text', 'lambda/omega_n', 'Checked' ,'on');
@@ -581,7 +582,7 @@ set(XlimMenu, 'CallBack', @(~,~) setXlim);
 
 %multipleAxesDisplay
 
-multipleAxesDisplayMenu = uimenu(paramMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
+multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
     function switchMultipleAxesDisplay(status)
         multipleAxesDisplayMenu.Checked = status;
         setMultipleAxesDisplay(status);
