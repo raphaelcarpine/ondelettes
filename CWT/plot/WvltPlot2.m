@@ -1,4 +1,4 @@
-function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, scale, figureTitle, axesTitle)
+function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, MotherWavelet, scale, figureTitle, axesTitle)
 
 if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');
@@ -74,11 +74,11 @@ shading flat
 
 %% zones d'effets de bord
 
-if ctEdgeEffects > 0
-    deltat = ctEdgeEffects*Q./(2*pi*freqs); % = a * Delta t_psi, en considerant que 2*pi*Delta f_psi * Delta t_psi = 1/2
-    
-    t1 = t(1) + deltat;
-    t2 = t(end) - deltat;
+[~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
+
+if ctEdgeEffects > 0    
+    t1 = t(1) + ctEdgeEffects * DeltaT(freqs);
+    t2 = t(end) - ctEdgeEffects * DeltaT(freqs);
     
     % zone grisée
     tEdge1 = [t1, t(1), t(1)];

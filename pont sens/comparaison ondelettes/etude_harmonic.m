@@ -155,14 +155,14 @@ F = [F, 4 + logspace(-8, 0, 30)];
 F = [F, 4 - logspace(-8, 0, 30)];
 F = sort(F);
 
-B = linspace(-10, 10, 100);
+B = linspace(-2, 2, 200);
 B = [B, 0 + logspace(-8, -1, 30)];
 B = [B, 0 - logspace(-8, -1, 30)];
 B = sort(B);
 
-B = linspace(0, 10, 100);
-B = [B, 0 + logspace(-8, -1, 50)];
-B = sort(B);
+% B = linspace(0, 1, 100);
+% B = [B, 0 + logspace(-8, -1, 50)];
+% B = sort(B);
 
 R = @(f, b) sign(beta*f-nu0)*pi/2 + 1i*Eii(2*pi*(beta*f-nu0)*b) - ( sign(alpha*f-nu0)*pi/2 + 1i*Eii(2*pi*(alpha*f-nu0)*b) );
 
@@ -187,7 +187,21 @@ zlim([0, 8]);
 % zticklabels({'0', '2\pi'});
 xticks([0, nu0/beta, nu0/alpha]);
 xticklabels({'0', '\nu_0/\beta', '\nu_0/\alpha'});
-set(gca, 'XDir','reverse')
+set(gca, 'YDir','reverse')
+light();
+
+figure;
+surf(Fgrid, Bgrid, abs(Rfb)/(2*pi), 'EdgeColor', 'none', 'FaceColor', [0 0.4470 0.7410], 'FaceLighting', 'gouraud');
+xlabel('1/a');
+ylabel('b');
+zlabel('|R(a,b)|'),
+zlim([0, 1.5]);
+zticks([0, 1]);
+% zticks([0, 2*pi]);
+% zticklabels({'0', '2\pi'});
+xticks([0, nu0/beta, nu0/alpha]);
+xticklabels({'0', '\nu_0/\beta', '\nu_0/\alpha'});
+set(gca, 'YDir','reverse')
 light();
 
 %% T[U](a, b)

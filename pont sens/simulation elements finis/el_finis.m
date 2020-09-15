@@ -1,7 +1,7 @@
 clear all
 
 save_results = 1;
-results_name = 'mu02Lw1';
+results_name = 'mu1Lw185';
 results_folder = 'testsMasseAjoutee';
 
 %% données pont
@@ -29,15 +29,15 @@ pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
 
 %% données train
 
-mu_t = 0.2*mu; % masse linéique du train
+mu_t = 1*mu; % masse linéique du train
 L_wagons = 18.5; % écart entre les wagons
 N_bogies = 16; % nombre de bogies
 c = 78.5; % vitesse du train
 g = 9.81;
 
-%test
-N_bogies = ceil(N_bogies * L_wagons);
-L_wagons = 1;
+% %test
+% N_bogies = ceil(N_bogies * L_wagons);
+% L_wagons = 1;
 
 %% données temps
 

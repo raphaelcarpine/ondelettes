@@ -94,13 +94,11 @@ for iT = 1:length(X)
     end
 end
 
-CauN = (2*Q^2 - 1/2); % param ondelette
-CauFreq = (CauN)/(2*pi); %freq centrale ondelette
-DeltaTPsi = 1/sqrt(2*CauN-1); % Delta T_psi
+%effets de bords
+[~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
 
-Scales = CauFreq./WvltFreq; % echelles a
-DeltaTimeLeft = ctLeft*Scales*DeltaTPsi; % ct * a * Delta T_psi gauche = largeur effet de bord gauche
-DeltaTimeRight = ctRight*Scales*DeltaTPsi; % ct * a * Delta T_psi droite = largeur effet de bord droite
+DeltaTimeLeft = ctLeft * DeltaT(WvltFreq); % ct * a * Delta T_psi gauche = largeur effet de bord gauche
+DeltaTimeRight = ctRight * DeltaT(WvltFreq); % ct * a * Delta T_psi droite = largeur effet de bord droite
 RangeLeft = bsxfun(@minus,X,transpose(DeltaTimeLeft))>X(1); % Zone d'effets de bord gauche
 RangeRight = bsxfun(@plus,X,transpose(DeltaTimeRight))<X(end); % Zone d'effets de bord droite
 mesuEdge = mesu;
@@ -364,9 +362,8 @@ for C_Field = 1:length(FieldList)
 end
 FieldList = fieldnames(ridge);
 for C_r = 1:length(ridge.time)
-    Scales = CauFreq./ridge.freq{C_r}; % Echelles associees au ridge
-    DeltaTimeLeft = ctLeft*Scales*DeltaTPsi; % ct * Delta t_psi/a associes a gauche
-    DeltaTimeRight = ctRight*Scales*DeltaTPsi; % ct * Delta t_psi/a associes a droite
+    DeltaTimeLeft = ctLeft * DeltaT(ridge.freq{C_r}); % ct * Delta t_psi/a associes a gauche
+    DeltaTimeRight = ctRight * DeltaT(ridge.freq{C_r}); % ct * Delta t_psi/a associes a droite
     
     
     RangeEdgeLeft = (ridge.time{C_r}-DeltaTimeLeft)>=X(IndBegin); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (gauche)
