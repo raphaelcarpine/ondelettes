@@ -29,6 +29,8 @@ defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
 defaultMotherWavelet = 'cauchy';
+defaultXLimRidge = [];
+defaultctRidge = 0;
 
 
 
@@ -61,6 +63,8 @@ addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
 addParameter(p, 'RealShapePlot', defaultRealShapePlot);
 addParameter(p, 'MotherWavelet', defaultMotherWavelet);
+addParameter(p, 'XLimRidge', defaultXLimRidge);
+addParameter(p, 'ctRidge', defaultctRidge);
 
 parse(p, varargin{:})
 
@@ -145,14 +149,18 @@ wvltAxesTitle = p.Results.WvltAxesTitle;
 ComplexShapePlot = p.Results.ComplexShapePlot;
 RealShapePlot = p.Results.RealShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
+XLimRidge = p.Results.XLimRidge;
+ctRidge = p.Results.ctRidge;
 
 x0 = getX();
 if isnan(XLim)
-    Xmin = x0(1);
-    Xmax = x0(end);
-else
-    Xmin = XLim(1);
-    Xmax = XLim(2);
+    XLim = [x0(1), x0(end)];
+end
+Xmin = XLim(1);
+Xmax = XLim(2);
+
+if isempty(XLimRidge)
+    XLimRidge = XLim;
 end
 
 if isnan(maxLagCorr)
@@ -356,7 +364,7 @@ for k=(n1+1:n1+n2)
     YScales(k-n1).Callback = @(~,~) set(YScales(k-n1), 'String', scalesNames{YScales(k-n1).Value+1});
 end
 
-LogScales = [yscaleTimeAmpl, xscaleAmplFreq];
+LogScales = [yscaleTimeAmpl, xscaleAmplFreq, xscaleAmplDamp];
 for scale = LogScales
     set(scale, 'Value', 1);
     set(scale, 'String', scalesNames{scale.Value+1});
@@ -433,7 +441,6 @@ end
 fig.MenuBar = 'none';
 
 paramMenu = uimenu(fig,'Text','Options');
-ridgeMenu = uimenu(fig,'Text','Ridges');
 
 % mother wavelet
 MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley'};
@@ -455,64 +462,6 @@ set(motherWaveletMenuChoices(1), 'CallBack', @(~,~) selectMotherWaveletMenu(1));
 set(motherWaveletMenuChoices(2), 'CallBack', @(~,~) selectMotherWaveletMenu(2));
 set(motherWaveletMenuChoices(3), 'CallBack', @(~,~) selectMotherWaveletMenu(3));
 set(motherWaveletMenuChoices(4), 'CallBack', @(~,~) selectMotherWaveletMenu(4));
-
-%autres valeurs par défault
-freqRidgeName = 'freq';
-phaseRidgeName = 'pha2';
-dampingRidgeName = 'damping3';
-
-freqRidgeNames = {'freq', 'freq2'};
-phaseRidgeNames = {'pha', 'pha2'};
-dampingRidgeNames = {'damping', 'damping2', 'damping3'};
-WvltScaleNames = {'lin', 'log10'};
-FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
-
-%freq
-freqMenu = uimenu(ridgeMenu, 'Text','Frequency');
-freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'max module', 'Checked' ,'on');
-freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'phase derivative');
-    function selectFreqMenu(kchoice)
-        for kchoices = 1:length(freqMenuChoices)
-            set(freqMenuChoices(kchoices), 'Checked', 'off');
-        end
-        set(freqMenuChoices(kchoice), 'Checked', 'on');
-        
-        freqRidgeName = freqRidgeNames{kchoice};
-    end
-set(freqMenuChoices(1), 'CallBack', @(~,~) selectFreqMenu(1));
-set(freqMenuChoices(2), 'CallBack', @(~,~) selectFreqMenu(2));
-
-%phase
-phaseMenu = uimenu(ridgeMenu, 'Text','Phase');
-phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bounded');
-phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continuous', 'Checked' ,'on');
-    function selectPhaseMenu(kchoice)
-        for kchoices = 1:length(phaseMenuChoices)
-            set(phaseMenuChoices(kchoices), 'Checked', 'off');
-        end
-        set(phaseMenuChoices(kchoice), 'Checked', 'on');
-        
-        phaseRidgeName = phaseRidgeNames{kchoice};
-    end
-set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
-set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
-
-% damping
-dampingMenu = uimenu(ridgeMenu, 'Text','Damping');
-dampingMenuChoices(1) = uimenu(dampingMenu, 'Text', 'lambda');
-dampingMenuChoices(2) = uimenu(dampingMenu, 'Text', 'lambda/omega_d');
-dampingMenuChoices(3) = uimenu(dampingMenu, 'Text', 'lambda/omega_n', 'Checked' ,'on');
-    function selectDampingMenu(kchoice)
-        for kchoices = 1:length(dampingMenuChoices)
-            set(dampingMenuChoices(kchoices), 'Checked', 'off');
-        end
-        set(dampingMenuChoices(kchoice), 'Checked', 'on');
-        
-        dampingRidgeName = dampingRidgeNames{kchoice};
-    end
-set(dampingMenuChoices(1), 'CallBack', @(~,~) selectDampingMenu(1));
-set(dampingMenuChoices(2), 'CallBack', @(~,~) selectDampingMenu(2));
-set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
 
 % wavelet scale
 WvltScaleMenu = uimenu(paramMenu, 'Text','Wavelet Scale');
@@ -564,6 +513,21 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
     end
 set(XlimMenu, 'CallBack', @(~,~) setXlim);
 
+% ct
+CtMenu = uimenu(paramMenu, 'Text','Set ct');
+    function setCt()
+        prompt = {'Enter ct :'};
+        dlgtitle = 'Input ct';
+        dims = [1 35];
+        definput = {num2str(ctEdgeEffects)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            ctEdgeEffects = str2double(answer{1});
+        catch
+        end
+    end
+set(CtMenu, 'CallBack', @(~,~) setCt);
+
 % %zero padding fourier
 % zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
 %     function setZeroPaddingFourier()
@@ -579,20 +543,6 @@ set(XlimMenu, 'CallBack', @(~,~) setXlim);
 %         end
 %     end
 % set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
-
-%multipleAxesDisplay
-
-multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
-    function switchMultipleAxesDisplay(status)
-        multipleAxesDisplayMenu.Checked = status;
-        setMultipleAxesDisplay(status);
-        if status
-            switchMultiSignalModeDisplay(false);
-            switchAutocorrelationModeDisplay(false)
-        end
-    end
-
-multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
 
 %multiSignalMode
 
@@ -657,6 +607,115 @@ set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierM
 
 switchMultiSignalModeDisplay(multiSignalMode);
 switchAutocorrelationModeDisplay(autocorrelationMode);
+
+
+%% ridge menu
+
+ridgeMenu = uimenu(fig,'Text','Ridges');
+
+%autres valeurs par défault
+freqRidgeName = 'freq';
+phaseRidgeName = 'pha2';
+dampingRidgeName = 'damping3';
+
+freqRidgeNames = {'freq', 'freq2'};
+phaseRidgeNames = {'pha', 'pha2'};
+dampingRidgeNames = {'damping', 'damping2', 'damping3'};
+WvltScaleNames = {'lin', 'log10'};
+FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
+
+%freq
+freqMenu = uimenu(ridgeMenu, 'Text','Frequency');
+freqMenuChoices(1) = uimenu(freqMenu, 'Text', 'max module', 'Checked' ,'on');
+freqMenuChoices(2) = uimenu(freqMenu, 'Text', 'phase derivative');
+    function selectFreqMenu(kchoice)
+        for kchoices = 1:length(freqMenuChoices)
+            set(freqMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(freqMenuChoices(kchoice), 'Checked', 'on');
+        
+        freqRidgeName = freqRidgeNames{kchoice};
+    end
+set(freqMenuChoices(1), 'CallBack', @(~,~) selectFreqMenu(1));
+set(freqMenuChoices(2), 'CallBack', @(~,~) selectFreqMenu(2));
+
+%phase
+phaseMenu = uimenu(ridgeMenu, 'Text','Phase');
+phaseMenuChoices(1) = uimenu(phaseMenu, 'Text', 'bounded');
+phaseMenuChoices(2) = uimenu(phaseMenu, 'Text', 'continuous', 'Checked' ,'on');
+    function selectPhaseMenu(kchoice)
+        for kchoices = 1:length(phaseMenuChoices)
+            set(phaseMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(phaseMenuChoices(kchoice), 'Checked', 'on');
+        
+        phaseRidgeName = phaseRidgeNames{kchoice};
+    end
+set(phaseMenuChoices(1), 'CallBack', @(~,~) selectPhaseMenu(1));
+set(phaseMenuChoices(2), 'CallBack', @(~,~) selectPhaseMenu(2));
+
+% damping
+dampingMenu = uimenu(ridgeMenu, 'Text','Damping');
+dampingMenuChoices(1) = uimenu(dampingMenu, 'Text', 'lambda');
+dampingMenuChoices(2) = uimenu(dampingMenu, 'Text', 'lambda/omega_d');
+dampingMenuChoices(3) = uimenu(dampingMenu, 'Text', 'lambda/omega_n', 'Checked' ,'on');
+    function selectDampingMenu(kchoice)
+        for kchoices = 1:length(dampingMenuChoices)
+            set(dampingMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(dampingMenuChoices(kchoice), 'Checked', 'on');
+        
+        dampingRidgeName = dampingRidgeNames{kchoice};
+    end
+set(dampingMenuChoices(1), 'CallBack', @(~,~) selectDampingMenu(1));
+set(dampingMenuChoices(2), 'CallBack', @(~,~) selectDampingMenu(2));
+set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
+
+%multipleAxesDisplay
+
+multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
+    function switchMultipleAxesDisplay(status)
+        multipleAxesDisplayMenu.Checked = status;
+        setMultipleAxesDisplay(status);
+        if status
+            switchMultiSignalModeDisplay(false);
+            switchAutocorrelationModeDisplay(false)
+        end
+    end
+
+multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
+
+% Xlim
+XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge');
+    function setXlimRidge()
+        prompt = {'Enter Xmin ridge :', 'Enter Xmax ridge :'};
+        dlgtitle = 'Input Xlim ridge';
+        dims = [1 35];
+        definput = {num2str(XLimRidge(1)), num2str(XLimRidge(2))};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            XLimRidge(1) = str2double(answer{1});
+            XLimRidge(2) = str2double(answer{2});
+        catch
+        end
+    end
+set(XlimRidgeMenu, 'CallBack', @(~,~) setXlimRidge);
+
+% ct
+CtRidgeMenu = uimenu(ridgeMenu, 'Text','Set ct ridge');
+    function setCtRidge()
+        prompt = {'Enter ct ridge:'};
+        dlgtitle = 'Input ct ridge';
+        dims = [1 35];
+        definput = {num2str(ctRidge)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            ctRidge = str2double(answer{1});
+        catch
+        end
+    end
+set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
+
 
 %% menus regression & plot extract
 
@@ -825,7 +884,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
                 end
                 
             elseif multiSignalMode
@@ -840,7 +899,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                    'MotherWavelet', MotherWavelet);
+                    'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
             
             elseif autocorrelationMode
                 ridges = cell(1, autocorrelationNsvd);
@@ -848,7 +907,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
                 end
             end
             
@@ -877,9 +936,9 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             % plot des ridges
             for kPlot = 1:length(ridges)
                 if autocorrelationMode
-                    XLimRidge = [tRy(1), tRy(end)];
+                    XLimRidgePlot = [tRy(1), tRy(end)];
                 else
-                    XLimRidge = [x(kPlot,1), x(kPlot,end)];
+                    XLimRidgePlot = XLimRidge;
                 end
                 
                 ridge = ridges{kPlot};
@@ -894,19 +953,19 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                         'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Amplitude (m/s^2)',...
-                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Frequency (Hz)',...
-                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Damping',...
-                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
@@ -924,7 +983,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                         'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Phase (rad)',...
-                        'XLim', XLimRidge, 'SquaredCWT', multiSignalMode);
+                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
             end
         end
@@ -937,13 +996,13 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
                 elseif autocorrelationMode
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
                         getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
                 end
                 
                 if autocorrelationMode

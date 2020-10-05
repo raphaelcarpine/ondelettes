@@ -9,7 +9,7 @@ allDamps = AllModalQuantities.damps;
 %%
 verb = true;
 plotGlobal = true;
-saveFigs = true;
+saveFigs = false;
 
 directory = 'mur silvia\modesOndelette\save\';
 

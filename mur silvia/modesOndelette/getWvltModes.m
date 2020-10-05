@@ -414,7 +414,7 @@ for indp = 1:3
             [time, freq, ~, shape, amplitude, errors, ridgesNumber] = getModes(ridges, 1);
         end
         
-        if isempty(time)
+        if isempty(time) || true
             warning(['no ridge, P', num2str(p), 'T', num2str(transient), 'm', num2str(mode)]);
             if verb
                 % test

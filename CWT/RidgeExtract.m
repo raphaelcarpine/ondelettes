@@ -17,6 +17,8 @@ ReleaseTimeDef = X(1);
 WaveletDef = nan;
 SmoothDampingDef = true;
 MotherWaveletDef = 'cauchy';
+XLimRidgeDef = [];
+ctRidgeDef = [];
 
 %%
 addRequired(p,'X')
@@ -38,6 +40,8 @@ addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
 addParameter(p,'SmoothDamping', SmoothDampingDef); % spline smoothing de l'amplitude pour lisser zeta(t)
 addParameter(p,'MotherWavelet', MotherWaveletDef);
+addParameter(p,'XLimRidge', XLimRidgeDef);
+addParameter(p,'ctRidge', ctRidgeDef);
 
 
 parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
@@ -56,6 +60,17 @@ ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
 SmoothDamping = p.Results.SmoothDamping;
 MotherWavelet = p.Results.MotherWavelet;
+XLimRidge = p.Results.XLimRidge;
+ctRidge = p.Results.ctRidge;
+
+if isempty(XLimRidge) || isnan(XLimRidge)
+    XLimRidge = [X(1), X(end)];
+end
+if isempty(ctRidge)
+    ctRidge = [0, 0];
+elseif length(ctRidge) == 1
+    ctRidge = [ctRidge, ctRidge];
+end
 
 %%
 if iscolumn(X)
@@ -99,10 +114,10 @@ end
 
 DeltaTimeLeft = ctLeft * DeltaT(WvltFreq); % ct * a * Delta T_psi gauche = largeur effet de bord gauche
 DeltaTimeRight = ctRight * DeltaT(WvltFreq); % ct * a * Delta T_psi droite = largeur effet de bord droite
-RangeLeft = bsxfun(@minus,X,transpose(DeltaTimeLeft))>X(1); % Zone d'effets de bord gauche
-RangeRight = bsxfun(@plus,X,transpose(DeltaTimeRight))<X(end); % Zone d'effets de bord droite
+RangeLeft = (X - transpose(DeltaTimeLeft)) >= X(1); % Zone d'effets de bord gauche
+RangeRight = (X + transpose(DeltaTimeRight)) <= X(end); % Zone d'effets de bord droite
 mesuEdge = mesu;
-mesuEdge(~(RangeLeft&RangeRight))=NaN; % Max locaux hors zone effets de bord seulement
+mesuEdge(~(RangeLeft & RangeRight)) = NaN; % Max locaux hors zone effets de bord seulement
 %% si Y_in = 0 au debut ou fin : zero-padding non voulu. On le retire
 % if ~isnan(Y)
 %     IndBegin = find(Y~=0,1); % eventuel zero-padding ou apparente (succession de 0 au début du signal)
@@ -111,9 +126,6 @@ mesuEdge(~(RangeLeft&RangeRight))=NaN; % Max locaux hors zone effets de bord seu
 %     IndBegin = 1;
 %     IndEnd = length(X);
 % end
-
-IndBegin = 1;
-IndEnd = length(X);
 
 %%
 Fs=1/mean(X(2:end)-X(1:end-1)); %Freq echantillonnage
@@ -366,13 +378,19 @@ for C_r = 1:length(ridge.time)
     DeltaTimeRight = ctRight * DeltaT(ridge.freq{C_r}); % ct * Delta t_psi/a associes a droite
     
     
-    RangeEdgeLeft = (ridge.time{C_r}-DeltaTimeLeft)>=X(IndBegin); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (gauche)
-    RangeEdgeRight = (ridge.time{C_r}+DeltaTimeRight)<=X(IndEnd); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (droite)
+    RangeEdgeLeft = (ridge.time{C_r}-DeltaTimeLeft) >= X(1); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (gauche)
+    RangeEdgeRight = (ridge.time{C_r}+DeltaTimeRight) <= X(end); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (droite)
     RangeEdge = RangeEdgeLeft & RangeEdgeRight; % intersection des deux listes = liste des instants hors effets de bord pour le ridge considere
     
-    RangeRelease = (ridge.time{C_r}-DeltaTimeLeft)>=ReleaseTime; % Liste des instants verifiant la meme condition a partir de l'instant de relachement (debut de la reponse libre)
+    RangeRelease = (ridge.time{C_r}-DeltaTimeLeft) >= ReleaseTime; % Liste des instants verifiant la meme condition a partir de l'instant de relachement (debut de la reponse libre)
     
-    RangeFinal = RangeEdge & RangeRelease; % intersection des listes
+    DeltaTimeRidgeLeft = ctRidge(1)* DeltaT(ridge.freq{C_r}); % ct * Delta t_psi/a associes a gauche
+    DeltaTimeRidgeRight = ctRidge(2) * DeltaT(ridge.freq{C_r}); % ct * Delta t_psi/a associes a droite
+    RangeRidgeEdgeLeft = (ridge.time{C_r} - DeltaTimeRidgeLeft) >= XLimRidge(1); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (gauche)
+    RangeRidgeEdgeRight = (ridge.time{C_r} + DeltaTimeRidgeRight) <= XLimRidge(2); % Liste des instants ou t + ct*Delta t_psi/a reste dans les limites du signal (droite)
+    RangeRidgeEdge = RangeRidgeEdgeLeft & RangeRidgeEdgeRight; % intersection des deux listes = liste des instants hors effets de bord pour le ridge considere
+    
+    RangeFinal = RangeEdge & RangeRelease & RangeRidgeEdge; % intersection des listes
     
     %%
     for C_Field = 1:length(FieldList)

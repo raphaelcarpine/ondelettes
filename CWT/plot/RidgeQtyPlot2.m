@@ -50,12 +50,12 @@ if isequal(NameY, 'val')
 end
 EvaluationFunctionX = p.Results.EvaluationFunctionX;
 EvaluationFunctionY = p.Results.EvaluationFunctionY;
-if ~isequal(EvaluationFunctionX, '')
-    NameX = [EvaluationFunctionX, '(', NameX, ')'];
-end
-if ~isequal(EvaluationFunctionY, '')
-    NameY = [EvaluationFunctionY, '(', NameY, ')'];
-end
+% if ~isequal(EvaluationFunctionX, '')
+%     NameX = [EvaluationFunctionX, '(', NameX, ')'];
+% end
+% if ~isequal(EvaluationFunctionY, '')
+%     NameY = [EvaluationFunctionY, '(', NameY, ')'];
+% end
 ScaleX = p.Results.ScaleX;
 ScaleY = p.Results.ScaleY;
 
