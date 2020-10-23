@@ -1,8 +1,8 @@
 clear all
 
 save_results = 1;
-results_name = 'mu07Lw185';
-results_folder = 'testsMasseAjoutee';
+results_name = 'mu02';
+results_folder = 'testsEcartementEssieux';
 
 %% données pont
 
@@ -18,31 +18,35 @@ amort = 4e5; % coefficient d'amortissement
 
 %% integration spatiale
 
-N = 200; % nb de points ds l'espace
+N = 50; % nb de points ds l'espace
 dx = L / (N-1);
 
 %% données capteurs ponts
 
-pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
+% pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
 % pos_capteurs = linspace(0, L, N); pos_capteurs = pos_capteurs(2:end-1);
+pos_capteurs = L/2;
 
 
 %% données train
 
-mu_t = 0.7*mu; % masse linéique du train
+mu_t = 0.2*mu; % masse linéique du train
 L_wagons = 18.5; % écart entre les wagons
 N_bogies = 16; % nombre de bogies
 c = 78.5; % vitesse du train
 g = 9.81;
 
+% %test
+% N_bogies = ceil(N_bogies * L_wagons);
+% L_wagons = 1;
+
 %test
-N_bogies = ceil(N_bogies * L_wagons);
-L_wagons = 1;
+N_bogies = ceil(200*c/L_wagons) + 1;
 
 %% données temps
 
-ti = -2;
-tf = 10;
+ti = 0;
+tf = 200;
 dt = 0.01;
 
 t = ti:dt:tf;

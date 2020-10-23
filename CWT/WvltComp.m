@@ -114,7 +114,7 @@ for CQ=1:length(Qin)
     % produit de la fft des ondelettes scalees avec la fft du signal
     integrande = cell(size(NSet));
     for CSet = 1:NbSet
-        integrande{CSet} = bsxfun(@times, ftWvlt{CSet}, ftSignal{CSet}); % Calcul par set
+        integrande{CSet} = ftWvlt{CSet} .* ftSignal{CSet}; % Calcul par set
     end
     %% Sortie
     % On a ajoute des zeros en augmentant le nb de points pour la fft, on

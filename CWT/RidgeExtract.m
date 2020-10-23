@@ -63,7 +63,7 @@ MotherWavelet = p.Results.MotherWavelet;
 XLimRidge = p.Results.XLimRidge;
 ctRidge = p.Results.ctRidge;
 
-if isempty(XLimRidge) || isnan(XLimRidge)
+if isempty(XLimRidge)
     XLimRidge = [X(1), X(end)];
 end
 if isempty(ctRidge)

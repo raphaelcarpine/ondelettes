@@ -1,0 +1,50 @@
+\documentclass[11p]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{multirow}
+\begin{document}
+
+\renewcommand{\arraystretch}{.5}
+
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\multicolumn{1}{|c}{\multirow{4}{*}{Step}} & 
+\multicolumn{1}{|c|}{\multirow{2}{*}{Frequency $f_k$}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{$\ \eta_{k, k+1}\ $}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{Damping $\zeta_k$}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{$\quad\tilde I_{np}^{(k)}\quad$}} \\
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} \\
+ & 
+\multicolumn{1}{c|}{\multirow{2}{*}{Hz}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{\%}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{\%}} & 
+\multicolumn{1}{c|}{\multirow{2}{*}{\%}} \\
+\multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{} \\ \hline \hline
+%\multicolumn{4}{|c|}{\multirow{2}{*}{$P_0$ step}} \\
+%\multicolumn{4}{|c|}{} \\ \hline
+\multirow{6}{*}{$P_0$} & \multirow{2}{*}{8.4} & & \multirow{2}{*}{1.4} & \multirow{2}{*}{1.9} \\ %\cline{3-3}
+ & & \multirow{2}{*}{120.9} & & \\ \cline{2-2} \cline{4-5}
+ &   \multirow{2}{*}{33.9} &  & \multirow{2}{*}{0.4} & \multirow{2}{*}{7.5} \\ \cline{3-3}
+ & & \multirow{2}{*}{8.0} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{36.8} & & \multirow{2}{*}{0.6} & \multirow{2}{*}{4.7} \\ %\cline{3-3}
+ & & & & \\ \hline \hline
+%\multicolumn{4}{|c|}{\multirow{2}{*}{$P_6$ step}} \\
+%\multicolumn{4}{|c|}{} \\ \hline
+\multirow{6}{*}{$P_6$} & \multirow{2}{*}{11.1} & & \multirow{2}{*}{0.6} & \multirow{2}{*}{0.3} \\ %\cline{3-3}
+ & & \multirow{2}{*}{95.3} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{31.3} & & \multirow{2}{*}{0.4} & \multirow{2}{*}{1.2} \\ \cline{3-3}
+ & & \multirow{2}{*}{4.9} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{32.8} & & \multirow{2}{*}{0.5} & \multirow{2}{*}{1.3} \\ \cline{3-3}
+ & & \multirow{2}{*}{12.8} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{37.3} & & \multirow{2}{*}{0.5} & \multirow{2}{*}{5.6} \\ %\cline{3-3}
+ & & & & \\ \hline \hline
+%\multicolumn{4}{|c|}{\multirow{2}{*}{$P_7$ step}} \\
+%\multicolumn{4}{|c|}{} \\ \hline
+\multirow{6}{*}{$P_7$} & \multirow{2}{*}{11.0} & & \multirow{2}{*}{0.7} & \multirow{2}{*}{0.5} \\ %\cline{3-3}
+ & & \multirow{2}{*}{88.0} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{28.3} & & \multirow{2}{*}{0.7} & \multirow{2}{*}{1.1} \\ \cline{3-3}
+ & & \multirow{2}{*}{18.8} & & \\ \cline{2-2} \cline{4-5} 
+ & \multirow{2}{*}{34.2} & & \multirow{2}{*}{0.6} & \multirow{2}{*}{3.9} \\ %\cline{3-3}
+ &  & & & \\ \hline
+\end{tabular}
+
+\end{document}

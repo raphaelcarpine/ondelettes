@@ -2,7 +2,7 @@ clear all
 
 %%
 kSimul = 1;
-results_folder = 'testsMasseAjoutee';
+results_folder = 'testsEcartementEssieux';
 
 folder_dir = 'pont sens/simulation elements finis/resultats';
 if ~isempty(results_folder)
@@ -60,6 +60,7 @@ movingPlot(Ytot, t, L, essieux, c, pos_capteurs, moving_coeff);
 
 % wavelet capteurs
 Ycapt = getYcapt(Ytot, pos_capteurs, dx);
+Ycapt = getYcapt(Ytot, L/2, dx);
 %Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
 
 
@@ -72,5 +73,15 @@ fmax = 16;
 Q = 10;
 MaxRidges = 1;
 RealShapePlot = deformeePont(L, pos_capteurs);
-WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', true,...
-    'MaxRidges', MaxRidges, 'RealShapePlot', RealShapePlot);
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
+    'MaxRidges', MaxRidges, 'RealShapePlot', RealShapePlot,...
+    'SignalUnit', 'm', 'SquaredSignalUnit', 'm²');
+
+
+
+
+
+
+
+
+

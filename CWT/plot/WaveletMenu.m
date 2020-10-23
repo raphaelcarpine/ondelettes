@@ -31,6 +31,9 @@ defaultRealShapePlot = @realShapePlot1;
 defaultMotherWavelet = 'cauchy';
 defaultXLimRidge = [];
 defaultctRidge = 0;
+defaultRemoveMean = false;
+defaultSignalUnit = 'm/s²';
+defaultSquaredSignalUnit = 'm^2/s^4';
 
 
 
@@ -65,6 +68,9 @@ addParameter(p, 'RealShapePlot', defaultRealShapePlot);
 addParameter(p, 'MotherWavelet', defaultMotherWavelet);
 addParameter(p, 'XLimRidge', defaultXLimRidge);
 addParameter(p, 'ctRidge', defaultctRidge);
+addParameter(p, 'RemoveMean', defaultRemoveMean);
+addParameter(p, 'SignalUnit', defaultSignalUnit);
+addParameter(p, 'SquaredSignalUnit', defaultSquaredSignalUnit);
 
 parse(p, varargin{:})
 
@@ -151,6 +157,9 @@ RealShapePlot = p.Results.RealShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
 XLimRidge = p.Results.XLimRidge;
 ctRidge = p.Results.ctRidge;
+removeMean = p.Results.RemoveMean;
+signalUnit = p.Results.SignalUnit;
+squaredSignalUnit = p.Results.SquaredSignalUnit;
 
 x0 = getX();
 if isnan(XLim)
@@ -483,7 +492,9 @@ FourierScaleMenu = uimenu(paramMenu, 'Text','Fourier Scale');
 FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin', 'Checked', 'on');
 FourierScaleMenuChoices(2) = uimenu(FourierScaleMenu, 'Text', 'squared');
 FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
-FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'phase');
+FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'spectral density (lin)');
+FourierScaleMenuChoices(5) = uimenu(FourierScaleMenu, 'Text', 'spectral density (log)');
+FourierScaleMenuChoices(6) = uimenu(FourierScaleMenu, 'Text', 'phase');
     function selectFourierScaleMenu(kchoice)
         for kchoices = 1:length(FourierScaleMenuChoices)
             set(FourierScaleMenuChoices(kchoices), 'Checked', 'off');
@@ -496,6 +507,8 @@ set(FourierScaleMenuChoices(1), 'CallBack', @(~,~) selectFourierScaleMenu(1));
 set(FourierScaleMenuChoices(2), 'CallBack', @(~,~) selectFourierScaleMenu(2));
 set(FourierScaleMenuChoices(3), 'CallBack', @(~,~) selectFourierScaleMenu(3));
 set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
+set(FourierScaleMenuChoices(5), 'CallBack', @(~,~) selectFourierScaleMenu(5));
+set(FourierScaleMenuChoices(6), 'CallBack', @(~,~) selectFourierScaleMenu(6));
 
 % Xlim
 XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
@@ -543,6 +556,18 @@ set(CtMenu, 'CallBack', @(~,~) setCt);
 %         end
 %     end
 % set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
+
+
+% remove mean
+
+removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean);
+    function switchRemoveMeanDisplay(status)
+        removeMeanMenu.Checked = status;
+        removeMean = status;
+    end
+
+removeMeanMenu.MenuSelectedFcn = @(~, ~) switchRemoveMeanDisplay(~strcmp(removeMeanMenu.Checked, 'on'));
+
 
 %multiSignalMode
 
@@ -622,7 +647,7 @@ freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
 WvltScaleNames = {'lin', 'log10'};
-FourierScaleNames = {'lin', 'squared', 'log', 'phase'};
+FourierScaleNames = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
 
 %freq
 freqMenu = uimenu(ridgeMenu, 'Text','Frequency');
@@ -772,6 +797,10 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         for line = 1:size(X, 1)
             Y2(line, :) = Y(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
             X2(line, :) = X(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
+        end
+        
+        if removeMean
+            Y2 = Y2 - mean(Y2, 2);
         end
         
         %%%
@@ -952,37 +981,38 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 if checkboxTimeAmpl.Value % plot de l'amplitude
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Amplitude (m/s^2)',...
+                        'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
+                        'NameY', ['Amplitude [', signalUnit, ']'],...
                         'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Frequency (Hz)',...
+                        'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Frequency [Hz]',...
                         'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Damping',...
+                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Damping',...
                         'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true, 'NameX', 'Amplitude (m/s^2)', 'NameY', 'Frequency (Hz)',...
-						'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true, 'NameX', ['Amplitude [', signalUnit, ']'],...
+                        'NameY', 'Frequency [Hz]', 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true, 'NameX', 'Amplitude (m/s^2)', 'NameY', 'Damping',...
-						'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true, 'NameX', ['Amplitude [', signalUnit, ']'],...
+                        'NameY', 'Damping', 'SquaredCWT', multiSignalMode);
                 end
                 if checkboxTimePhase.Value % plot de la phase
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true, 'NameX', 'Time (s)', 'NameY', 'Phase (rad)',...
+                        'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Phase (rad)',...
                         'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
                 end
             end
@@ -1028,19 +1058,19 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     % axe x
                     XquantName = xAxisShapesnames{get(xAxisShapes, 'Value')};
                     if isequal(XquantName, 'time')
-                        XquantLabel = 'Time (s)';
+                        XquantLabel = 'Time [s]';
                         XquantScale = 'lin';
                         Xquantity = timeShapes;
                     elseif isequal(XquantName, 'ampl')
-                        XquantLabel = 'Amplitude (m/s^2)';
+                        XquantLabel = ['Amplitude [', signalUnit, ']'];
                         XquantScale = 'lin';
                         Xquantity = absAmplitudesShapes;
                     elseif isequal(XquantName, 'log(ampl)')
-                        XquantLabel = 'Amplitude (m/s^2)';
+                        XquantLabel = ['Amplitude [', signalUnit, ']'];
                         XquantScale = 'log';
                         Xquantity = absAmplitudesShapes;
                     elseif isequal(XquantName, 'freq')
-                        XquantLabel = 'Frequence (Hz)';
+                        XquantLabel = 'Frequence [Hz]';
                         XquantScale = 'lin';
                         Xquantity = freqsShapes;
                     end
@@ -1277,13 +1307,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     elseif isequal(FourierScale, 'log')
                         plot(fourierPlotAxes(kPlot), freqs, abs(four));
                         set(fourierPlotAxes(kPlot), 'YScale', 'log');
+                    elseif isequal(FourierScale, 'spectral density (lin)')
+                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                    elseif isequal(FourierScale, 'spectral density (log)')
+                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                        set(fourierPlotAxes(kPlot), 'YScale', 'log');
                     elseif isequal(FourierScale, 'phase')
                         plot(fourierPlotAxes(kPlot), freqs, angle(four));
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
-                    
-                    xlabel(fourierPlotAxes(kPlot), 'freq');
-                    ylabel(fourierPlotAxes(kPlot), 'fft');
                     
                     %                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
                 end
@@ -1309,12 +1341,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 elseif isequal(FourierScale, 'log')
                     plot(fourierPlotAxes(kPlot), freqs, abs(four));
                     set(fourierPlotAxes(kPlot), 'YScale', 'log');
+                elseif isequal(FourierScale, 'spectral density (lin)')
+                    plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                elseif isequal(FourierScale, 'spectral density (log)')
+                    plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                    set(fourierPlotAxes(kPlot), 'YScale', 'log');
                 elseif isequal(FourierScale, 'phase')
                     plot(fourierPlotAxes(kPlot), freqs, angle(four));
                 end
                 hold(fourierPlotAxes(kPlot), 'off');
-                xlabel(fourierPlotAxes(kPlot), 'freq');
-                ylabel(fourierPlotAxes(kPlot), 'fft');
             end
             
         else % autocorr
@@ -1329,7 +1364,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     fourierFig = figure;
                     fourierPlotAxes = axes(fourierFig);
                     
-                    Tfour = (tRy(end)-tRy(1)) / (length(tRy)-1) * length(tRy);
+                    Tfour = mean(diff(tRy)) * length(tRy);
                     fftRx = SVfftrx{ksv}(1:floor(end/2));
                     freqs = 1/Tfour * (0:length(fftRx)-1);
                     
@@ -1340,18 +1375,22 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     elseif isequal(FourierScale, 'log')
                         plot(fourierPlotAxes, freqs, abs(fftRx));
                         set(fourierPlotAxes, 'YScale', 'log');
+                    elseif isequal(FourierScale, 'spectral density (lin)')
+                        plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                    elseif isequal(FourierScale, 'spectral density (log)')
+                        plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                        set(fourierPlotAxes, 'YScale', 'log');
                     elseif isequal(FourierScale, 'phase')
                         plot(fourierPlotAxes, freqs, angle(fftRx));
                     end
-                    xlabel(fourierPlotAxes, 'freq');
-                    ylabel(fourierPlotAxes, 'fft');
+                    
                 end
             else
                 fourierFig = figure;
                 fourierPlotAxes = axes(fourierFig);
                 hold(fourierPlotAxes, 'on');
                 
-                Tfour = (tRy(end)-tRy(1)) / (length(tRy)-1) * length(tRy);
+                Tfour = mean(diff(tRy)) * length(tRy);
                 
                 legendRij = cell(1, nbPlots^2);
                 for i = 1:nbPlots
@@ -1367,6 +1406,11 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         elseif isequal(FourierScale, 'log')
                             fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx));
                             set(fourierPlotAxes, 'YScale', 'log');
+                        elseif isequal(FourierScale, 'spectral density (lin)')
+                            fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                        elseif isequal(FourierScale, 'spectral density (log)')
+                            fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                            set(fourierPlotAxes, 'YScale', 'log');
                         elseif isequal(FourierScale, 'phase')
                             fourierPlot = plot(fourierPlotAxes, freqs, angle(fftRx));
                         end
@@ -1380,8 +1424,21 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 end
                 
                 hold(fourierPlotAxes, 'off');
-                xlabel(fourierPlotAxes, 'freq');
-                ylabel(fourierPlotAxes, 'fft');
+                
+            end
+        end
+        
+        for kPlot = 1:length(fourierPlotAxes)
+            xlabel(fourierPlotAxes(kPlot), 'Frequency [Hz]');
+            switch FourierScale
+                case {'lin', 'log'}
+                    ylabel(fourierPlotAxes(kPlot), ['Fourier transform [', signalUnit, ']']);
+                case 'squared'
+                    ylabel(fourierPlotAxes(kPlot), ['Squared Fourier transform [', squaredSignalUnit, ']']);
+                case {'spectral density (lin)', 'spectral density (log)'}
+                    ylabel(fourierPlotAxes(kPlot), ['Spectral density [', squaredSignalUnit, '/Hz]']);
+                case 'phase'
+                    ylabel(fourierPlotAxes(kPlot), 'Fourier transform phase [rad]');
             end
         end
     end

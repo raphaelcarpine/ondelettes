@@ -15,7 +15,7 @@ X = [X11, X12; X21, X22];
 t = (1/Fs) * (0:size(X, 2)-1);
 
 % fréquence de rééchantillonage
-Fs_new = 200;
+Fs_new = 1600;
 
 n_resampling = floor(Fs/Fs_new);
 Fs_new = Fs / n_resampling;
@@ -36,7 +36,7 @@ t = t(1:n_resampling:end);
 
 fig = figure;
 ax = axes(fig);
-plt = plot(ax, t, X(1, :));
+plt = plot(ax, t, X);
 
 
 fmin = 1;

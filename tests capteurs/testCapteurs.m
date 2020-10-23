@@ -7,7 +7,7 @@ ordre = [1.1, 3.1, 3.2, 3.3, 1.2, 1.3, 2.1, 2.2, 2.3, 4.1, 4.2, 4.3, 5.1, 5.2, 5
 
 %%
 
-Data = readmatrix('tests capteurs/SensorConnectData3.csv');
+Data = readmatrix('tests capteurs/SensorConnectData2_4.csv');
 
 Data = Data(:, 2:end);
 Data = transpose(Data);
@@ -28,7 +28,7 @@ Data = Data(:, kti:ktf);
 % Data = Data(:, 1:floor(end/4));
 % Data = Data(3:3:end, :);
 
-Fe = 256;
+Fe = 4096;
 Fc = 104;
 Fband = Fe/2;
 dt = 1/Fe;
