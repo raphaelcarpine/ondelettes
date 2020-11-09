@@ -2,7 +2,7 @@ clear all
 
 %%
 kSimul = 1;
-results_folder = 'testsEcartementEssieux';
+results_folder = 'testsMasseAjoutee';
 
 folder_dir = 'pont sens/simulation elements finis/resultats';
 if ~isempty(results_folder)

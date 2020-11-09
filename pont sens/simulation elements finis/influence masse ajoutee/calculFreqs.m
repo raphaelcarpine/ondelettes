@@ -17,7 +17,7 @@ Array_Lw = [];
 Array_zeta = [];
 Array_zeta_t = [];
 
-for kSimul = 1:18
+for kSimul = 1:3
     % recherche du fichier
     name0 = sprintf('simul%d', kSimul);
     listing = dir(folder_dir);

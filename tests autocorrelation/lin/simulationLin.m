@@ -6,8 +6,11 @@ close all
 
 w0 = [10, 10.05, 20]*2*pi;
 zeta = [0.01, 0.015, 0.01];
+w0 = [10]*2*pi;
+zeta = [0.01];
 
 C = [1, -2, 1];
+C = 1;
 
 nbDDL = 3;
 
@@ -73,7 +76,7 @@ f = zeros(1, nt);
 f(floor(tdirac/dt)+1) = sqrt(Edirac/dt);
 %f = f + sqrt(Pnoise) * randn(1, nt);
 
-if false % bruit parfait pour fourier
+if true % bruit parfait pour fourier
     f = exp(2i*pi*rand(1, nt)); % bruit
     f(1) = 1;
     for k = 2:nt-1

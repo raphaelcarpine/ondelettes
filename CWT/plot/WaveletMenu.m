@@ -1432,13 +1432,13 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             xlabel(fourierPlotAxes(kPlot), 'Frequency [Hz]');
             switch FourierScale
                 case {'lin', 'log'}
-                    ylabel(fourierPlotAxes(kPlot), ['Fourier transform [', signalUnit, ']']);
+                    ylabel(fourierPlotAxes(kPlot), ['Amplitude [', signalUnit, ']']);
                 case 'squared'
-                    ylabel(fourierPlotAxes(kPlot), ['Squared Fourier transform [', squaredSignalUnit, ']']);
+                    ylabel(fourierPlotAxes(kPlot), ['Squared amplitude [', squaredSignalUnit, ']']);
                 case {'spectral density (lin)', 'spectral density (log)'}
                     ylabel(fourierPlotAxes(kPlot), ['Spectral density [', squaredSignalUnit, '/Hz]']);
                 case 'phase'
-                    ylabel(fourierPlotAxes(kPlot), 'Fourier transform phase [rad]');
+                    ylabel(fourierPlotAxes(kPlot), 'Phase [rad]');
             end
         end
     end
