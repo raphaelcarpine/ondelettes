@@ -1,11 +1,11 @@
-function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, MotherWavelet, scale, figureTitle, axesTitle)
+function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, MotherWavelet, WvltScale, figureTitle, axesTitle, FreqScale)
 
 if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');
 end
 
 if nargin < 7
-    scale = 'log10';
+    WvltScale = 'log10';
 end
 if nargin < 8
     figureTitle = '';
@@ -13,13 +13,16 @@ end
 if nargin < 9
     axesTitle = '';
 end
+if nargin < 10
+    FreqScale = 'lin';
+end
 
 
-if isequal(scale, 'lin')
+if isequal(WvltScale, 'lin')
     moduleScale = @(x) x;
-elseif isequal(scale, 'log')
+elseif isequal(WvltScale, 'log')
     moduleScale = @(x) log(x);
-elseif isequal(scale, 'log10')
+elseif isequal(WvltScale, 'log10')
     moduleScale = @(x) log10(x);
 else
     error("");
@@ -67,8 +70,9 @@ elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
     ZedgeEffects = 1;
 end
 
-xlabel(ax, 'Time (s)');
-ylabel(ax, 'Frequency (Hz)');
+xlabel(ax, 'Time [s]');
+ylabel(ax, 'Frequency [Hz]');
+set(ax, 'YScale', FreqScale);
 title(ax, axesTitle);
 shading flat
 

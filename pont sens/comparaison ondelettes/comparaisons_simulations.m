@@ -1,9 +1,9 @@
 ti = -10;
 tf = 20;
 ti = -4;
-tf = 10;
+tf = 20;
 t1 = 0;
-t2 = 3;
+t2 = 9;
 dt = 0.01;
 
 masse_ajoutee = 0.2;
@@ -16,6 +16,10 @@ fpc = fp * (sqrt(1-zeta^2) + 1i*zeta);
 Aex = [-0.5, 1 * exp(2i*pi*0.1), 0.2 * exp(2i*pi*0.7), 0.1 * exp(2i*pi*0.75)];
 Ap1 = 0.8 * exp(2i*pi*0.9);
 Ap2 = 1.2 * exp(2i*pi*0.5);
+Aex = [0, 1 * exp(2i*pi*0.1), 0, 0];
+Aex = [0, 0, 0, 0];
+Ap1 = 1;
+Ap2 = 0;
 
 %%
 

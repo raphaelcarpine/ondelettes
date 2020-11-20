@@ -14,7 +14,6 @@ defaultXLim = nan;
 defaultYLim = nan;
 defaultGrid = 'on'; % 'auto' pour ne pas changer
 defaultRenameAxes = true;
-defaultSquaredCWT = false;
 
 validQty = {'time', 'val', 'freq', 'diff', 'damping', 'damping2', 'damping3', 'bandwidth', 'freq2', 'pha', 'pha2'};
 checkQty = @(str) ismember(str, validQty);
@@ -36,7 +35,6 @@ addParameter(p,'XLim', defaultXLim);
 addParameter(p,'YLim', defaultYLim);
 addParameter(p,'Grid', defaultGrid);
 addParameter(p,'RenameAxes', defaultRenameAxes);
-addParameter(p,'SquaredCWT', defaultSquaredCWT);
 
 parse(p, ridge, QtyX, QtyY, varargin{:})
 
@@ -71,7 +69,6 @@ if isequal(ax, 0)
 end
 
 RenameAxes = p.Results.RenameAxes;
-SquaredCWT = p.Results.SquaredCWT;
 
 %% 
 
@@ -81,19 +78,6 @@ plts = [];
 for k_ridge = 1:length(ridge.freq)
     x = eval([EvaluationFunctionX, '(ridge.', QtyX, '{', num2str(k_ridge), '});']);
     y = eval([EvaluationFunctionY, '(ridge.', QtyY, '{', num2str(k_ridge), '});']);
-    
-    if SquaredCWT
-        if isequal(QtyX, 'val')
-            x = sqrt(x);
-        elseif ismember(QtyX, {'damping', 'bandwidth', 'freq2', 'pha', 'pha2'})
-            x = x/2;
-        end
-        if isequal(QtyY, 'val')
-            y = sqrt(y);
-        elseif ismember(QtyY, {'damping', 'bandwidth', 'freq2', 'pha', 'pha2'})
-            y = y/2;
-        end
-    end
     
     plts(end+1) = plot(x, y, 'Parent', ax);
     if showEdge

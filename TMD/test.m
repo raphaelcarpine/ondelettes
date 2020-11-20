@@ -147,7 +147,7 @@ k1 = (1/(1+mu))^2;
 c0 = 0;
 c1 = 2/(1+mu)*sqrt(3*mu/8/(1+mu));
 % c1 = 2/(1+mu)*sqrt(mu/(1+mu));
-mr = TMDmasseressort(m1, k1, @(x, v) 0.1*sign(v)*abs(v)^2);
+mr = TMDmasseressort(m1, k1, @(x, v) 0.08*sign(v)*abs(v)^0.1);
 tour = Structure(m0, k0, @(x,v) 0*v, {{mr, 1}});
 [t, X] = tour.reponseLibre(0, 1, 500, true);
 x = X(:,1)';
@@ -159,7 +159,10 @@ fmin = 0.5/2/pi;
 fmax = 1.5/2/pi;
 NbFreq = 200;
 
-WaveletMenu(fmin,fmax,NbFreq, T, X);
+figure;
+plt = plot(T, X);
+
+WaveletMenu('WaveletPlot', plt, 'fmin', 0.05, 'fmax', 0.3);
 
 %%
 M = @(mu, alpha, X) max (real (polesSystFrac(mu, 1, X(1), 0, X(2), alpha)));

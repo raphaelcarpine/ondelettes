@@ -4,23 +4,32 @@ close all
 
 %% système
 
-w0 = [10, 10.05, 20]*2*pi;
-zeta = [0.01, 0.015, 0.01];
-w0 = [10]*2*pi;
-zeta = [0.01];
-
-C = [1, -2, 1];
-C = 1;
-
-nbDDL = 3;
+% w0 = [10, 10.05, 20]*2*pi;
+% zeta = [0.01, 0.015, 0.01];
+% w0 = [10]*2*pi;
+% zeta = [0.01];
+% 
+% C = [1, -2, 1];
+% C = 1;
+% 
+% nbDDL = 3;
 
 
 %% système
 
-m = [1, 0.01, 2];
-k = (10*2*pi)^2 * [1, 0.02, 0.02, 1];
-c = 1 * [0, 0, 0, 1];
-c = 0.1*[1 1 1 1];
+% le système est le suivant 
+%
+%             ______________                               ______________                               ______________                               ______________          / 
+%   \|   ____| ressort k(1) |____     ____________    ____| ressort k(2) |____     ____________    ____| ressort k(3) |____     ____________    ____| ressort k(4) |____    |/    
+%   \|__|    |______________|    |___| masse m(1) |__|    |______________|    |___| masse m(2) |__|    |______________|    |___| masse m(3) |__|    |______________|    |___|/  
+%   \|  |   __________________   |   |____________|  |   __________________   |   |____________|  |   __________________   |   |____________|  |   __________________   |   |/
+%   \|  |__| amortisseur c(1) |__|                   |__| amortisseur c(2) |__|                   |__| amortisseur c(3) |__|                   |__| amortisseur c(4) |__|   |/  
+%          |__________________|                         |__________________|                         |__________________|                         |__________________|      
+%
+
+m = [1, 1, 1];
+k = (10*2*pi)^2 * [1, 1, 1, 0];
+c = 0.1*[1 1 1 0];
 
 M = diag(m);
 K = zeros(3);
@@ -55,7 +64,7 @@ syst = systLin(M, K, C);
 [poles, shapes] = syst.normalModes()
 [poles, shapes] = syst.complexModes()
 [Mb, Kb, Cb] = syst.modalDamping();
-Kb^(-1/2)*Cb
+% Kb^(-1/2)*Cb
 
 
 %% excitation
@@ -69,7 +78,7 @@ nt = length(t);
 
 tdirac = 0;
 Edirac = 1; % energie du signal dirac (integrale carré)
-Tsyst = mean(1 ./ (w0.*zeta));
+Tsyst = mean(1 ./ -real(poles(1)));
 Pnoise = 0.0001 * Edirac / Tsyst; % puissance du signal noise (integrale carré / T)
 
 f = zeros(1, nt);
@@ -88,10 +97,10 @@ end
 %% reponse
 
 % ondelette
-Q = 20;
+Q = 10;
 MaxRidges = 3;
 MaxParallelRidges = 3;
-fmin = 5;
+fmin = 3;
 fmax = 25;
 MultiSignalMode = true;
 
@@ -116,7 +125,7 @@ end
 ddlF = 2;
 x = syst.response(f, dt, ddlF);
 
-fig = figure('Name', ['zeta=', num2str(zeta)]);
+fig = figure();
 ax = axes(fig);
 plt = plot(ax, t, x);
 xlabel(ax, 't');

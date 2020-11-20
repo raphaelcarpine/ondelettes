@@ -32,6 +32,13 @@ elseif strcmp(MotherWavelet, 'littlewood-paley')
         ((nu >= -1 - deltaf_lil/2) & (nu <= -1 + deltaf_lil/2)); % Calcul Ondelettes Littlewood-Paley en a * f
     DeltaT = @(f) DeltaT_psi ./ f;
     
+elseif strcmp(MotherWavelet, 'exponential')
+    lambda_exp = 2*pi/Q; % parametre de l'ondelette exponentielle
+    DeltaT_psi = 0;
+    
+    FTpsi = @(nu) lambda_exp ./ (-2i*pi*(nu-1) + lambda_exp); % Calcul Ondelettes Littlewood-Paley en a * f
+    DeltaT = @(f) DeltaT_psi ./ f;
+    
 end
 end
 

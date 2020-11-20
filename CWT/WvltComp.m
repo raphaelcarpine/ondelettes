@@ -1,5 +1,4 @@
-
-function WvltOut = WvltComp(X,Y,WvltFreq,Qin,varargin)
+function [WvltOut, ctZeroPadding] = WvltComp(X,Y,WvltFreq, Q, varargin)
 
 p = inputParser ;
 %% parametres par defaut
@@ -7,23 +6,38 @@ ZeroPaddingDef = true;
 CenterSignalDef = false;
 MotherWaveletDef = 'cauchy'; %'littlewood-paley';
 ctDef = 3;
+MeanOverFreqFuncDef = []; % mode mean(func(wvlt), 1)
+XindexOutDef = []; % mode WvltOut = Wvlt(:, XindexOut);
+
 %%
 addRequired(p,'X')
 addRequired(p,'Y')
 addRequired(p,'WvltFreq')
-addRequired(p,'Qin')
+addRequired(p,'Q')
 addParameter(p,'ZeroPadding',ZeroPaddingDef);
 addParameter(p,'CenterSignal',CenterSignalDef);
 addParameter(p,'MotherWavelet',MotherWaveletDef);
 addParameter(p,'ct',ctDef);
+addParameter(p,'MeanOverFreqFunc', MeanOverFreqFuncDef);
+addParameter(p,'XindexOut', XindexOutDef);
 
-parse(p,X,WvltFreq,Y,Qin,varargin{:});
+parse(p,X,WvltFreq,Y,Q,varargin{:});
 
 %
 ZeroPadding = p.Results.ZeroPadding;
 CenterSignal = p.Results.CenterSignal;
 MotherWavelet = p.Results.MotherWavelet;
 ct = p.Results.ct;
+MeanOverFreqFunc = p.Results.MeanOverFreqFunc;
+XindexOut = p.Results.XindexOut;
+
+ct = ct * ZeroPadding;
+
+%% 
+if islogical(XindexOut) || length(XindexOut) == length(X)
+    XindexOut = find(XindexOut); % conversion de [0, 1, 1, 0, 1] en [2, 3, 5]
+end
+
 %%
 if length(WvltFreq) > 500
     str = input('length(WvltFreq) > 500, continue ? ', 's');
@@ -38,7 +52,7 @@ Fs = 1/mean(diff(X)); %Frequence d'echantillonage
 Diff = diff(X);
 Diff = Diff/Diff(1);
 if max(abs(Diff-1)) > 1e-5
-    warning(['pas de temps non constant, erreur : ', num2str(max(abs(Diff-1)))]);
+    warning(['non-constant time step, error : ', num2str(max(abs(Diff-1)))]);
 end
 
 % vecteurs colone
@@ -61,31 +75,38 @@ end
 if CenterSignal
     Y = Y-mean(Y);
 end
-%%
-WvltOut = zeros(length(WvltFreq),length(Y),length(Qin));
 
 %% Calcul
-for CQ=1:length(Qin)
-    Q = Qin(CQ);
-    [FTpsi, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
+
+[FTpsi, DeltaTfunc] = FTpsi_DeltaT(Q, MotherWavelet);
+
+if isempty(MeanOverFreqFunc) && isempty(XindexOut) % mode normal
+    WvltFreqTot = {WvltFreq};
+else % mode moyenne sur les fréquences ou temps particuliers (économie de la ram)
+    WvltFreqTot = num2cell(WvltFreq);
+    if ~isempty(MeanOverFreqFunc) && ~isempty(XindexOut)
+        WvltOutTot = zeros(1, length(XindexOut));
+    elseif ~isempty(MeanOverFreqFunc)
+        WvltOutTot = zeros(1, length(X));
+    elseif ~isempty(XindexOut)
+        WvltOutTot = nan(length(WvltFreq), length(XindexOut));
+    end
+end
+
+for k_wvlt_freq = 1:length(WvltFreqTot)
+    WvltFreq = WvltFreqTot{k_wvlt_freq};
+    
     %% Choix du nb de zeros a ajouter pour chaque freq. de calcul de la CWT
     n=length(X);
     
-    if ~ZeroPadding
-        N0 = 2*ceil(n/2); %multiple de 2 tout juste superieur (plus facile de gerer la periodicite de la fft)
-        NbSet = 1; %un seul set de calcul
-        NSet = N0; %nb de points pour fft
-        FreqSet{1} = true(size(WvltFreq)); %liste des indices des freq. du set associe a N0 pts pour la fft
-    else
-        DeltaT = max(DeltaT(WvltFreq), Q./(2*pi*WvltFreq)); % = a * Delta t_psi, on prend le max avec le cas mu_psi=1/2 pour l'ondelette harmonique
-        DeltaTMaxInd = round(ct*Fs*DeltaT); % Conversion en nb de pts de ct * a * Delta t_psi = zero padding mini
-        N0 = 2.^nextpow2(n+DeltaTMaxInd); % Nb pts pour fft = Puissance de 2 >= nb pts du signal + nb pts du zero-padding minimum
-        NSet = unique(N0); % Liste des Nb pts pour fft uniques
-        NbSet = length(NSet); % Nb de set de calcul (autant que de N0 uniques)
-        FreqSet = cell(size(NSet));
-        for CSet = 1:NbSet
-            FreqSet{CSet} = N0==NSet(CSet) ; % Liste des indices des freq. associees à chaque set (auquel est associe un Nb pts pour fft)
-        end
+    DeltaT = max(DeltaTfunc(WvltFreq), Q./(2*pi*WvltFreq)); % = a * Delta t_psi, on prend le max avec le cas mu_psi=1/2 pour l'ondelette harmonique
+    DeltaTMaxInd = round(ct*Fs*DeltaT); % Conversion en nb de pts de ct * a * Delta t_psi = zero padding mini
+    N0 = 2.^nextpow2(n+DeltaTMaxInd); % Nb pts pour fft = Puissance de 2 >= nb pts du signal + nb pts du zero-padding minimum
+    NSet = unique(N0); % Liste des Nb pts pour fft uniques
+    NbSet = length(NSet); % Nb de set de calcul (autant que de N0 uniques)
+    FreqSet = cell(size(NSet));
+    for CSet = 1:NbSet
+        FreqSet{CSet} = N0==NSet(CSet) ; % Liste des indices des freq. associees à chaque set (auquel est associe un Nb pts pour fft)
     end
     %% fft signal
     ftSignal = cell(size(NSet));
@@ -132,5 +153,25 @@ for CQ=1:length(Qin)
     for CSet = 1:NbSet
         wavelet1(:,FreqSet{CSet}) = wavelet0{CSet}; % On agrege le calcul de chaque set
     end
-    WvltOut(:,:,CQ)=transpose(wavelet1)/WvltNorm; % On termine avec le coef de normalisation
+    WvltOut = transpose(wavelet1)/WvltNorm; % On termine avec le coef de normalisation
+    
+    %% mode moyenne sur les fréquences ou temps particuliers (économie de la ram)
+    
+    if ~isempty(MeanOverFreqFunc) && ~isempty(XindexOut)
+        WvltOutTot = WvltOutTot + MeanOverFreqFunc(WvltOut(:, XindexOut));
+    elseif ~isempty(MeanOverFreqFunc)
+        WvltOutTot = WvltOutTot + MeanOverFreqFunc(WvltOut);
+    elseif ~isempty(XindexOut)
+        WvltOutTot(k_wvlt_freq, :) = WvltOut(:, XindexOut);
+    else
+        WvltOutTot = WvltOut;
+    end
+    
+end
+
+WvltOut = WvltOutTot;
+
+%%
+ctZeroPadding = ct; % ZeroPadding*ct
+
 end

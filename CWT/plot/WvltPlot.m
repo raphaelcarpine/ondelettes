@@ -15,9 +15,7 @@ addRequired(p,'Y')
 addRequired(p,'WvltFreq')
 addRequired(p,'Q')
 addParameter(p,'ZeroPadding',ZeroPaddingDef);
-addParameter(p,'ct',NaN);
 addParameter(p,'ctEdgeEffects',ctDef);
-addParameter(p,'ctZeroPadding',ctDef);
 addParameter(p,'PlotScale',PlotScaleDef);
 
 addParameter(p,'FreqScale',FreqScaleDef);
@@ -27,14 +25,8 @@ addParameter(p,'Visible',VisibleDef);
 
 parse(p,X,Y,WvltFreq,Q,varargin{:});
 
-%
-if isnan(p.Results.ct) % Si ct n'est pas affecte, on considere ctZeroPad et ctEdgeEff independamment
-    ctZeroPadding = p.Results.ctZeroPadding;
-    ctEdgeEffects = p.Results.ctEdgeEffects;
-else % sinon, ct est affecte a ctZeroPadd et ctEdgeEff
-    ctZeroPadding = p.Results.ct;
-    ctEdgeEffects = p.Results.ct;
-end
+
+ctEdgeEffects = p.Results.ctEdgeEffects;
 
 WvltName = WvltNameDef;
 ZeroPadding = p.Results.ZeroPadding;
@@ -51,8 +43,7 @@ else
     figure('Name',Title,'NumberTitle','off','Visible',Visible)
 end
 %% Calcul de la CWT
-wavelet=WvltComp(X,Y,WvltFreq,Q,...
-    'ZeroPadding',ZeroPadding,'ct',ctZeroPadding);
+[wavelet, ctZeroPadding] = WvltComp(X,Y,WvltFreq,Q, 'ZeroPadding',ZeroPadding);
 %% on veut Y colonne
 if ~iscolumn(Y)
     Y=transpose(Y);
@@ -129,8 +120,7 @@ hold on
 plot(esdY_w,freq,'DisplayName','ESD')
 %% Estimation de l'ESD par la CWT
 if ZeroPadding == 1 % La relation est valide sur CWT non coupee : si zeropadding, alors la CWT a ete coupee apres calcul... il faut la (re)calculer non coupee (sans zeropadding)
-    wavelet=WvltComp(X,Y,WvltFreq,Q,...
-        'ZeroPadding',0);
+    wavelet=WvltComp(X,Y,WvltFreq,Q, 'ZeroPadding',0);
 end
 nCau = (2*Q.^2 - 1/2); % parametre de l'ondelette
 Cpsi = exp((1-nCau)*log(4) + 2*nCau -2*nCau*log(nCau) + gammaln(2*nCau)); % Constante d'admissibilite de l'ondelette de param nCau
@@ -152,10 +142,9 @@ ax3.YLim = [WvltFreq(1),WvltFreq(end)];
 linkaxes([ax2,ax1],'x');
 linkaxes([ax2,ax3],'y');
 %% echelle axe freq.
-if strcmp(FreqScale,'log')
-    ax2.YScale='log';
-    ax3.YScale='log';
-end
+ax2.YScale = FreqScale;
+ax3.YScale = FreqScale;
+    
 %% Titre et parametres
 subplot(2, 2, 2);
 title(Title);
@@ -166,8 +155,8 @@ text(ParamX,.5,sprintf('Q_\\psi = %3.1f',Q));
 
 text(ParamX,.8,sprintf('\\psi: %s wavelet',WvltName));
 if ZeroPadding==1
-    text(ParamX,.2,sprintf('\\itc_{t,\\rmzp}\\rm \\geq %.0f',ctZeroPadding));
+    text(ParamX,.2,sprintf('\\itc_{t,\\rmzp}\\rm \\geq %.0f', ctZeroPadding));
 else
     text(ParamX,.2,sprintf('\\itc_{t,\\rmzp}\\rm = %.0f',0));
 end
-text(ParamX,-.1,sprintf('\\itc_{t,\\rmef}\\rm = %.0f',ctEdgeEffects));
+text(ParamX,-.1,sprintf('\\itc_{t,\\rmef}\\rm = %.0f', ctEdgeEffects));

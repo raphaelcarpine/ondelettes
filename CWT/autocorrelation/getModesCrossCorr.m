@@ -22,8 +22,18 @@ Ndof = size(SVvectrx{1}, 1);
 
 
 %%
+p = inputParser;
+p.KeepUnmatched = true;
+addParameter(p, 'FrequencyScale', 'lin');
+parse(p, varargin{:});
+FrequencyScale = p.Results.FrequencyScale;
 
-arrayFreqs = linspace(fmin, fmax, NbFreq);
+switch FrequencyScale
+    case 'lin'
+        arrayFreqs = linspace(fmin, fmax, NbFreq);
+    case 'log'
+        arrayFreqs = logspace(log10(fmin), log10(fmax), NbFreq);
+end
 
 t = cell(1, Nsv);
 freqs = cell(1, Nsv);

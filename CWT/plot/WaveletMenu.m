@@ -17,6 +17,7 @@ defaultMaxSlopeRidge = 1;
 defaultMultipleAxesDisplay = false;
 defaultRidgeMinModu = 0;
 defaultCtEdgeEffects = 3;
+defaultCf = 5;
 defaultZeroPaddingFourier = 0;
 defaultMultiSignalMode = false;
 defaultAutocorrelationMode = false;
@@ -24,6 +25,7 @@ defaultMaxLagCorr = nan;
 defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
+defaultFrequencyScale = 'lin';
 defaultXLim = nan;
 defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
@@ -54,6 +56,7 @@ addParameter(p,'MaxSlopeRidge', defaultMaxSlopeRidge);
 addParameter(p,'MultipleAxesDisplay', defaultMultipleAxesDisplay);
 addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
+addParameter(p,'Cf', defaultCf);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
@@ -61,6 +64,7 @@ addParameter(p,'AutocorrelationMaxLag', defaultMaxLagCorr);
 addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
+addParameter(p,'FrequencyScale', defaultFrequencyScale);
 addParameter(p,'XLim', defaultXLim);
 addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
@@ -139,6 +143,7 @@ MaxSlopeRidge = p.Results.MaxSlopeRidge;
 multipleAxesDisplay = p.Results.MultipleAxesDisplay;
 RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
+cf = p.Results.Cf;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 
 multiSignalMode = p.Results.MultiSignalMode;
@@ -150,6 +155,7 @@ autocorrelationNsvd = p.Results.AutocorrelationNsvd;
 maxLagCorr = p.Results.AutocorrelationMaxLag;
 WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
+FrequencyScale = p.Results.FrequencyScale;
 XLim = p.Results.XLim;
 wvltAxesTitle = p.Results.WvltAxesTitle;
 ComplexShapePlot = p.Results.ComplexShapePlot;
@@ -452,13 +458,14 @@ fig.MenuBar = 'none';
 paramMenu = uimenu(fig,'Text','Options');
 
 % mother wavelet
-MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley'};
+MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley', 'exponential'};
 
 motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
 motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy', 'Checked' ,'on');
 motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Morlet');
 motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Harmonic');
 motherWaveletMenuChoices(4) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
+motherWaveletMenuChoices(5) = uimenu(motherWaveletMenu, 'Text', 'Exponential');
     function selectMotherWaveletMenu(kchoice)
         for kchoices = 1:length(motherWaveletMenuChoices)
             set(motherWaveletMenuChoices(kchoices), 'Checked', 'off');
@@ -471,11 +478,15 @@ set(motherWaveletMenuChoices(1), 'CallBack', @(~,~) selectMotherWaveletMenu(1));
 set(motherWaveletMenuChoices(2), 'CallBack', @(~,~) selectMotherWaveletMenu(2));
 set(motherWaveletMenuChoices(3), 'CallBack', @(~,~) selectMotherWaveletMenu(3));
 set(motherWaveletMenuChoices(4), 'CallBack', @(~,~) selectMotherWaveletMenu(4));
+set(motherWaveletMenuChoices(5), 'CallBack', @(~,~) selectMotherWaveletMenu(5));
 
 % wavelet scale
 WvltScaleMenu = uimenu(paramMenu, 'Text','Wavelet Scale');
 WvltScaleMenuChoices(1) = uimenu(WvltScaleMenu, 'Text', 'lin');
-WvltScaleMenuChoices(2) = uimenu(WvltScaleMenu, 'Text', 'log', 'Checked' ,'on');
+WvltScaleMenuChoices(2) = uimenu(WvltScaleMenu, 'Text', 'log');
+WvltScaleValues = {'lin', 'log'};
+set(WvltScaleMenuChoices(find(strcmp(WvltScaleValues, WvltScale))), 'Checked', 'on');
+
     function selectWvltScaleMenu(kchoice)
         for kchoices = 1:length(WvltScaleMenuChoices)
             set(WvltScaleMenuChoices(kchoices), 'Checked', 'off');
@@ -489,12 +500,15 @@ set(WvltScaleMenuChoices(2), 'CallBack', @(~,~) selectWvltScaleMenu(2));
 
 % fourier scale
 FourierScaleMenu = uimenu(paramMenu, 'Text','Fourier Scale');
-FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin', 'Checked', 'on');
+FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin');
 FourierScaleMenuChoices(2) = uimenu(FourierScaleMenu, 'Text', 'squared');
 FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
 FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'spectral density (lin)');
 FourierScaleMenuChoices(5) = uimenu(FourierScaleMenu, 'Text', 'spectral density (log)');
 FourierScaleMenuChoices(6) = uimenu(FourierScaleMenu, 'Text', 'phase');
+FourierScaleValues = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
+set(FourierScaleMenuChoices(find(strcmp(FourierScaleValues, FourierScale))), 'Checked', 'on');
+
     function selectFourierScaleMenu(kchoice)
         for kchoices = 1:length(FourierScaleMenuChoices)
             set(FourierScaleMenuChoices(kchoices), 'Checked', 'off');
@@ -510,8 +524,26 @@ set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
 set(FourierScaleMenuChoices(5), 'CallBack', @(~,~) selectFourierScaleMenu(5));
 set(FourierScaleMenuChoices(6), 'CallBack', @(~,~) selectFourierScaleMenu(6));
 
+% frequency scale
+FrequencyScaleMenu = uimenu(paramMenu, 'Text', 'Frequency Scale');
+FrequencyScaleMenuChoices(1) = uimenu(FrequencyScaleMenu, 'Text', 'lin');
+FrequencyScaleMenuChoices(2) = uimenu(FrequencyScaleMenu, 'Text', 'log');
+FrequencyScaleValues = {'lin', 'log'};
+set(FrequencyScaleMenuChoices(find(strcmp(FrequencyScaleValues, FrequencyScale))), 'Checked', 'on');
+
+    function selectFrequencyScaleMenu(kchoice)
+        for kchoices = 1:length(FrequencyScaleMenuChoices)
+            set(FrequencyScaleMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(FrequencyScaleMenuChoices(kchoice), 'Checked', 'on');
+        
+        FrequencyScale = FrequencyScaleNames{kchoice};
+    end
+set(FrequencyScaleMenuChoices(1), 'CallBack', @(~,~) selectFrequencyScaleMenu(1));
+set(FrequencyScaleMenuChoices(2), 'CallBack', @(~,~) selectFrequencyScaleMenu(2));
+
 % Xlim
-XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
+XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
     function setXlim()
         prompt = {'Enter Xmin :', 'Enter Xmax :'};
         dlgtitle = 'Input Xlim';
@@ -527,7 +559,7 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
 set(XlimMenu, 'CallBack', @(~,~) setXlim);
 
 % ct
-CtMenu = uimenu(paramMenu, 'Text','Set ct');
+CtMenu = uimenu(paramMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')']);
     function setCt()
         prompt = {'Enter ct :'};
         dlgtitle = 'Input ct';
@@ -535,11 +567,28 @@ CtMenu = uimenu(paramMenu, 'Text','Set ct');
         definput = {num2str(ctEdgeEffects)};
         answer = inputdlg(prompt,dlgtitle,dims,definput);
         try
-            ctEdgeEffects = str2double(answer{1});
+            ctEdgeEffects = str2num(answer{1});
+            set(CtMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')']);
         catch
         end
     end
 set(CtMenu, 'CallBack', @(~,~) setCt);
+
+% cf
+CfMenu = uimenu(paramMenu, 'Text', ['Set cf (', num2str(cf), ')']);
+    function setCf()
+        prompt = {'Enter cf :'};
+        dlgtitle = 'Input cf';
+        dims = [1 35];
+        definput = {num2str(cf)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            cf = str2double(answer{1});
+            set(CfMenu, 'Text', ['Set cf (', num2str(cf), ')']);
+        catch
+        end
+    end
+set(CfMenu, 'CallBack', @(~,~) setCf);
 
 % %zero padding fourier
 % zeroPaddingFourierMenu = uimenu(paramMenu, 'Text','Zero padding Fourier');
@@ -550,7 +599,7 @@ set(CtMenu, 'CallBack', @(~,~) setCt);
 %         definput = {num2str(ZeroPaddingFourier)};
 %         answer = inputdlg(prompt,dlgtitle,dims,definput);
 %         try
-%             ZeroPaddingFourier = str2double(answer{1});
+%             ZeroPaddingFourier = str2num(answer{1});
 %             ZeroPaddingFourier = max(round(ZeroPaddingFourier), 0);
 %         catch
 %         end
@@ -571,7 +620,8 @@ removeMeanMenu.MenuSelectedFcn = @(~, ~) switchRemoveMeanDisplay(~strcmp(removeM
 
 %multiSignalMode
 
-multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode', 'Checked', multiSignalMode);
+multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode',...
+    'Checked', multiSignalMode, 'Separator', 'on');
     function switchMultiSignalModeDisplay(status)
         multiSignalModeMenu.Checked = status;
         multiSignalMode = status;
@@ -648,6 +698,7 @@ phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
 WvltScaleNames = {'lin', 'log10'};
 FourierScaleNames = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
+FrequencyScaleNames = {'lin', 'log'};
 
 %freq
 freqMenu = uimenu(ridgeMenu, 'Text','Frequency');
@@ -698,7 +749,8 @@ set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
 
 %multipleAxesDisplay
 
-multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes', 'Checked', multipleAxesDisplay);
+multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes',...
+    'Checked', multipleAxesDisplay, 'Separator', 'on');
     function switchMultipleAxesDisplay(status)
         multipleAxesDisplayMenu.Checked = status;
         setMultipleAxesDisplay(status);
@@ -727,7 +779,7 @@ XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge');
 set(XlimRidgeMenu, 'CallBack', @(~,~) setXlimRidge);
 
 % ct
-CtRidgeMenu = uimenu(ridgeMenu, 'Text','Set ct ridge');
+CtRidgeMenu = uimenu(ridgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')']);
     function setCtRidge()
         prompt = {'Enter ct ridge:'};
         dlgtitle = 'Input ct ridge';
@@ -735,7 +787,8 @@ CtRidgeMenu = uimenu(ridgeMenu, 'Text','Set ct ridge');
         definput = {num2str(ctRidge)};
         answer = inputdlg(prompt,dlgtitle,dims,definput);
         try
-            ctRidge = str2double(answer{1});
+            ctRidge = str2num(answer{1});
+            set( CtRidgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')']);
         catch
         end
     end
@@ -745,6 +798,12 @@ set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
 %% menus regression & plot extract
 
 toolsMenu = uimenu(fig, 'Text', 'Tools');
+
+% bounds Q
+
+QboundsMenu = uimenu(toolsMenu,'Text','Bounds Q');
+
+QboundsMenu.MenuSelectedFcn = @(~, ~) BoundsQMenu([Xmin, Xmax], XLimRidge, ctEdgeEffects, ctRidge, cf, MotherWavelet);
 
 % filtering
 
@@ -830,6 +889,13 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         end
         fmin = fminNew; fmax = fmaxNew; NbFreq = NbFreqNew; Q = QNew;
         
+        switch FrequencyScale
+            case 'lin'
+                WvltFreqs = linspace(fmin, fmax, NbFreq);
+            case 'log'
+                WvltFreqs = logspace(log10(fmin), log10(fmax), NbFreq);
+        end
+        
         maxR = eval(get(editmaxR, 'String')); %nombre max de ridges
         PR = eval(get(editPR, 'String')); %nombre max de ridges parallèles
         slopeRidge = eval(get(editSL, 'String')); %max slope ridge
@@ -841,7 +907,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             NmaxLagCorr = floor(maxLagCorr/Dx);
             plotCrossCorr(Dx, y, NmaxLagCorr);
             if isempty(SVry)
-                [SVry, SVvectry] = svdCWT(tRy, Ry, fmin, fmax, NbFreq, Q, autocorrelationNsvd);
+                [SVry, SVvectry] = svdCWT(tRy, Ry, WvltFreqs, Q, autocorrelationNsvd);
             end
         end
         
@@ -849,8 +915,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if checkboxGeneral.Value
             if ~multiSignalMode
                 for kPlot = 1:nbPlots
-                    WvltPlot(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ctEdgeEffects', ctEdgeEffects,...
-                        'ctZeroPadding', ctEdgeEffects);
+                    WvltPlot(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ctEdgeEffects', ctEdgeEffects, 'FreqScale', FrequencyScale);
                 end
             end
         end
@@ -858,14 +923,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if checkboxModule.Value || checkboxPhase.Value
             if ~multiSignalMode && ~autocorrelationMode
                 for kPlot = 1:nbPlots
-                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet);
+                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet);
                     if checkboxModule.Value
-                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                        WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                     end
                     if checkboxPhase.Value
-                        WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                        WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
+                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                     end
                 end
                 
@@ -873,32 +938,32 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 wavelet = 0; % calcul de la somme des carrés de transformées
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
                 end
                 %wavelet = sqrt(wavelet);
                 
                 if checkboxModule.Value
-                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
+                    WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
                         'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                 end
                 if checkboxPhase.Value
-                    WvltPlot2(x(kPlot,:), linspace(fmin,fmax,NbFreq), wavelet,...
+                    WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
                         'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                 end
                 
             elseif autocorrelationMode
                 for ksvd = 1:autocorrelationNsvd
                     if checkboxModule.Value
-                        WvltPlot2(tRy, linspace(fmin,fmax,NbFreq), SVry{ksvd},...
+                        WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                            ['xcorr->CWT->SVD;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                            ['xcorr->CWT->SVD;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                     end
                     if checkboxPhase.Value
-                        WvltPlot2(tRy, linspace(fmin,fmax,NbFreq), SVry{ksvd},...
+                        WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                            ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle);
+                            ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
                     end
                 end
             end
@@ -913,14 +978,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
                 end
                 
             elseif multiSignalMode
                 wavelet = 0;
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), linspace(fmin,fmax,NbFreq), Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
                 end
                 
                 ridges = cell(1, 1);
@@ -928,7 +994,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                    'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
+                    'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                    'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
             
             elseif autocorrelationMode
                 ridges = cell(1, autocorrelationNsvd);
@@ -936,7 +1003,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
                 end
             end
             
@@ -974,7 +1042,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 
                 if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
                     newTimeAmplPlots = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
-                        'Axes', plotAxes(kPlot), 'Grid', 'auto', 'RenameAxes', false, 'SquaredCWT', multiSignalMode);
+                        'Axes', plotAxes(kPlot), 'Grid', 'auto', 'RenameAxes', false);
                     timeAmplPlots = [timeAmplPlots, newTimeAmplPlots];
                 end
                 
@@ -982,38 +1050,37 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                         'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
-                        'NameY', ['Amplitude [', signalUnit, ']'],...
-                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
+                        'NameY', ['Amplitude [', signalUnit, ']'], 'XLim', XLimRidgePlot);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Frequency [Hz]',...
-                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
+                        'NameY', 'Frequency [Hz]', 'XLim', XLimRidgePlot);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Damping',...
-                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
+                        'NameY', 'Damping', 'XLim', XLimRidgePlot);
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true, 'NameX', ['Amplitude [', signalUnit, ']'],...
-                        'NameY', 'Frequency [Hz]', 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true,...
+                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Frequency [Hz]');
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true, 'NameX', ['Amplitude [', signalUnit, ']'],...
-                        'NameY', 'Damping', 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true,...
+                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping');
                 end
                 if checkboxTimePhase.Value % plot de la phase
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]', 'NameY', 'Phase (rad)',...
-                        'XLim', XLimRidgePlot, 'SquaredCWT', multiSignalMode);
+                        'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true,...
+                        'NameX', 'Time [s]', 'NameY', 'Phase (rad)', 'XLim', XLimRidgePlot);
                 end
             end
         end
@@ -1026,13 +1093,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'FrequencyScale', FrequencyScale);
                 elseif autocorrelationMode
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
                         getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge);
+                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'FrequencyScale', FrequencyScale);
                 end
                 
                 if autocorrelationMode
@@ -1276,14 +1345,16 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             if multipleAxesDisplay %création des axes où sont plot les courbes
                 for kPlot = 1:nbAxes
                     fourierPlotAxes(kPlot) = subplot0(nbAxes, 1, kPlot, axes(ffourier));
-                    set(fourierPlotAxes(kPlot), 'XScale', 'lin', 'YScale', 'lin');
+                    set(fourierPlotAxes(kPlot), 'XScale', FrequencyScale, 'YScale', 'lin');
+                    set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
                 end
             else
                 axesffourier = axes(ffourier);
                 hold(axesffourier, 'on');
-                set(axesffourier, 'XScale', 'lin', 'YScale', 'lin');
+                set(axesffourier, 'XScale', FrequencyScale, 'YScale', 'lin');
                 for kPlot = 1:nbAxes
                     fourierPlotAxes(kPlot) = axesffourier;
+                    set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
                 end
             end
             
@@ -1316,8 +1387,6 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         plot(fourierPlotAxes(kPlot), freqs, angle(four));
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
-                    
-                    %                 set(fourierPlotAxes(kPlot), 'Xlim', [fmin fmax]);
                 end
             else
                 FourierTot = 0;

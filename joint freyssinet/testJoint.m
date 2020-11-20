@@ -14,20 +14,22 @@ X = [X11, X12; X21, X22];
 
 t = (1/Fs) * (0:size(X, 2)-1);
 
-% fréquence de rééchantillonage
-Fs_new = 1600;
-
-n_resampling = floor(Fs/Fs_new);
-Fs_new = Fs / n_resampling;
-
-% filtrage
-Fc = 0.5 * Fs_new/2;
-X = butterworthFilter(t, X, Fc, 'low', 5);
-X = butterworthFilter(t, X, Fc, 'low', 5);
-
-% rééchantillonage
-X = X(:, 1:n_resampling:end);
-t = t(1:n_resampling:end);
+if 1
+    % fréquence de rééchantillonage
+    Fs_new = 4000;
+    
+    n_resampling = floor(Fs/Fs_new);
+    Fs_new = Fs / n_resampling;
+    
+    % filtrage
+    Fc = 0.8 * Fs_new/2;
+    X = butterworthFilter(t, X, Fc, 'low', 5);
+    X = butterworthFilter(t, X, Fc, 'low', 5);
+    
+    % rééchantillonage
+    X = X(:, 1:n_resampling:end);
+    t = t(1:n_resampling:end);
+end
 
 
 %% affichage

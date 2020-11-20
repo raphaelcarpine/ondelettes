@@ -1,6 +1,6 @@
 function ridge = RidgeExtract(X,Y,Q,fmin,fmax,NbFreq,varargin)
 %%
-p = inputParser ;
+p = inputParser;
 %% parametres par defaut
 etDef = 1;
 efDef = 1;
@@ -17,8 +17,10 @@ ReleaseTimeDef = X(1);
 WaveletDef = nan;
 SmoothDampingDef = true;
 MotherWaveletDef = 'cauchy';
+FrequencyScaleDef = 'lin';
 XLimRidgeDef = [];
 ctRidgeDef = [];
+SquaredCWTDef = false;
 
 %%
 addRequired(p,'X')
@@ -40,8 +42,10 @@ addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
 addParameter(p,'SmoothDamping', SmoothDampingDef); % spline smoothing de l'amplitude pour lisser zeta(t)
 addParameter(p,'MotherWavelet', MotherWaveletDef);
+addParameter(p,'FrequencyScale', FrequencyScaleDef);
 addParameter(p,'XLimRidge', XLimRidgeDef);
 addParameter(p,'ctRidge', ctRidgeDef);
+addParameter(p,'SquaredCWT', SquaredCWTDef);
 
 
 parse(p,X,Y,Q,fmin,fmax,NbFreq,varargin{:});
@@ -60,8 +64,10 @@ ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
 SmoothDamping = p.Results.SmoothDamping;
 MotherWavelet = p.Results.MotherWavelet;
+FrequencyScale = p.Results.FrequencyScale;
 XLimRidge = p.Results.XLimRidge;
 ctRidge = p.Results.ctRidge;
+SquaredCWT = p.Results.SquaredCWT;
 
 if isempty(XLimRidge)
     XLimRidge = [X(1), X(end)];
@@ -78,11 +84,20 @@ if iscolumn(X)
 end
 %%  %%  %%  %%  %%  %%
 
-WvltFreq = linspace(fmin,fmax,NbFreq); % Freq de calcul de la CWT
+switch FrequencyScale
+    case 'lin'
+        WvltFreq = linspace(fmin, fmax, NbFreq); % Freq de calcul de la CWT
+    case 'log'
+        WvltFreq = logspace(log10(fmin), log10(fmax), NbFreq); % Freq de calcul de la CWT
+end
 
 if isnan(wavelet)
-    wavelet= WvltComp(X, Y, WvltFreq, Q, 'MotherWavelet', MotherWavelet); % Calcul CWT
+    wavelet = WvltComp(X, Y, WvltFreq, Q, 'MotherWavelet', MotherWavelet); % Calcul CWT
 end
+
+% if SquaredCWT
+%     wavelet = sqrt(wavelet);
+% end
 
 % % calcul du bruit
 % noise = exp(mean(mean(log(abs(wavelet)))));
@@ -156,7 +171,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     ind_freq(1) = a ;
     ridge.time{C_r}(1) = b ;
-    ridge.val{C_r}(1)  = wavelet(a,b) ;
+    ridge.val{C_r}(1)  = wavelet(a,b);
     
     C_ind = 2;
     while (ridge.time{C_r}(C_ind-1)+et<=nx) % On chaine vers l'avant
@@ -176,7 +191,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
         else
             ind_freq(C_ind) = I_f ; % Assignation freq.
             ridge.time{C_r}(C_ind) = I_t ; % Assignation instant
-            ridge.val{C_r}(C_ind)  = wavelet(I_f,I_t) ; % Assignation valeur
+            ridge.val{C_r}(C_ind)  = wavelet(I_f, I_t); % Assignation valeur
             
             C_ind = C_ind + 1; % Increment
         end
@@ -203,7 +218,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
         else
             ind_freq(C_ind) = I_f ; % Assignation freq.
             ridge.time{C_r}(C_ind) = I_t ; % Assignation instant
-            ridge.val{C_r}(C_ind)  = wavelet(I_f,I_t) ; % Assignation valeur
+            ridge.val{C_r}(C_ind)  = wavelet(I_f, I_t); % Assignation valeur
             
             C_ind = C_ind+1; %Increment (comme on a inverser le sens, on incremente bien en +1 pour aller vers l'arriere
         end
@@ -236,6 +251,9 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     % points du sommet
     [ridge.freq{C_r}, ridge.val{C_r}] = localMax3Points(WvltFreqLocal, mesuEdgeLocal);
     
+    if SquaredCWT
+        ridge.val{C_r} = sqrt(ridge.val{C_r});
+    end
     
     % On convertit les indices en temps
     ridge.time{C_r} = X(ridge.time{C_r});
@@ -243,13 +261,13 @@ end
 %% retrait des ridges trop courts
 d_r=0;
 % for C_r=1:length(ridge.time)
-%     if length(ridge.time{C_r-d_r})<=LengthMin        
+%     if length(ridge.time{C_r-d_r})<=LengthMin
 %         FieldList = fieldnames(ridge);
 %         for C_Field = 1:length(FieldList)
 %             FieldName = FieldList{C_Field};
 %             ridge.(FieldName)=ridge.(FieldName)([1:C_r-d_r-1, C_r-d_r+1:length(ridge.(FieldName))]);
 %         end
-%         
+%
 %         d_r=d_r+1;
 %     end
 % end
@@ -283,11 +301,18 @@ end
 
 for C_r = 1:length(ridge.time)
     ridge.pha2{C_r} = ridge.pha{C_r};
+    
+    if SquaredCWT
+        phaseDiscontinuity = pi;
+    else
+        phaseDiscontinuity = 2*pi;
+    end
+    
     for kt = 1:(length(ridge.pha2{C_r})-1) % continuité de la phase
-        if abs(ridge.pha2{C_r}(kt+1)+2*pi-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
-            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) + 2*pi;
-        elseif abs(ridge.pha2{C_r}(kt+1)-2*pi-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
-            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) - 2*pi;
+        if abs(ridge.pha2{C_r}(kt+1)+phaseDiscontinuity-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
+            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) + phaseDiscontinuity;
+        elseif abs(ridge.pha2{C_r}(kt+1)-phaseDiscontinuity-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
+            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) - phaseDiscontinuity;
         end
     end
 end
@@ -317,11 +342,11 @@ end
 for C_r = 1:length(ridge.time)
     % amortissement
     logAmpl = log(abs(ridge.val{C_r}));
-%     if SmoothDamping
-%         freqmoy = mean(ridge.freq{C_r});
-%         deltaT = Q / (2*pi*freqmoy);
-%         logAmpl = gaussianSmooth(logAmpl, round(deltaT*Fs/1));
-%     end
+    %     if SmoothDamping
+    %         freqmoy = mean(ridge.freq{C_r});
+    %         deltaT = Q / (2*pi*freqmoy);
+    %         logAmpl = gaussianSmooth(logAmpl, round(deltaT*Fs/1));
+    %     end
     ridge.damping{C_r} = -diff(logAmpl)*Fs; % -A'/A = lambda
     ridge.damping{C_r} = ([ridge.damping{C_r}(1), ridge.damping{C_r}] + ...
         [ridge.damping{C_r}, ridge.damping{C_r}(end)]) /2;

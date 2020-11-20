@@ -10,6 +10,8 @@ X = X(2:end, :);
 
 %% information colonnes
 
+colones = [3];
+
 % temps_avant = dataArray{:, 1};
 % c_02_avant = dataArray{:, 2};
 % a_p12_avant = dataArray{:, 3};
@@ -28,6 +30,7 @@ X = X(2:end, :);
 % c_16_avant = dataArray{:, 16};
 % c_17_avant = dataArray{:, 17};
 
+X = X(colones-1, :);
 
 
 %% correction du temps

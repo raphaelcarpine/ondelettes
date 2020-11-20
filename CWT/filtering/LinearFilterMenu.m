@@ -31,7 +31,7 @@ X = X0;
 
 Hpans = [10, 4, 4];
 
-fig = figure('Name', 'Linear Filter Menu');
+fig = figure('Name', 'Linear Filter Menu', 'numbertitle', 'off');
 fig.Units = 'characters';
 fig.Position(3) = 70;
 fig.Position(4) = sum(Hpans);
