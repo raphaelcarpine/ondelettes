@@ -1,8 +1,8 @@
-function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale)
+function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale, figName)
 %PLOTSPECTRUMS Summary of this function goes here
 %   Detailed explanation goes here
 
-fig = figure('Name', 'CWT(t = t_k)');
+fig = figure('Name', figName);
 ax = axes(fig);
 plot(ax, Freqs, Spectrums);
 set(ax, 'XScale', spectrumFrequencyScale, 'YScale', spectrumScale);

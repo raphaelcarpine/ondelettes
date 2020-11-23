@@ -1,7 +1,8 @@
 function shockDetectionMenu(t, X, ZeroPadding,...
     QMeanInit, MotherWaveletMeanInit, ctEdgeEffectsMeanInit, QSpectrumInit, MotherWaveletSpectrumInit,...
     freqLimMeanInit, nbFreqMeanInit, scaleFreqMeanInit, scaleMeanInit,...
-    freqLimSpectrumInit, nbFreqSpectrumInit, scaleFreqSpectrumInit, scaleSpectrumInit)
+    freqLimSpectrumInit, nbFreqSpectrumInit, scaleFreqSpectrumInit, scaleSpectrumInit,...
+    multiSignalMeanInit, multiSignalSpectrumInit)
 %SHOCKDETECTIONMENU Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,12 +13,14 @@ thresholdValueInit = 2;
 maxDetectionMethodInit = 'local'; % 'local', 'global'  (detect local maxima or global maxima)
 plotMeanInit = true;
 plotSpectrumInit = true;
-computeWholeWaveletInit = false;
+% computeWholeWaveletInit = false; % à coder ?
+
 
 if nargin == 0 % test
-    t = linspace(0, 20, 1000);
+    t = linspace(0, 40, 10000);
     X = sin(2*pi*6*(t-8)) .* exp(-0.02*2*pi*6*(t-8)) .* (t >= 8)...
-        + 0.5 * sin(2*pi*6*(t-10)) .* exp(-0.02*2*pi*6*(t-10)) .* (t >= 10);
+        + 0.5 * sin(2*pi*6*(t-25)) .* exp(-0.02*2*pi*6*(t-25)) .* (t >= 25);
+    X = [1; -2] * X;
     figure;
     plot(t, X);
     ZeroPadding = true;
@@ -35,12 +38,14 @@ if nargin == 0 % test
     nbFreqSpectrumInit = 300;
     scaleFreqSpectrumInit = 'log';
     scaleSpectrumInit = 'lin';
+    multiSignalMeanInit = true;
+    multiSignalSpectrumInit = false;
 end
 
 %% input window
 
-HpansShock = [5, 5, 9, 5];
-HpansSpectrum = [5, 5, 5];
+HpansShock = [5, 5, 9, 5, 2];
+HpansSpectrum = [5, 5, 5, 2];
 
 Hpans = [sum(HpansShock), sum(HpansSpectrum), 2];
 
@@ -171,6 +176,11 @@ scaleMeanInput = uicontrol('Parent', plotShockPan, 'Style', 'popup', 'String', s
     'Value', find(strcmp(scaleMeanValues, scaleMeanInit)),...
     'Units', 'characters', 'Position', [44, 0.5, 8, 1.8]);
 
+% multi signal mode
+multiSignalMeanInput = uicontrol('Parent', shockPan, 'Style', 'checkbox', 'String', 'single detection (multiple chanels)',...
+    'Value', multiSignalMeanInit, 'Units', 'characters', 'Position', [1, 0.5, 50, 1.5]);
+
+
 %% spectrum panel
 
 % freq panel
@@ -215,6 +225,23 @@ scaleSpectrumInput = uicontrol('Parent', plotSpectrumPan, 'Style', 'popup', 'Str
     'Value', find(strcmp(scaleSpectrumValues, scaleSpectrumInit)),...
     'Units', 'characters', 'Position', [44, 0.5, 8, 1.8]);
 
+% multi signal
+multiSignalSpectrumInput = uicontrol('Parent', spectrumPan, 'Style', 'checkbox', 'String', 'sum of squared spectrums (multiple chanels)',...
+    'Value', multiSignalSpectrumInit, 'Units', 'characters', 'Position', [1, 0.5, 50, 1.5]);
+
+% interraction mulit signal mean
+    function multiSignalMeanCallback(flag)
+        if flag
+            set(multiSignalSpectrumInput, 'Enable', 'on');
+        else
+            set(multiSignalSpectrumInput, 'Enable', 'off');
+            set(multiSignalSpectrumInput, 'Value', false);
+        end
+    end
+
+multiSignalMeanCallback(multiSignalMeanInit);
+multiSignalMeanInput.Callback = @(hObject, ~) multiSignalMeanCallback(get(hObject, 'Value'));
+
 
 %% ok button
 
@@ -250,6 +277,9 @@ okInput.Callback = @(~, ~) okReturn();
         plotMean = get(plotMeanInput, 'Value');
         scaleMean = scaleMeanValues{get(scaleMeanInput, 'Value')};
         
+        % multi signal mode
+        multiSignalMean = get(multiSignalMeanInput, 'Value');
+        
         % freq panel
         fminSpectrum = str2double(get(fminSpectrumInput, 'String'));
         fmaxSpectrum = str2double(get(fmaxSpectrumInput, 'String'));
@@ -263,6 +293,14 @@ okInput.Callback = @(~, ~) okReturn();
         % plot panel
         plotSpectrum = get(plotSpectrumInput, 'Value');
         scaleSpectrum = scaleSpectrumValues{get(scaleSpectrumInput, 'Value')};
+        
+        % multi signal mode
+        multiSignalSpectrum = get(multiSignalSpectrumInput, 'Value');
+        
+        
+        %%
+        multiSignalSpectrum = multiSignalSpectrum & multiSignalMean;
+        
         
         %%
         
@@ -282,7 +320,8 @@ okInput.Callback = @(~, ~) okReturn();
         
         shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean, MotherWaveletSpectrum,...
             ctEdgeEffectsMean, ZeroPadding, meanFunc, thresholdMode, thresholdValue, maxDetectionMethod,...
-            'plotMean', plotMean, 'plotSpectrum', plotSpectrum, 'meanScale', scaleMean, 'spectrumScale', scaleSpectrum);
+            multiSignalMean, multiSignalSpectrum, 'plotMean', plotMean, 'plotSpectrum', plotSpectrum,...
+            'meanScale', scaleMean, 'spectrumScale', scaleSpectrum);
         
         %%
         
