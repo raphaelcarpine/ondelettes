@@ -795,7 +795,33 @@ CtRidgeMenu = uimenu(ridgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')'
 set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
 
 
-%% menus regression & plot extract
+%% shock menu
+
+shocksMenu = uimenu(fig, 'Text', 'Shocks');
+
+% shocks detection
+getShocksMenu = uimenu(shocksMenu, 'Text', 'Shocks detection menu');
+
+    function getShocksMenuCallback()
+        % evaluation des parametres
+        fmin = eval(get(editfmin, 'String'));
+        fmax = eval(get(editfmax, 'String'));
+        NbFreq = eval(get(editNbFreq, 'String'));
+        Q = eval(get(editQ, 'String'));
+        getXY();
+        
+        % shocks menu
+        shockDetectionMenu(x, y,...
+            Q, MotherWavelet, ctEdgeEffects, Q, MotherWavelet,...
+            [fmin, fmax], NbFreq, FrequencyScale, WvltScale,...
+            [fmin, fmax], NbFreq, FrequencyScale, WvltScale,...
+            multiSignalMode, multiSignalMode);
+    end
+
+getShocksMenu.MenuSelectedFcn = @(~, ~) getShocksMenuCallback();
+
+
+%% tools menu
 
 toolsMenu = uimenu(fig, 'Text', 'Tools');
 
@@ -923,7 +949,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if checkboxModule.Value || checkboxPhase.Value
             if ~multiSignalMode && ~autocorrelationMode
                 for kPlot = 1:nbPlots
-                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet);
+                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
                     if checkboxModule.Value
                         WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
                             WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
@@ -938,7 +964,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 wavelet = 0; % calcul de la somme des carrés de transformées
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
                 end
                 %wavelet = sqrt(wavelet);
                 
@@ -986,7 +1012,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 wavelet = 0;
                 for kPlot = 1:nbPlots
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ct', ctEdgeEffects, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
                 end
                 
                 ridges = cell(1, 1);

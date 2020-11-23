@@ -1,5 +1,5 @@
 function spectrums = shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean,...
-    MotherWaveletSpectrum, ctEdgeEffectsMean, ZeroPadding,...
+    MotherWaveletSpectrum, ctEdgeEffectsMean,...
     meanFunc, thresholdMode, thresholdValue, maxDetectionMethod, multiSignalMean, multiSignalSpectrum, varargin)
 %CHOCDETECTION Summary of this function goes here
 %   Wavelet : CWT(i,j)  i freq index & j time index
@@ -68,7 +68,7 @@ end
 % mean
 meanWvltTot = nan(size(X));
 for k_x = 1:size(X, 1)
-    meanWvltTot(k_x, :) = WvltComp(t, X(k_x, :), freqsMean, QMean, 'ZeroPadding', ZeroPadding, 'MotherWavelet', MotherWaveletMean,...
+    meanWvltTot(k_x, :) = WvltComp(t, X(k_x, :), freqsMean, QMean, 'MotherWavelet', MotherWaveletMean,...
         'MeanOverFreqFunc', meanFunc);
 end
 
@@ -167,7 +167,7 @@ for k_x = 1:size(X, 1)
     else
         shockIndexes = shockIndexesTot{k_x};
     end
-    spectrums = WvltComp(t, X(k_x, :), freqsSpectrum, QSpectrum, 'ZeroPadding', ZeroPadding,...
+    spectrums = WvltComp(t, X(k_x, :), freqsSpectrum, QSpectrum,...
         'MotherWavelet', MotherWaveletSpectrum, 'XindexOut', shockIndexes);
     spectrums = transpose(spectrums);
     spectrumsTot{k_x} = spectrums;

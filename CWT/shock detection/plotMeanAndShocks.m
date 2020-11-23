@@ -56,7 +56,7 @@ text(ax, t(1), threshold, '  threshold', 'Color', colorThreshold, 'VerticalAlign
 % mean
 colorMean = 0*[1 1 1];
 plot(ax, [t(1), t(end)], [meanT, meanT], '--', 'Color', colorMean);
-text(ax, t(1), meanT, '  mean', 'Color', colorMean, 'VerticalAlignment','bottom');
+text(ax, t(end), meanT, 'mean  ', 'Color', colorMean, 'VerticalAlignment','bottom', 'HorizontalAlignment', 'right');
 
 end
 
