@@ -4,14 +4,30 @@ function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale, 
 
 fig = figure('Name', figName);
 ax = axes(fig);
-plot(ax, Freqs, Spectrums);
+plts = plot(ax, Freqs, Spectrums);
 set(ax, 'XScale', spectrumFrequencyScale, 'YScale', spectrumScale);
 xlabel(ax, 'Frequency [Hz]');
 ylabel(ax, 'Amplitude CWT');
 
-shockTimeNames = ['t_{'.*ones(size(Spectrums, 1), 1), num2str(transpose(1:size(Spectrums, 1))), '}'.*ones(size(Spectrums, 1), 1)];
-shockTimeNames = cellstr(shockTimeNames);
+% legend
+shockTimeNames = cell(size(Spectrums, 1), 1);
+for k_shock = 1:size(Spectrums, 1)
+    shockTimeNames{k_shock} = ['t_{', num2str(k_shock), '}'];
+end
 
-legend(ax, shockTimeNames, 'Location', 'best');
+if length(shockTimeNames) <= 10
+    legend(ax, shockTimeNames, 'Location', 'best');
+end
+
+% data tips
+for k_plot = 1:length(plts)
+    plt = plts(k_plot);
+    plt.DataTipTemplate.DataTipRows = [plt.DataTipTemplate.DataTipRows(1); plt.DataTipTemplate.DataTipRows];
+    plt.DataTipTemplate.DataTipRows(1).Label = shockTimeNames{k_plot};
+    plt.DataTipTemplate.DataTipRows(1).Value = '';
+    plt.DataTipTemplate.DataTipRows(2).Label = 'freq';
+    plt.DataTipTemplate.DataTipRows(3).Label = 'ampl';
+end
+
 end
 

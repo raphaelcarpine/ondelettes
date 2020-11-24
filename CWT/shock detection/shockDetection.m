@@ -149,6 +149,7 @@ for k_x = 1:size(meanWvltTot, 1)
         end
         plotMeanAndShocks(t, meanWvlt, meanWvlttEdgeEffects, shockIndexes,...
             threshold, meanTmeanWvlt, meanScale, figName);
+        drawnow;
     end
     
     % save

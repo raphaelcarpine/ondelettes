@@ -14,7 +14,7 @@ X = [X11, X12; X21, X22];
 
 t = (1/Fs) * (0:size(X, 2)-1);
 
-if 1
+if 0
     % fréquence de rééchantillonage
     Fs_new = 4000;
     
@@ -31,6 +31,14 @@ if 1
     t = t(1:n_resampling:end);
 end
 
+%% selection
+
+ti = 100;
+tf = 200;
+
+X = X(:, t >= ti & t <= tf);
+t = t(t >= ti & t <= tf);
+
 
 %% affichage
 
@@ -41,9 +49,9 @@ ax = axes(fig);
 plt = plot(ax, t, X);
 
 
-fmin = 1;
-fmax = 10;
-Q = 3;
+fmin = 500;
+fmax = 3000;
+Q = 30;
 % MaxRidges = 1;
 % XLimRidge = [t(kt0), t(end)];
 % ctRidge = 1;

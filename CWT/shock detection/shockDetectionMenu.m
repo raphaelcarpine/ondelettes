@@ -245,7 +245,6 @@ multiSignalMeanInput.Callback = @(hObject, ~) multiSignalMeanCallback(get(hObjec
 %% ok button
 
 okInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'OK',...
-    'Value', find(strcmp(scaleSpectrumValues, scaleSpectrumInit)),...
     'Units', 'characters', 'Position', [30, 0.5, 15, 2.5]);
 
 %% return func
@@ -253,6 +252,10 @@ okInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'OK',...
 okInput.Callback = @(~, ~) okReturn();
 
     function okReturn()
+        % cursor
+        set(fig, 'pointer', 'watch');
+        drawnow;
+        
         %% input
         
         % freq panel
@@ -321,6 +324,10 @@ okInput.Callback = @(~, ~) okReturn();
             ctEdgeEffectsMean, meanFunc, thresholdMode, thresholdValue, maxDetectionMethod,...
             multiSignalMean, multiSignalSpectrum, 'plotMean', plotMean, 'plotSpectrum', plotSpectrum,...
             'meanScale', scaleMean, 'spectrumScale', scaleSpectrum);
+        
+        %% cursor
+        set(fig, 'pointer', 'arrow');
+        drawnow;
         
         %%
         

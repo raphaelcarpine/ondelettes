@@ -820,6 +820,24 @@ getShocksMenu = uimenu(shocksMenu, 'Text', 'Shocks detection menu');
 
 getShocksMenu.MenuSelectedFcn = @(~, ~) getShocksMenuCallback();
 
+% audio
+audioMenu = uimenu(shocksMenu, 'Text', 'Audio');
+
+    function audioMenuCallback()
+        % evaluation des parametres
+        getXY();
+        
+        % plot time on axes
+        Fs = 1/mean(diff(x(1, :)));
+        audioAxes = findAxesAudio(Fs);
+        [initFcnAudio, updateFcnAudio, closeFcnAudio] = audioTimeOnAxes(audioAxes);
+        
+        % audio menu
+        audioPlayer(x, y, initFcnAudio, updateFcnAudio, closeFcnAudio);
+    end
+
+audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
+
 
 %% tools menu
 

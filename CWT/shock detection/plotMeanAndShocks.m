@@ -18,8 +18,10 @@ ylabel(ax, 'Average F(CWT(t,~))');
 
 shockTimes = t(shockIndexes);
 shockValues = meanWvlt(shockIndexes);
-shockTimeNames = ['t_{'.*ones(length(shockTimes), 1), num2str(transpose(1:length(shockTimes))), '}'.*ones(length(shockTimes), 1)];
-shockTimeNames = cellstr(shockTimeNames);
+shockTimeNames = cell(length(shockTimes), 1);
+for k_shock = 1:length(shockTimes)
+    shockTimeNames{k_shock} = ['t_{', num2str(k_shock), '}'];
+end
 
 % graph
 plot(ax, shockTimes, meanWvlt(shockIndexes), '+',...
