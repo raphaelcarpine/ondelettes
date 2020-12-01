@@ -53,12 +53,14 @@ end
 % threshold
 colorThreshold = 'r';
 plot(ax, [t(1), t(end)], [threshold, threshold], '-', 'Color', colorThreshold);
-text(ax, t(1), threshold, '  threshold', 'Color', colorThreshold, 'VerticalAlignment', 'bottom');
+thresholdTxt = text(ax, ax.XLim(1), threshold, '  threshold', 'Color', colorThreshold, 'VerticalAlignment', 'bottom');
+addlistener(ax, 'XLim', 'PostSet', @(~,~) set(thresholdTxt, 'Position', [ax.XLim(1), threshold]));
 
 % mean
 colorMean = 0*[1 1 1];
 plot(ax, [t(1), t(end)], [meanT, meanT], '--', 'Color', colorMean);
-text(ax, t(end), meanT, 'mean  ', 'Color', colorMean, 'VerticalAlignment','bottom', 'HorizontalAlignment', 'right');
+meanTxt = text(ax, ax.XLim(2), meanT, 'mean  ', 'Color', colorMean, 'VerticalAlignment','bottom', 'HorizontalAlignment', 'right');
+addlistener(ax, 'XLim', 'PostSet', @(~,~) set(meanTxt, 'Position', [ax.XLim(2), meanT]));
 
 end
 

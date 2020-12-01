@@ -1,4 +1,4 @@
-function spectrums = shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean,...
+function shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean,...
     MotherWaveletSpectrum, ctEdgeEffectsMean,...
     meanFunc, thresholdMode, thresholdValue, maxDetectionMethod, multiSignalMean, multiSignalSpectrum, varargin)
 %CHOCDETECTION Summary of this function goes here
@@ -12,12 +12,14 @@ p = inputParser;
 % maxDetectionMethodDef = 'local'; % 'local', 'global'  (detect local maxima or global maxima)
 plotMeanDef = true;
 plotSpectrumDef = true;
+plotAverageSpectrumDef = false;
 meanScaleDef = 'lin';
 spectrumFrequencyScaleDef = nan;
 spectrumScaleDef = 'lin';
 
 addParameter(p, 'plotMean', plotMeanDef);
 addParameter(p, 'plotSpectrum', plotSpectrumDef);
+addParameter(p, 'plotAverageSpectrum', plotAverageSpectrumDef);
 addParameter(p, 'meanScale', meanScaleDef);
 addParameter(p, 'spectrumFrequencyScale', spectrumFrequencyScaleDef);
 addParameter(p, 'spectrumScale', spectrumScaleDef);
@@ -26,6 +28,7 @@ parse(p, varargin{:});
 
 plotMean = p.Results.plotMean;
 plotSpectrum = p.Results.plotSpectrum;
+plotAverageSpectrum = p.Results.plotAverageSpectrum;
 meanScale = p.Results.meanScale;
 spectrumFrequencyScale = p.Results.spectrumFrequencyScale;
 spectrumScale = p.Results.spectrumScale;
@@ -160,6 +163,10 @@ end
 
 %% spectrum
 
+if ~plotSpectrum && ~plotAverageSpectrum
+    return
+end
+
 spectrumsTot = cell(1, size(X, 1));
 
 for k_x = 1:size(X, 1)
@@ -179,21 +186,38 @@ if multiSignalMean && multiSignalSpectrum
     for k_x = 1:size(X, 1)
         squaredSpectrums = squaredSpectrums + abs(spectrumsTot{k_x}).^2;
     end
+    squaredSpectrums = squaredSpectrums / size(X, 1);
+    
     if plotSpectrum
-        figName = ['mean(abs(CWT(t=t_k, f))^2) ; all channels'];
+        figName = 'mean(abs(CWT(t=t_k, f))^2) ; all channels';
         plotSpectrums(freqsSpectrum, squaredSpectrums, spectrumFrequencyScale, spectrumScale, figName);
     end
+    
+    if plotAverageSpectrum
+        figName = 'mean(abs(CWT(t=t_k, f))^2) ; all channels, all shocks';
+        plotSpectrums(freqsSpectrum, mean(squaredSpectrums, 1), spectrumFrequencyScale, spectrumScale, figName);
+    end
+    
 elseif ~multiSignalSpectrum
     for k_x = 1:size(X, 1)
         spectrums = spectrumsTot{k_x};
+        
         if plotSpectrum
             figName = ['CWT(t=t_k, f) ; channel ', num2str(k_x)];
             plotSpectrums(freqsSpectrum, abs(spectrums), spectrumFrequencyScale, spectrumScale, figName);
         end
+        
+        if plotAverageSpectrum
+            figName = ['mean(abs(CWT(t=t_k, f))^2) ; channel ', num2str(k_x), ', all shocks'];
+            plotSpectrums(freqsSpectrum, mean(abs(spectrums).^2, 1), spectrumFrequencyScale, spectrumScale, figName);
+        end
+        
     end
 else
     warning(' ');
 end
+
+
 
 
 end

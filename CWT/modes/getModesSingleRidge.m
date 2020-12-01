@@ -31,7 +31,7 @@ for kddl = 1:Nddl
     wvlt2 = wvlt2 + wvlt{kddl}.^2;
 end
 
-Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, varargin{:});
+Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, 'SquaredCWT', true, varargin{:});
 
 %%
 Nridges = length(Ridges.time);

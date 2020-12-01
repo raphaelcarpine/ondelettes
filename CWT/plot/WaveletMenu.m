@@ -696,7 +696,7 @@ dampingRidgeName = 'damping3';
 freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
-WvltScaleNames = {'lin', 'log10'};
+WvltScaleNames = {'lin', 'log'};
 FourierScaleNames = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
 FrequencyScaleNames = {'lin', 'log'};
 
@@ -763,7 +763,7 @@ multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes',...
 multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
 
 % Xlim
-XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge');
+XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge', 'Separator', 'on');
     function setXlimRidge()
         prompt = {'Enter Xmin ridge :', 'Enter Xmax ridge :'};
         dlgtitle = 'Input Xlim ridge';
@@ -794,6 +794,88 @@ CtRidgeMenu = uimenu(ridgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')'
     end
 set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
 
+% threshold
+ThresholdRidgeMenu = uimenu(ridgeMenu, 'Text','Set ridge threshold');
+    function setThresholdRidge()
+        prompt = {['Enter ridge threshold [', signalUnit, ']:']};
+        dlgtitle = 'Input ridge threshold';
+        dims = [1 35];
+        definput = {sprintf('%.10e', RidgeMinModu)};
+        answer = inputdlg(prompt,dlgtitle,dims,definput);
+        try
+            RidgeMinModu = eval(answer{1});
+        catch
+        end
+    end
+set(ThresholdRidgeMenu, 'CallBack', @(~,~) setThresholdRidge);
+
+% compute average noise
+AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
+    function getAverageNoise()
+        % input
+        QAverage = eval(get(editQ, 'String'));
+        
+        % menu
+        [fAverage, ignoreXLim, typeOfAverage, figAverageMenu] = getAverageMenu(WvltScale);
+        
+        if isempty(fAverage) || isnan(fAverage)
+            return
+        end
+        
+        % compute average
+        if ignoreXLim
+            XminOld = Xmin; XmaxOld = Xmax;
+            Xmin = -inf; Xmax = inf;
+            getXY();
+            Xmin = XminOld; Xmax = XmaxOld;
+        else
+            getXY();
+        end
+        
+        if multiSignalMode
+            wavelet = 0;
+            for kPlot = 1:nbPlots
+                wavelet = wavelet + WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
+                    'MotherWavelet', MotherWavelet).^2;
+            end
+        else
+            wavelet = [];
+            for kPlot = 1:nbPlots
+                wavelet = [wavelet; WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
+                    'MotherWavelet', MotherWavelet)];
+            end
+        end
+        
+        % edge effects
+        [~, DeltaT] = FTpsi_DeltaT(QAverage, MotherWavelet);
+        deltaT = DeltaT(fAverage);
+        deltaT = ctEdgeEffects .* [deltaT, deltaT];
+        x1 = x(1, :);
+        wavelet = wavelet(:, (x1 >= x1(1) + deltaT(1)) & (x1 <= x1(end) - deltaT(2)));
+        
+        % compute
+        switch typeOfAverage
+            case 'lin'
+                AverageNoise = mean(abs(wavelet), 2);
+            case 'log'
+                AverageNoise = exp(mean(log(abs(wavelet)), 2));
+        end
+        
+        if multiSignalMode
+            AverageNoise = sqrt(AverageNoise);
+        end
+        
+        % display results
+        try
+            delete(figAverageMenu);
+        catch
+        end
+        
+        dispAverageMenu(AverageNoise, fAverage, multiSignalMode, typeOfAverage, ignoreXLim, signalUnit);
+        
+    end
+set(AverageNoiseMenu, 'CallBack', @(~,~) getAverageNoise);
+
 
 %% shock menu
 
@@ -804,17 +886,17 @@ getShocksMenu = uimenu(shocksMenu, 'Text', 'Shocks detection menu');
 
     function getShocksMenuCallback()
         % evaluation des parametres
-        fmin = eval(get(editfmin, 'String'));
-        fmax = eval(get(editfmax, 'String'));
-        NbFreq = eval(get(editNbFreq, 'String'));
-        Q = eval(get(editQ, 'String'));
+        fminShock = eval(get(editfmin, 'String'));
+        fmaxShock = eval(get(editfmax, 'String'));
+        NbFreqShock = eval(get(editNbFreq, 'String'));
+        QShock = eval(get(editQ, 'String'));
         getXY();
         
         % shocks menu
         shockDetectionMenu(x, y,...
-            Q, MotherWavelet, ctEdgeEffects, Q, MotherWavelet,...
-            [fmin, fmax], NbFreq, FrequencyScale, WvltScale,...
-            [fmin, fmax], NbFreq, FrequencyScale, WvltScale,...
+            QShock, MotherWavelet, ctEdgeEffects, QShock, MotherWavelet,...
+            [fminShock, fmaxShock], NbFreqShock, FrequencyScale, WvltScale,...
+            [fminShock, fmaxShock], NbFreqShock, FrequencyScale, WvltScale,...
             multiSignalMode, multiSignalMode);
     end
 
@@ -1036,7 +1118,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 ridges = cell(1, 1);
                 ridges{1} = RidgeExtract(x(kPlot,:), nan, Q, fmin, fmax, NbFreq,...
                     'Wavelet', wavelet,...
-                    'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
+                    'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                     'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                     'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
@@ -1094,37 +1176,37 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                         'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
-                        'NameY', ['Amplitude [', signalUnit, ']'], 'XLim', XLimRidgePlot);
+                        'NameY', ['Amplitude [', signalUnit, ']'], 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
                     RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
-                        'NameY', 'Frequency [Hz]', 'XLim', XLimRidgePlot);
+                        'NameY', 'Frequency [Hz]', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
-                        'NameY', 'Damping', 'XLim', XLimRidgePlot);
+                        'NameY', 'Damping', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplFreq, 'String'), 'ScaleY', get(yscaleAmplFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(4, kPlot), 'RenameAxes', true,...
-                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Frequency [Hz]');
+                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Frequency [Hz]', 'Threshold', RidgeMinModu);
                 end
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true,...
-                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping');
+                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping', 'Threshold', RidgeMinModu);
                 end
                 if checkboxTimePhase.Value % plot de la phase
                     RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                         'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true,...
-                        'NameX', 'Time [s]', 'NameY', 'Phase (rad)', 'XLim', XLimRidgePlot);
+                        'NameX', 'Time [s]', 'NameY', 'Phase (rad)', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                 end
             end
         end
@@ -1135,7 +1217,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 if multiSignalMode
                     [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
                         getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
-                        'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu^2,...
+                        'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale);
@@ -1374,8 +1456,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
     function fourierTransform()
         getXY();
-        fmin = eval(get(editfmin, 'String'));
-        fmax = eval(get(editfmax, 'String'));
+        
+        fminNew = eval(get(editfmin, 'String'));
+        fmaxNew = eval(get(editfmax, 'String'));
+        if fminNew ~= fmin || fmaxNew ~= fmax 
+            resetCrossCorr();
+        end
+        fmin = fminNew;
+        fmax = fmaxNew;
         
         if ~autocorrelationMode
             ffourier = figure;

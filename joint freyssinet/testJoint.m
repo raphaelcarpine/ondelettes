@@ -14,15 +14,16 @@ X = [X11, X12; X21, X22];
 
 t = (1/Fs) * (0:size(X, 2)-1);
 
-if 0
+if 1
     % fréquence de rééchantillonage
-    Fs_new = 4000;
+    Fs_new = 10000;
     
     n_resampling = floor(Fs/Fs_new);
     Fs_new = Fs / n_resampling;
     
     % filtrage
     Fc = 0.8 * Fs_new/2;
+    Fc = 4000;
     X = butterworthFilter(t, X, Fc, 'low', 5);
     X = butterworthFilter(t, X, Fc, 'low', 5);
     
@@ -33,11 +34,11 @@ end
 
 %% selection
 
-ti = 100;
-tf = 200;
-
-X = X(:, t >= ti & t <= tf);
-t = t(t >= ti & t <= tf);
+% ti = 0;
+% tf = 100;
+% 
+% X = X(:, t >= ti & t <= tf);
+% t = t(t >= ti & t <= tf);
 
 
 %% affichage
@@ -49,14 +50,17 @@ ax = axes(fig);
 plt = plot(ax, t, X);
 
 
-fmin = 500;
+fmin = 300;
 fmax = 3000;
 Q = 30;
-% MaxRidges = 1;
-% XLimRidge = [t(kt0), t(end)];
-% ctRidge = 1;
-WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false);%,...
-%     'MaxRidges', MaxRidges, 'XLim', XLimRidge, 'ctRidge', 1);
+XLim = [126, 132];
+FrequencyScale = 'log';
+WvltScale = 'lin';
+MotherWavelet =  'morlet';
+
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
+    'WvltScale', WvltScale, 'FrequencyScale', FrequencyScale, 'MotherWavelet', MotherWavelet);%,...
+%     'XLim', XLim);
 
 
 

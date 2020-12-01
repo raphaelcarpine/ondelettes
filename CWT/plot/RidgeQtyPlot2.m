@@ -12,6 +12,7 @@ defaultEvaluationFunctionY = '';
 defaultShowEdge = true;
 defaultXLim = nan;
 defaultYLim = nan;
+defaultThreshold = 0;
 defaultGrid = 'on'; % 'auto' pour ne pas changer
 defaultRenameAxes = true;
 
@@ -33,6 +34,7 @@ addParameter(p,'EvaluationFunctionY', defaultEvaluationFunctionY, checkEvaluatio
 addParameter(p,'showEdge', defaultShowEdge);
 addParameter(p,'XLim', defaultXLim);
 addParameter(p,'YLim', defaultYLim);
+addParameter(p,'Threshold', defaultThreshold);
 addParameter(p,'Grid', defaultGrid);
 addParameter(p,'RenameAxes', defaultRenameAxes);
 
@@ -60,6 +62,7 @@ ScaleY = p.Results.ScaleY;
 showEdge = p.Results.showEdge;
 XLim = p.Results.XLim;
 YLim = p.Results.YLim;
+Threshold = p.Results.Threshold;
 Grid = p.Results.Grid;
 
 ax = p.Results.Axes;
@@ -84,6 +87,13 @@ for k_ridge = 1:length(ridge.freq)
         %TODO
     end
 end
+
+if strcmp(QtyY, 'val') && Threshold > 0
+    yline(ax, Threshold, 'r--');
+    thresholdTxt = text(ax, ax.XLim(1), Threshold, ' threshold', 'VerticalAlignment', 'bottom', 'Color', 'r');
+    addlistener(ax, 'XLim', 'PostSet', @(~,~) set(thresholdTxt, 'Position', [ax.XLim(1), Threshold]));
+end
+    
 
 %legend('show','location','best')
 if RenameAxes

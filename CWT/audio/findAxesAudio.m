@@ -13,7 +13,7 @@ for kax = 1:length(allAxes)
         dx = mean(diff(xdata));
         if (Fs*dx - 1) < 1e-3 && all(abs(diff(xdata)/dx - 1) < 1e-3)
             Axes(end+1) = ax;
-            continue
+            break
         end
     end
 end

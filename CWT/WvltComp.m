@@ -8,6 +8,7 @@ MotherWaveletDef = 'cauchy'; %'littlewood-paley';
 ctDef = 3;
 MeanOverFreqFuncDef = []; % mode mean(func(wvlt), 1)
 XindexOutDef = []; % mode WvltOut = Wvlt(:, XindexOut);
+MeanSquareOverXelementsDef = {};
 
 %%
 addRequired(p,'X')
@@ -20,6 +21,7 @@ addParameter(p,'MotherWavelet',MotherWaveletDef);
 addParameter(p,'ct',ctDef);
 addParameter(p,'MeanOverFreqFunc', MeanOverFreqFuncDef);
 addParameter(p,'XindexOut', XindexOutDef);
+addParameter(p,'MeanSquareOverXelements', MeanSquareOverXelementsDef);
 
 parse(p,X,WvltFreq,Y,Q,varargin{:});
 
@@ -30,6 +32,7 @@ MotherWavelet = p.Results.MotherWavelet;
 ct = p.Results.ct;
 MeanOverFreqFunc = p.Results.MeanOverFreqFunc;
 XindexOut = p.Results.XindexOut;
+MeanSquareOverXelements = p.Results.MeanSquareOverXelements;
 
 ct = ct * ZeroPadding;
 
@@ -91,6 +94,16 @@ else % mode moyenne sur les fréquences ou temps particuliers (économie de la ram
     elseif ~isempty(XindexOut)
         WvltOutTot = nan(length(WvltFreq), length(XindexOut));
     end
+end
+
+% mean square over X
+MeanSquareOverX = nan(0, length(MeanSquareOverXelements));
+
+% waitbar
+if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+    [initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(length(WvltFreqTot),...
+        'displayTime', 0, 'windowTitle', 'Computing CWT');
+    initWaitBar();
 end
 
 for k_wvlt_freq = 1:length(WvltFreqTot)
@@ -155,6 +168,14 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
     end
     WvltOut = transpose(wavelet1)/WvltNorm; % On termine avec le coef de normalisation
     
+    %% moyennage sur t
+    MeanSquareOverXnextLines = [];
+    for k_el = 1:length(MeanSquareOverXelements)
+        MeanSquareOverXnextLines = [MeanSquareOverXnextLines,...
+            mean(abs(WvltOut(:, MeanSquareOverXelements{k_el})).^2, 2)];
+    end
+    MeanSquareOverX = [MeanSquareOverX; MeanSquareOverXnextLines];
+    
     %% mode moyenne sur les fréquences ou temps particuliers (économie de la ram)
     
     if ~isempty(MeanOverFreqFunc) && ~isempty(XindexOut)
@@ -163,12 +184,28 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
         WvltOutTot = WvltOutTot + MeanOverFreqFunc(WvltOut);
     elseif ~isempty(XindexOut)
         WvltOutTot(k_wvlt_freq, :) = WvltOut(:, XindexOut);
-    else
+    else % mode normal
         WvltOutTot = WvltOut;
+    end
+    
+    %% waitbar
+    
+    if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+        updateWaitBar(k_wvlt_freq);
     end
     
 end
 
+% waitbar
+if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+    closeWaitBar();
+end
+
+%% moyennage sur t
+WvltOutTot = [WvltOutTot, MeanSquareOverX];
+
+
+%%
 WvltOut = WvltOutTot;
 
 %%

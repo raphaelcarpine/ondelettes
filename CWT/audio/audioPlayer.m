@@ -3,13 +3,13 @@ function audioPlayer(T, X, initFcn, updateFcn, closeFcn)
 %   Detailed explanation goes here
 
 volume = 1;
-timeAcc = 1;
+timeSpeed = 1;
 
 if nargin == 0
     Fs = 1000;
     T = (0:10*Fs) / Fs;
     X = randn(2, length(T));
-    volume  = 0.1;
+    volume  = 0.2;
 end
 
 if nargin <= 2
@@ -41,7 +41,6 @@ if any(abs(diff(T)/mean(diff(T)) - 1) > 1e-3)
 end
 
 Fs = 1/mean(diff(T));
-Fs = Fs * timeAcc;
 
 %% stereo
 
@@ -57,11 +56,10 @@ end
 Xaudio = Xaudio - min(Xaudio, [], 'all');
 Xaudio = Xaudio / max(Xaudio, [], 'all');
 Xaudio = 2*Xaudio - 1;
-Xaudio = Xaudio * volume;
 
 %% initialization
 
-audioP = audioplayer(transpose(Xaudio), Fs);
+audioP = audioplayer(volume*transpose(Xaudio), round(timeSpeed*Fs));
 initFcn(T(1));
 
 
@@ -93,6 +91,18 @@ playPauseBut = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'play',
 stopBut = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'stop',...
     'Units', 'characters', 'Position', [13, 1, 8, 3]);
 
+% volume
+uicontrol('Parent', fig, 'Style', 'text', 'String', 'volume',...
+    'Units', 'characters', 'Position', [25, 2.5, 20, 1.5]);
+volumeSlider = uicontrol('Parent', fig, 'Style', 'slider', 'Value', volume,...
+    'Units', 'characters', 'Position', [25, 1, 20, 1.1]);
+
+% speed
+uicontrol('Parent', fig, 'Style', 'text', 'String', 'speed',...
+    'Units', 'characters', 'Position', [50, 2, 10, 1]);
+speedInput = uicontrol('Parent', fig, 'Style', 'edit', 'String', num2str(timeSpeed),...
+    'Units', 'characters', 'Position', [60, 1.5, 6, 2]);
+
 %
 set(tiTxt, 'Units', 'normalized');
 set(tfBTxt, 'Units', 'normalized');
@@ -103,17 +113,39 @@ set(timeSlider, 'Units', 'normalized');
 
 kt0 = 0; % index of t0
 
-    function setTime(xt)
+
+    function initAudioP(wasPlaying)
+        if nargin == 0
+            wasPlaying = isplaying(audioP);
+        end
+        
+        audioP = audioplayer(volume * transpose(Xaudio(:, kt0+1:end)), round(timeSpeed*Fs));
+        
+        set(audioP, 'StartFcn', @(~,~) updateTime(true));
+        set(audioP, 'TimerFcn', @(~,~) updateTime());
+        set(audioP, 'StopFcn', @(~,~) updateTime());
+        
+        if wasPlaying
+            resume(audioP);
+        end
+    end
+
+    function setTime(xt, wasPlaying)
+        if nargin == 1
+            wasPlaying = isplaying(audioP);
+        end
+        
         stop(audioP);
-        set(playPauseBut, 'String', 'play');
+%         set(playPauseBut, 'String', 'play');
         
         kt0 = floor(xt*length(T));
         if kt0 == length(T)
             kt0 = length(T) - 1;
+        elseif kt0 == 0
+            kt0 = 1;
         end
         
-        audioP = audioplayer(transpose(Xaudio(:, kt0+1:end)), Fs);
-        initAudioP(audioP);
+        initAudioP(wasPlaying);
         
         set(timeSlider, 'Value', xt);
         t = T(1) + xt * (T(end)-T(1));
@@ -122,13 +154,21 @@ kt0 = 0; % index of t0
         updateFcn(t);
     end
 
-    function updateTime()
-        disp(timeSlider.ButtonDownFcn);
+    function updateTime(startingFlag)
+        if nargin == 0
+            startingFlag = false;
+        end
+        
         kt = kt0 + get(audioP, 'CurrentSample');
+        kt = min(kt, length(T));
         t = T(kt);
         xt = (t-T(1)) / (T(end)-T(1));
         set(timeSlider, 'Value', xt);
         set(tTxt, 'String', char(duration(seconds(t), 'Format', 'mm:ss')));
+        
+        if ~isplaying(audioP) && ~startingFlag
+            set(playPauseBut, 'String', 'play');
+        end
         
         updateFcn(t);
     end
@@ -138,7 +178,7 @@ kt0 = 0; % index of t0
         
         if flag
             set(playPauseBut, 'String', 'play');
-            set(audioP, 'UserData', 'paused');
+%             set(audioP, 'UserData', 'paused');
             updateTime();
             pause(audioP);
         else
@@ -149,29 +189,55 @@ kt0 = 0; % index of t0
     end
 
     function stopFunc()
-        if ~isempty(audioP.UserData)
-            set(audioP, 'UserData', []);
-            return
-        end
+%         if ~isempty(get(audioP, 'UserData'))
+%             set(audioP, 'UserData', []);
+%             return
+%         end
         pause(audioP);
         
         kt0 = 0;
-        audioP = audioplayer(transpose(Xaudio), Fs);
-        initAudioP(audioP);
         
-        setTime(0);
+        initAudioP();
+        
+        setTime(0, false);
         set(playPauseBut, 'String', 'play');
     end
 
-%%
+%% callbacks
 
+% time
 timeSlider.Callback = @(hObject,~) setTime(get(hObject, 'Value'));
 
+% play/pause
 playPauseBut.Callback = @(~,~) playPauseFunc();
 
+% stop
 stopBut.Callback = @(~,~) stopFunc();
 
+% volume
+    function volumeCallback()
+        volume = get(volumeSlider, 'Value');
+        kt0 = kt0 + get(audioP, 'CurrentSample') - 1;
+%         set(audioP, 'UserData', 'paused');
+        initAudioP();
+    end
+volumeSlider.Callback = @(~,~) volumeCallback();
 
+% speed
+    function speedCallback()
+        newTimeSpeed = str2double(get(speedInput, 'String'));
+        if isnan(newTimeSpeed)
+            set(speedInput, 'String', timeSpeed);
+        end
+        timeSpeed = newTimeSpeed;
+        
+        kt0 = kt0 + get(audioP, 'CurrentSample') - 1;
+%         set(audioP, 'UserData', 'paused');
+        initAudioP();
+    end
+speedInput.Callback = @(~,~) speedCallback();
+
+% shortcuts
     function keyboardShortcuts(~, event)
         switch event.Key
             case 'space'
@@ -179,24 +245,35 @@ stopBut.Callback = @(~,~) stopFunc();
         end
     end
 set(fig, 'KeyPressFcn', @keyboardShortcuts);
+set(tiTxt, 'KeyPressFcn', @keyboardShortcuts);
+set(tfBTxt, 'KeyPressFcn', @keyboardShortcuts);
+set(tTxt, 'KeyPressFcn', @keyboardShortcuts);
+set(timeSlider, 'KeyPressFcn', @keyboardShortcuts);
+% set(playPauseBut, 'KeyPressFcn', @keyboardShortcuts);
+% set(stopBut, 'KeyPressFcn', @keyboardShortcuts);
+set(volumeSlider, 'KeyPressFcn', @keyboardShortcuts);
 
-%%
 
-    function initAudioP(audiop)
-        set(audiop, 'TimerFcn', @(~,~) updateTime());
-%         set(audiop, 'StopFcn', @(~,~) updateTime());
-        set(audiop, 'StopFcn', @(~,~) stopFunc());
-        set(audiop, 'StartFcn', @(~,~) updateTime());
-        % set(audiop, 'TimePeriod', 0.02);
-    end
 
-initAudioP(audioP);
 
-%%
+
+
+
+
+%% initialization
+
+
+initAudioP();
+
+%% close acallback
 
     function closeFigFcn(~, ~)
         try
             closeFcn();
+        catch
+        end
+        try
+            delete(audioP);
         catch
         end
         delete(fig)

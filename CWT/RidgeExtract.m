@@ -78,6 +78,7 @@ elseif length(ctRidge) == 1
     ctRidge = [ctRidge, ctRidge];
 end
 
+
 %%
 if iscolumn(X)
     X=transpose(X);
@@ -107,6 +108,9 @@ end
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
 mesu = abs(mesu);
 
+if SquaredCWT
+    MinModu = MinModu^2;
+end
 mesu(mesu<MinModu) = NaN; % retrait des max. locaux < MinModu
 
 %retrait des max locaux paralleles excessifs

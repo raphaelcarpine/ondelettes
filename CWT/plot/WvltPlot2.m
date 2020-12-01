@@ -5,7 +5,7 @@ if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
 end
 
 if nargin < 7
-    WvltScale = 'log10';
+    WvltScale = 'log';
 end
 if nargin < 8
     figureTitle = '';
@@ -18,14 +18,13 @@ if nargin < 10
 end
 
 
-if isequal(WvltScale, 'lin')
-    moduleScale = @(x) x;
-elseif isequal(WvltScale, 'log')
-    moduleScale = @(x) log(x);
-elseif isequal(WvltScale, 'log10')
-    moduleScale = @(x) log10(x);
-else
-    error("");
+switch WvltScale
+    case 'lin'
+        moduleScale = @(x) x;
+    case 'log'
+        moduleScale = @(x) log(x);
+    otherwise
+        error('wrong scale');
 end
 
 
@@ -55,9 +54,10 @@ hold(ax, 'on');
 [T, Freqs] = meshgrid(t, freqs);
 
 if isequal(plotQuantity, 'abs') || isequal(plotQuantity, 'module')
-    wavelet = moduleScale(abs(wavelet));
+    wavelet = abs(wavelet);
 %     plt = pcolor(ax, T, Freqs, wavelet);
-    plt = surf(ax, T, Freqs, wavelet);
+    plt = surf(ax, T, Freqs, wavelet, moduleScale(wavelet));
+    set(ax, 'ZScale', WvltScale);
     colormap(ax, jet);
     
     ZedgeEffects = max(max(wavelet)) + 1;
