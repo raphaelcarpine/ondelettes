@@ -132,7 +132,8 @@ else
         parent.CloseRequestFcn = @(~,~) closeParent(parent);
     end
 end
-nbPlots = size(getX(), 1);
+nbPlots = size(getY(), 1);
+signalChannels = 1:nbPlots;
 
 
 fmin = p.Results.fmin;
@@ -546,8 +547,15 @@ set(FrequencyScaleMenuChoices(find(strcmp(FrequencyScaleValues, FrequencyScale))
 set(FrequencyScaleMenuChoices(1), 'CallBack', @(~,~) selectFrequencyScaleMenu(1));
 set(FrequencyScaleMenuChoices(2), 'CallBack', @(~,~) selectFrequencyScaleMenu(2));
 
+% signal channels
+signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on');
+    function setSignalChannels()
+        signalChannels = getSignalChannels(signalChannels, nbPlots);
+    end
+signalChannelsMenu.Callback = @(~,~) setSignalChannels();
+
 % Xlim
-XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
+XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
     function setXlim()
         prompt = {'Enter Xmin :', 'Enter Xmax :'};
         dlgtitle = 'Input Xlim';
@@ -1014,12 +1022,20 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         %test X identique
         %%%
         
+        x = X2;
+        y = Y2;
+        
+        if nbPlots ~= size(y, 1)
+            signalChannels = 1:nbPlots;
+        end
+        nbPlots = size(y, 1);
+        
+        x = x(signalChannels, :);
+        y = y(signalChannels, :);
+        
         if ~isequal(x, X2) || ~isequal(y, Y2)
             resetCrossCorr();
         end
-        
-        x = X2;
-        y = Y2;
     end
 
     function show()
