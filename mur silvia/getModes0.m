@@ -16,14 +16,14 @@ tf = inf;
 
 [t, X] = getData(P, transient);
 
-X = X(:, t>=t0 & t<tf);
-t = t(t>=t0 & t<tf);
+% X = X(:, t>=t0 & t<tf);
+% t = t(t>=t0 & t<tf);
 
 
-% rééchantillonnage
-indices = 1:3:length(t);
-X = X(:, indices);
-t = t(indices);
+% % rééchantillonnage
+% indices = 1:3:length(t);
+% X = X(:, indices);
+% t = t(indices);
 
 
 % T0 = 100;
@@ -65,8 +65,8 @@ end
 fig = figure;
 ax = axes(fig);
 plts = plot(t, X(sensors,:), 'Parent', ax);
-xlabel(ax, 'time');
-ylabel(ax, 'acceleration');
+xlabel(ax, 'Time [s]');
+ylabel(ax, 'Acceleration [m/s²]');
 plts = transpose(plts);
 
 
@@ -77,13 +77,14 @@ MaxParallelRidges = 1;
 fmin = 4;
 fmax = 40;
 NbFreq = 300;
+MultiSignalMode = true;
 
 ct = 3;
 cf = 5;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
-    , 'CtEdgeEffects', ct, 'MultiSignalMode', true);
+    , 'CtEdgeEffects', ct, 'MultiSignalMode', MultiSignalMode);
 
 
 return

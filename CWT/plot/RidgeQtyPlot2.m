@@ -1,4 +1,4 @@
-function plts = RidgeQtyPlot2(ridge, QtyX, QtyY ,varargin)
+function [ax, plts] = RidgeQtyPlot2(ridge, QtyX, QtyY ,varargin)
 %% Quantity : time, val, freq, diff, amor, freq2, pha
 p = inputParser;
 

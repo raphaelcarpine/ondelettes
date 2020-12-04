@@ -10,6 +10,7 @@ hold(ax, 'on');
 plt0 = plot(ax, t, meanWvlttEdgeEffects, '--');
 plt = plot(ax, t, meanWvlt, 'Color', get(plt0, 'Color'));
 set(ax, 'YScale', meanScale);
+set(ax, 'XLim', [t(1), t(end)]);
 xlabel(ax, 'Time [s]');
 ylabel(ax, 'Average F(CWT(t,~))');
 

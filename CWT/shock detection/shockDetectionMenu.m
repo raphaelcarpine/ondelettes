@@ -42,10 +42,32 @@ if nargin == 0 % test
     multiChannelSpectrumInit = false;
 end
 
+%% input array size
+
+% array size
+if size(t, 1) == 1 && size(t, 2) == size(X, 2)
+    % ok
+elseif size(t, 1) == size(X, 1) && size(t, 2) == size(X, 2)
+    dt = mean(diff(t(1, :)));
+    for k_t = 2:size(t, 1)
+        if max(abs(t(k_t, :) - t(1, :))) > dt * 1e-3
+            error(' ');
+        end
+    end
+    t = t(1, :);
+else
+    error(['array size problem (', num2str(size(t)), ' & ', num2str(size(X)), ')']);
+end
+
+% time step
+if any(abs(diff(t)/mean(diff(t)) - 1) > 1e-3)
+    error('non-constant time step');
+end
+
 %% input window
 
 HpansShock = [2, 5, 5, 9, 5, 2.5];
-HpansSpectrum = [2, 5, 5, 8];
+HpansSpectrum = [2, 5, 5, 8, 2.5];
 
 Hpans = [sum(HpansShock), sum(HpansSpectrum)];
 
@@ -247,33 +269,43 @@ scaleSpectrumInput = uicontrol('Parent', plotSpectrumPan, 'Style', 'popup', 'Str
 averageSpectrumInput = uicontrol('Parent', plotSpectrumPan, 'Style', 'checkbox', 'String', 'plot average squared spectrum (multiple shocks)',...
     'Value', averageSpectrumInit, 'Units', 'characters', 'Position', [1, 0.5, 60, 1.5]);
 
+% ok button
+computeSpectrumInput = uicontrol('Parent', spectrumPan, 'Style', 'pushbutton', 'String', 'compute',...
+    'Units', 'normalized', 'Position', [0.3, zpansSpectrum(5), 0.4, hpansSpectrum(5)]);
+
 
 %% ok button
 
-okInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'OK',...
-    'Units', 'characters', 'Position', [80, 0.5, 15, 2.5]);
+% okInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'OK',...
+%     'Units', 'characters', 'Position', [80, 0.5, 15, 2.5]);
 
-%% return functions
+%% shocks return function
 
 computeShockInput.Callback = @(~, ~) computeShockReturn();
 
 fminMean = nan;
 fmaxMean = nan;
 nbFreqMean = nan;
-scaleFreqMean = nan;
+scaleFreqMean = '';
 QMean = nan;
-MotherWaveletMean = nan;
+MotherWaveletMean = '';
 ctEdgeEffectsMean = nan;
 meanFunc = @() 0;
 
+freqsMean = [];
+
 meanWvltTot = nan(size(X));
+meanWvlt = [];
+
+shockIndexes = {};
+thresholdAbsoluteValues = {};
 
     function computeShockReturn()
         % cursor
         set(fig, 'pointer', 'watch');
         drawnow;
         
-        %% input
+        %%%% input
         
         % multi channel mode
         multiChannelMean = get(multiChannelMeanInput, 'Value');
@@ -300,11 +332,11 @@ meanWvltTot = nan(size(X));
         scaleMean = scaleMeanValues{get(scaleMeanInput, 'Value')};
         
         
-        %% check if new CWT
+        %%%% check if new CWT
         
         if fminMeanNew ~= fminMean || fmaxMeanNew ~= fmaxMean || nbFreqMeanNew ~= nbFreqMean ||...
-                scaleFreqMeanNew ~= scaleFreqMean || QMeanNew ~= QMean ||...
-                MotherWaveletMeanNew ~= MotherWaveletMean || ctEdgeEffectsMeanNew ~= ctEdgeEffectsMean ||...
+                ~strcmp(scaleFreqMeanNew, scaleFreqMean) || QMeanNew ~= QMean ||...
+                ~strcmp(MotherWaveletMeanNew, MotherWaveletMean) || ~isequal(ctEdgeEffectsMeanNew, ctEdgeEffectsMean) ||...
                 ~strcmp(func2str(meanFuncNew), func2str(meanFunc))
             %
             fminMean = fminMeanNew;
@@ -324,13 +356,6 @@ meanWvltTot = nan(size(X));
                     freqsMean = logspace(log10(fminMean), log10(fmaxMean), nbFreqMean);
             end
             
-            switch scaleFreqSpectrum
-                case 'lin'
-                    freqsSpectrum = linspace(fminSpectrum, fmaxSpectrum, nbFreqSpectrum);
-                case 'log'
-                    freqsSpectrum = logspace(log10(fminSpectrum), log10(fmaxSpectrum), nbFreqSpectrum);
-            end
-            
             % computing meanWvltTot
             meanWvltTot = nan(size(X));
             for k_x = 1:size(X, 1)
@@ -339,77 +364,55 @@ meanWvltTot = nan(size(X));
             end
         end
         
-        %% shock detection
+        %%%% shock detection
         
-        if multiSignalMean
-            meanWvltTot2 = mean(meanWvltTot, 1);
+        if multiChannelMean
+            meanWvlt = mean(meanWvltTot, 1);
         else
-            meanWvltTot2 = meanWvltTot;
+            meanWvlt = meanWvltTot;
         end
         
-        shockIndexes = cell(1, size(meanWvltTot2, 1));
-        for k_ch = 1:size(meanWvltTot2, 1)
-            if multiSignalMean
-                figNameSuffix = 'all channels';
+        shockIndexes = cell(1, size(meanWvlt, 1));
+        thresholdAbsoluteValues = cell(1, size(meanWvlt, 1));
+        for k_ch = 1:size(meanWvlt, 1)
+            figName = ['mean fcn: ', func2str(meanFunc), ' ; ',...
+                num2str(fminMean), ' < f < ', num2str(fmaxMean), ' (', scaleFreqMean, ' scale) ; '];
+            if multiChannelMean
+                figName = [figName, 'all channels'];
             else
-                figNameSuffix = sprintf('channel %d', k_ch);
+                figName = [figName, sprintf('channel %d', k_ch)];
             end
-            shockIndexes{k_ch} = maxDetection(t, meanWvltTot2, FreqsMean, QMean, MotherWaveletMean, ctEdgeEffectsMean,...
-                thresholdMode, thresholdValue, maxDetectionMethod, plotMean, figNameSuffix);
+            [shockIndexes{k_ch}, thresholdAbsoluteValues{k_ch}] = ...
+                maxDetection(t, meanWvlt(k_ch, :), freqsMean, QMean, MotherWaveletMean, ctEdgeEffectsMean,...
+                thresholdMode, thresholdValue, maxDetectionMethod, plotMean, scaleMean, figName);
         end
         
-        
-        %%
-        
-        
-        
-        shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean, MotherWaveletSpectrum,...
-            ctEdgeEffectsMean, meanFunc, thresholdMode, thresholdValue, maxDetectionMethod,...
-            multiChannelMean, multiChannelSpectrum, 'plotMean', plotMean, 'plotSpectrum', plotSpectrum,...
-            'meanScale', scaleMean, 'spectrumScale', scaleSpectrum, 'plotAverageSpectrum', averageSpectrum);
-        
-        %% cursor
+        %%%% cursor
         set(fig, 'pointer', 'arrow');
         drawnow;
-        
-        %%
-        
-%         delete(fig);
         
     end
 
 
 
+%% spectrums return function
 
-function okReturn()
+computeSpectrumInput.Callback = @(~, ~) computeSpectrumReturn();
+
+
+    function computeSpectrumReturn()
         % cursor
         set(fig, 'pointer', 'watch');
         drawnow;
         
-        %% input
+        %%%% compute shocks
+        computeShockReturn();
         
-        % freq panel
-        fminMean = str2double(get(fminMeanInput, 'String'));
-        fmaxMean = str2double(get(fmaxMeanInput, 'String'));
-        nbFreqMean = str2double(get(nbFreqMeanInput, 'String'));
-        scaleFreqMean = scaleFreqMeanValues{get(scaleFreqMeanInput, 'Value')};
-        
-        % wvlt panel
-        QMean = str2double(get(QMeanInput, 'String'));
-        MotherWaveletMean =  MotherWaveletMeanValues{get(MotherWaveletMeanInput, 'Value')};
-        ctEdgeEffectsMean = str2num(get(ctEdgeEffectsMeanInput, 'String'));
-        
-        % shock panel
-        meanFunc = str2func(get(meanFuncInput, 'String'));
-        thresholdValue = str2double(get(thresholdValueInput, 'String'));
-        thresholdMode = thresholdModeValues{get(thresholdModeInput, 'Value')};
-        maxDetectionMethod = maxDetectionMethodValues{get(maxDetectionMethodInput, 'Value')};
-        
-        % plot panel
-        plotMean = get(plotMeanInput, 'Value');
-        scaleMean = scaleMeanValues{get(scaleMeanInput, 'Value')};
+        %%%% input
         
         % multi channel mode
+        multiChannelSpectrum = get(multiChannelSpectrumInput, 'Value');
+        % multi channel mode mean
         multiChannelMean = get(multiChannelMeanInput, 'Value');
         
         % freq panel
@@ -423,29 +426,16 @@ function okReturn()
         MotherWaveletSpectrum =  MotherWaveletSpectrumValues{get(MotherWaveletSpectrumInput, 'Value')};
         
         % plot panel
-        plotSpectrum = get(plotSpectrumInput, 'Value');
+        plotShockSpectrums = get(plotSpectrumInput, 'Value');
         scaleSpectrum = scaleSpectrumValues{get(scaleSpectrumInput, 'Value')};
         
         % average spectrum mode
-        averageSpectrum = get(averageSpectrumInput, 'Value');
-        
-        % multi channel mode
-        multiChannelSpectrum = get(multiChannelSpectrumInput, 'Value');
+        averageShockSpectrum = get(averageSpectrumInput, 'Value');
         
         
-        %%
-        multiChannelSpectrum = multiChannelSpectrum & multiChannelMean;
-        
-        
-        %%
-        
-        switch scaleFreqMean
-            case 'lin'
-                freqsMean = linspace(fminMean, fmaxMean, nbFreqMean);
-            case 'log'
-                freqsMean = logspace(log10(fminMean), log10(fmaxMean), nbFreqMean);
-        end
-        
+        %%%% compute spectrum
+            
+        % frequencies array
         switch scaleFreqSpectrum
             case 'lin'
                 freqsSpectrum = linspace(fminSpectrum, fmaxSpectrum, nbFreqSpectrum);
@@ -453,20 +443,31 @@ function okReturn()
                 freqsSpectrum = logspace(log10(fminSpectrum), log10(fmaxSpectrum), nbFreqSpectrum);
         end
         
-        shockDetection(t, X, freqsMean, freqsSpectrum, QMean, QSpectrum, MotherWaveletMean, MotherWaveletSpectrum,...
-            ctEdgeEffectsMean, meanFunc, thresholdMode, thresholdValue, maxDetectionMethod,...
-            multiChannelMean, multiChannelSpectrum, 'plotMean', plotMean, 'plotSpectrum', plotSpectrum,...
-            'meanScale', scaleMean, 'spectrumScale', scaleSpectrum, 'plotAverageSpectrum', averageSpectrum);
+        % under & above threshold indexes
+        UnderThresholdAverageIndexes = cell(1, size(meanWvlt, 1));
+        AboveThresholdAverageIndexes = cell(1, size(meanWvlt, 1));
+        for k_ch = 1:size(meanWvlt, 1)
+            UnderThresholdAverageIndexes{k_ch} = meanWvlt(k_ch, :) < thresholdAbsoluteValues{k_ch};
+            AboveThresholdAverageIndexes{k_ch} = meanWvlt(k_ch, :) >= thresholdAbsoluteValues{k_ch};
+        end
         
-        %% cursor
+        getSpectrums(t, X, shockIndexes, freqsSpectrum, QSpectrum, MotherWaveletSpectrum,...
+            scaleFreqSpectrum, scaleSpectrum,...
+            multiChannelMean, multiChannelSpectrum, plotShockSpectrums,...
+            'plotAverageShockSpectrum', averageShockSpectrum,...
+            'plotAverageSpectrum', averageShockSpectrum,...
+            'plotUnderThresholdAverage', averageShockSpectrum,...
+            'plotUnderThresholdAverageIndexes', UnderThresholdAverageIndexes,...
+            'plotAboveThresholdAverage', averageShockSpectrum,...
+            'plotAboveThresholdAverageIndexes', AboveThresholdAverageIndexes);
+        
+        
+        %%%% cursor
         set(fig, 'pointer', 'arrow');
         drawnow;
         
-        %%
-        
-%         delete(fig);
-        
     end
+
 
 end
 

@@ -27,6 +27,7 @@ defaultWvltScale = 'log';
 defaultFourierScale = 'lin';
 defaultFrequencyScale = 'lin';
 defaultXLim = nan;
+defaultShowXLim = true;
 defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
@@ -66,6 +67,7 @@ addParameter(p,'WvltScale', defaultWvltScale);
 addParameter(p,'FourierScale', defaultFourierScale);
 addParameter(p,'FrequencyScale', defaultFrequencyScale);
 addParameter(p,'XLim', defaultXLim);
+addParameter(p,'ShowXLim', defaultShowXLim);
 addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
 addParameter(p, 'RealShapePlot', defaultRealShapePlot);
@@ -113,7 +115,7 @@ end
 if WaveletPlot == 0
     getX = @() p.Results.X;
     getY = @() p.Results.Y;
-    plotAxes = 0;
+    plotAxes = gobjects(1, 0);
     plotAxesName = '';
 else
     getX = @() cellmat2mat (get(WaveletPlot, 'XData'));
@@ -157,11 +159,12 @@ WvltScale = p.Results.WvltScale;
 FourierScale = p.Results.FourierScale;
 FrequencyScale = p.Results.FrequencyScale;
 XLim = p.Results.XLim;
+XLimRidge = p.Results.XLimRidge;
+ShowXLim = p.Results.ShowXLim;
 wvltAxesTitle = p.Results.WvltAxesTitle;
 ComplexShapePlot = p.Results.ComplexShapePlot;
 RealShapePlot = p.Results.RealShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
-XLimRidge = p.Results.XLimRidge;
 ctRidge = p.Results.ctRidge;
 removeMean = p.Results.RemoveMean;
 signalUnit = p.Results.SignalUnit;
@@ -171,15 +174,12 @@ x0 = getX();
 if isnan(XLim)
     XLim = [x0(1), x0(end)];
 end
-Xmin = XLim(1);
-Xmax = XLim(2);
-
 if isempty(XLimRidge)
-    XLimRidge = XLim;
+    XLimRidge = [x0(1), x0(end)];
 end
 
 if isnan(maxLagCorr)
-    maxLagCorr = Xmax-Xmin;
+    maxLagCorr = XLim(2)-XLim(1);
 end
 
 x = nan; y = nan;
@@ -200,6 +200,10 @@ end
             subplot0 = @(i,j,k,ax) ax;
         end
     end
+
+%% affichage XLim
+
+XLimDisplayObj = XLimDisplay(XLim, XLimRidge, ShowXLim, ShowXLim, plotAxes, true(size(plotAxes)));
 
 
 %% bouton ondelettes et panneaux param et sorties
@@ -297,7 +301,7 @@ checkboxPhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','check
 
 Checkboxs1 = [checkboxGeneral, checkboxModule, checkboxPhase];
 
-if ~isequal(plotAxes, 0)
+if ~isempty(plotAxes)
     checkboxTimeAmplPlot = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
         'String', 'time, ampl on plot', 'Value', false);
     Checkboxs1 = [Checkboxs1, checkboxTimeAmplPlot];
@@ -548,15 +552,25 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
         prompt = {'Enter Xmin :', 'Enter Xmax :'};
         dlgtitle = 'Input Xlim';
         dims = [1 35];
-        definput = {num2str(Xmin), num2str(Xmax)};
+        definput = {num2str(XLim(1)), num2str(XLim(2))};
         answer = inputdlg(prompt,dlgtitle,dims,definput);
         try
-            Xmin = str2double(answer{1});
-            Xmax = str2double(answer{2});
+            XLim(1) = str2double(answer{1});
+            XLim(2) = str2double(answer{2});
+            XLimDisplayObj.updateXLim(XLim);
         catch
         end
     end
 set(XlimMenu, 'CallBack', @(~,~) setXlim);
+
+% show XLim
+XlimDisplayMenu = uimenu(paramMenu, 'Text','Show Xlim', 'Checked', ShowXLim);
+    function setXlimDisplay()
+        ShowXLim = ~ShowXLim;
+        set(XlimDisplayMenu, 'Checked', ShowXLim);
+        XLimDisplayObj.setVisible(ShowXLim, ShowXLim);
+    end
+set(XlimDisplayMenu, 'CallBack', @(~,~) setXlimDisplay);
 
 % ct
 CtMenu = uimenu(paramMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')']);
@@ -773,6 +787,7 @@ XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge', 'Separator', 'on');
         try
             XLimRidge(1) = str2double(answer{1});
             XLimRidge(2) = str2double(answer{2});
+            XLimDisplayObj.updateXLimRidges(XLimRidge);
         catch
         end
     end
@@ -819,15 +834,19 @@ AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
         [fAverage, ignoreXLim, typeOfAverage, figAverageMenu] = getAverageMenu(WvltScale);
         
         if isempty(fAverage) || isnan(fAverage)
+            try
+                delete(figAverageMenu);
+            catch
+            end
             return
         end
         
         % compute average
         if ignoreXLim
-            XminOld = Xmin; XmaxOld = Xmax;
-            Xmin = -inf; Xmax = inf;
+            XminOld = XLim(1); XmaxOld = XLim(2);
+            XLim(1) = -inf; XLim(2) = inf;
             getXY();
-            Xmin = XminOld; Xmax = XmaxOld;
+            XLim(1) = XminOld; XLim(2) = XmaxOld;
         else
             getXY();
         end
@@ -929,7 +948,10 @@ toolsMenu = uimenu(fig, 'Text', 'Tools');
 
 QboundsMenu = uimenu(toolsMenu,'Text','Bounds Q');
 
-QboundsMenu.MenuSelectedFcn = @(~, ~) BoundsQMenu([Xmin, Xmax], XLimRidge, ctEdgeEffects, ctRidge, cf, MotherWavelet);
+QboundsMenu.MenuSelectedFcn = @QboundsMenuCallback;
+    function QboundsMenuCallback(~,~)
+        BoundsQMenu(XLim, XLimRidge, ctEdgeEffects, ctRidge, cf, MotherWavelet);
+    end
 
 % filtering
 
@@ -980,8 +1002,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         Y = getY();
         
         for line = 1:size(X, 1)
-            Y2(line, :) = Y(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
-            X2(line, :) = X(line, X(line, :)>=Xmin & X(line, :)<=Xmax);
+            Y2(line, :) = Y(line, X(line, :)>=XLim(1) & X(line, :)<=XLim(2));
+            X2(line, :) = X(line, X(line, :)>=XLim(1) & X(line, :)<=XLim(2));
         end
         
         if removeMean
@@ -1161,34 +1183,37 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 if autocorrelationMode
                     XLimRidgePlot = [tRy(1), tRy(end)];
                 else
-                    XLimRidgePlot = XLimRidge;
+                    XLimRidgePlot = XLim;
                 end
                 
                 ridge = ridges{kPlot};
                 
-                if ~isequal(plotAxes, 0) && checkboxTimeAmplPlot.Value % plot de l'amplitude directement sur l'axe
-                    newTimeAmplPlots = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
+                if  checkboxTimeAmplPlot.Value && ~isempty(plotAxes) && all(isvalid(plotAxes)) % plot de l'amplitude directement sur l'axe
+                    [~, newTimeAmplPlots] = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'Axes', plotAxes(kPlot), 'Grid', 'auto', 'RenameAxes', false);
                     timeAmplPlots = [timeAmplPlots, newTimeAmplPlots];
                 end
                 
                 if checkboxTimeAmpl.Value % plot de l'amplitude
-                    RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
+                    axRidges = RidgeQtyPlot2(ridge, 'time', 'val', 'EvaluationFunctionY', 'abs',...
                         'ScaleX', get(xscaleTimeAmpl, 'String'), 'ScaleY', get(yscaleTimeAmpl, 'String'),...
                         'Axes', axesFiguresCheckboxs2(1, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
                         'NameY', ['Amplitude [', signalUnit, ']'], 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                    XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
                 end
                 if checkboxTimeFreq.Value % plot de la frequence
-                    RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
+                    axRidges = RidgeQtyPlot2(ridge, 'time', freqRidgeName,...
                         'ScaleX', get(xscaleTimeFreq, 'String'), 'ScaleY', get(yscaleTimeFreq, 'String'),...
                         'Axes', axesFiguresCheckboxs2(2, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
                         'NameY', 'Frequency [Hz]', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                    XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
                 end
                 if checkboxTimeDamp.Value % plot de l'amortissement
-                    RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
+                    axRidges = RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
                         'NameY', 'Damping', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                    XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
                     RidgeQtyPlot2(ridge, 'val', freqRidgeName, 'EvaluationFunctionX', 'abs',...
@@ -1203,10 +1228,11 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping', 'Threshold', RidgeMinModu);
                 end
                 if checkboxTimePhase.Value % plot de la phase
-                    RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
+                    axRidges = RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                         'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true,...
                         'NameX', 'Time [s]', 'NameY', 'Phase (rad)', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                    XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
                 end
             end
         end
@@ -1430,7 +1456,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         getXY();
         
         hilbertPlotAxes = plotAxes;
-        if isequal(hilbertPlotAxes, 0)
+        if isempty(hilbertPlotAxes) || ~all(isvalid(hilbertPlotAxes))
             fhilb = figure;
             hilbertPlotAxes = [];
             for kPlot = 1:nbPlots

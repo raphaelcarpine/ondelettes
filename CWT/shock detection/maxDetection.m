@@ -1,5 +1,5 @@
-function shockIndexes = maxDetection(t, meanWvlt, Freqs, Q, MotherWavelet, ctEdgeEffects, thresholdMode,...
-    thresholdValue, maxDetectionMethod, plotMean, figNameSuffix)
+function [shockIndexes, thresholdAbsoluteValue] = maxDetection(t, meanWvlt, Freqs, Q, MotherWavelet, ctEdgeEffects, thresholdMode,...
+    thresholdValue, maxDetectionMethod, plotMean, meanScale, figName)
 %% array size
 
 % array size
@@ -71,18 +71,12 @@ end
 
 % plot
 if plotMean
-    figName = ['mean function : ', func2str(meanFunc), ' ; ',...
-        num2str(Freqs(1)), ' < f < ', num2str(Freqs(end))];
-    
-    if ~isempty(figNameSuffix)
-        figName = [figName, ' ; ', figNameSuffix];
-    end
     plotMeanAndShocks(t, meanWvlt, meanWvlttEdgeEffects, shockIndexes,...
         threshold, meanTmeanWvlt, meanScale, figName);
     drawnow;
 end
 
-
+thresholdAbsoluteValue = threshold;
 
 end
 
