@@ -49,7 +49,7 @@ if length(WvltFreq) > 500
     end
 end
 
-%%
+%% array size
 Fs = 1/mean(diff(X)); %Frequence d'echantillonage
 
 Diff = diff(X);
@@ -69,6 +69,7 @@ end
 if size(X, 2) ~= 1 || size(Y, 2) ~= 1 || ~isequal(size(X), size(Y))
     error(['array size problem (', num2str(size(X)), ' & ', num2str(size(Y)), ')']);
 end
+
 %% shanon
 if max(WvltFreq) > Fs/2
     warning('Shanon');
@@ -79,11 +80,17 @@ if CenterSignal
     Y = Y-mean(Y);
 end
 
+%% signal long (waitbar)
+
+longSignal = 1e-9 * length(X)*log( length(X))*  length(WvltFreq) > 1;
+
+longSignal = longSignal && isempty(MeanOverFreqFunc) && isempty(XindexOut);
+
 %% Calcul
 
 [FTpsi, DeltaTfunc] = FTpsi_DeltaT(Q, MotherWavelet);
 
-if isempty(MeanOverFreqFunc) && isempty(XindexOut) % mode normal
+if isempty(MeanOverFreqFunc) && isempty(XindexOut) && ~longSignal % mode normal
     WvltFreqTot = {WvltFreq};
 else % mode moyenne sur les fréquences ou temps particuliers (économie de la ram)
     WvltFreqTot = num2cell(WvltFreq);
@@ -93,6 +100,8 @@ else % mode moyenne sur les fréquences ou temps particuliers (économie de la ram
         WvltOutTot = zeros(1, length(X));
     elseif ~isempty(XindexOut)
         WvltOutTot = nan(length(WvltFreq), length(XindexOut));
+    elseif longSignal
+        WvltOutTot = nan(length(WvltFreq), length(X));
     end
 end
 
@@ -100,7 +109,7 @@ end
 MeanSquareOverX = nan(0, length(MeanSquareOverXelements));
 
 % waitbar
-if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut) || longSignal
     [initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(length(WvltFreqTot),...
         'displayTime', 0, 'windowTitle', 'Computing CWT');
     initWaitBar();
@@ -110,7 +119,7 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
     WvltFreq = WvltFreqTot{k_wvlt_freq};
     
     %% Choix du nb de zeros a ajouter pour chaque freq. de calcul de la CWT
-    n=length(X);
+    n = length(X);
     
     DeltaT = max(DeltaTfunc(WvltFreq), Q./(2*pi*WvltFreq)); % = a * Delta t_psi, on prend le max avec le cas mu_psi=1/2 pour l'ondelette harmonique
     DeltaTMaxInd = round(ct*Fs*DeltaT); % Conversion en nb de pts de ct * a * Delta t_psi = zero padding mini
@@ -184,20 +193,22 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
         WvltOutTot = WvltOutTot + MeanOverFreqFunc(WvltOut);
     elseif ~isempty(XindexOut)
         WvltOutTot(k_wvlt_freq, :) = WvltOut(:, XindexOut);
+    elseif longSignal
+        WvltOutTot(k_wvlt_freq, :) = WvltOut;
     else % mode normal
         WvltOutTot = WvltOut;
     end
     
     %% waitbar
     
-    if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+    if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut) || longSignal
         updateWaitBar(k_wvlt_freq);
     end
     
 end
 
 % waitbar
-if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut)
+if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut) || longSignal
     closeWaitBar();
 end
 

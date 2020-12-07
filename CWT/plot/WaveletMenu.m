@@ -132,7 +132,8 @@ else
         parent.CloseRequestFcn = @(~,~) closeParent(parent);
     end
 end
-nbPlots = size(getY(), 1);
+nbPlotsTot = size(getY(), 1);
+nbPlots = nbPlotsTot;
 signalChannels = 1:nbPlots;
 
 
@@ -550,7 +551,16 @@ set(FrequencyScaleMenuChoices(2), 'CallBack', @(~,~) selectFrequencyScaleMenu(2)
 % signal channels
 signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on');
     function setSignalChannels()
-        signalChannels = getSignalChannels(signalChannels, nbPlots);
+        signalChannels = getSignalChannels(signalChannels, nbPlotsTot);
+        nbPlots = length(signalChannels);
+        
+        for k_plot = 1:length(WaveletPlot)
+            if ismember(k_plot, signalChannels)
+                set(WaveletPlot(k_plot), 'LineStyle', '-');
+            else
+                set(WaveletPlot(k_plot), 'LineStyle', ':');
+            end
+        end
     end
 signalChannelsMenu.Callback = @(~,~) setSignalChannels();
 
@@ -920,7 +930,7 @@ getShocksMenu = uimenu(shocksMenu, 'Text', 'Shocks detection menu');
         getXY();
         
         % shocks menu
-        shockDetectionMenu(x, y,...
+        shockDetectionMenu(x, y, signalChannels,...
             QShock, MotherWavelet, ctEdgeEffects, QShock, MotherWavelet,...
             [fminShock, fmaxShock], NbFreqShock, FrequencyScale, WvltScale,...
             [fminShock, fmaxShock], NbFreqShock, FrequencyScale, WvltScale,...
@@ -1022,20 +1032,15 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         %test X identique
         %%%
         
-        x = X2;
-        y = Y2;
-        
-        if nbPlots ~= size(y, 1)
-            signalChannels = 1:nbPlots;
-        end
-        nbPlots = size(y, 1);
-        
-        x = x(signalChannels, :);
-        y = y(signalChannels, :);
+        X2 = X2(signalChannels, :);
+        Y2 = Y2(signalChannels, :);
         
         if ~isequal(x, X2) || ~isequal(y, Y2)
             resetCrossCorr();
         end
+        
+        x = X2;
+        y = Y2;
     end
 
     function show()
@@ -1088,13 +1093,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             if ~multiSignalMode && ~autocorrelationMode
                 for kPlot = 1:nbPlots
                     wavelet = WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
+                    titleCWTPlot = ['channel ', num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
                     if checkboxModule.Value
                         WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                            WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                     if checkboxPhase.Value
                         WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
-                            WvltScale, ['Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                            WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                 end
                 
@@ -1104,30 +1110,32 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     wavelet = wavelet +...
                         WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
                 end
-                %wavelet = sqrt(wavelet);
                 
+                titleCWTPlot = ['sum_wvlt^2 (all selected channels) ; Q=', num2str(Q),' ; scale: ', WvltScale];
                 if checkboxModule.Value
                     WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
                         'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                        titleCWTPlot, wvltAxesTitle, FrequencyScale);
                 end
                 if checkboxPhase.Value
                     WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
                         'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                        ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                        titleCWTPlot, wvltAxesTitle, FrequencyScale);
                 end
                 
             elseif autocorrelationMode
                 for ksvd = 1:autocorrelationNsvd
+                    titleCWTPlot = ['xcorr->CWT->SVD (all selected channels) ; sing. value ', num2str(ksvd),...
+                        ' ; Q=', num2str(Q),' ; scale: ', WvltScale];
                     if checkboxModule.Value
                         WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                            ['xcorr->CWT->SVD;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                            titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                     if checkboxPhase.Value
                         WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
-                            ['sum_wvlt^2;Q=', num2str(Q),';scale:', WvltScale], wvltAxesTitle, FrequencyScale);
+                            titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                 end
             end

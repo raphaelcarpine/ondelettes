@@ -1,4 +1,4 @@
-function shockDetectionMenu(t, X,...
+function shockDetectionMenu(t, X, signalChannels,...
     QMeanInit, MotherWaveletMeanInit, ctEdgeEffectsMeanInit, QSpectrumInit, MotherWaveletSpectrumInit,...
     freqLimMeanInit, nbFreqMeanInit, scaleFreqMeanInit, scaleMeanInit,...
     freqLimSpectrumInit, nbFreqSpectrumInit, scaleFreqSpectrumInit, scaleSpectrumInit,...
@@ -16,6 +16,11 @@ plotSpectrumInit = true;
 averageSpectrumInit = false;
 % computeWholeWaveletInit = false; % à coder ?
 
+NpcPCAInit = 2;
+scalePCAInit = true;
+plotScatterPCAInit = true;
+plotPCPCAInit = true;
+plotDistribPCAInit = true;
 
 if nargin == 0 % test
     t = linspace(0, 40, 10000);
@@ -24,6 +29,7 @@ if nargin == 0 % test
     X = [1; -2] * X;
     figure;
     plot(t, X);
+    signalChannels = 3 + 1:size(X, 1);
     
     QMeanInit = 5;
     MotherWaveletMeanInit = 'morlet';
@@ -67,29 +73,39 @@ end
 %% input window
 
 HpansShock = [2, 5, 5, 9, 5, 2.5];
-HpansSpectrum = [2, 5, 5, 8, 2.5];
+HpansSpectrum = [2, 5, 5, 7.5, 2.5];
+HpansPCA = [7, 8.5, 2.5];
 
-Hpans = [sum(HpansShock), sum(HpansSpectrum)];
+Hpans = [sum(HpansShock), sum(HpansSpectrum); 0, sum(HpansPCA)];
 
 fig = figure('Name', 'Shock Detection Menu', 'numbertitle', 'off');
 fig.Units = 'characters';
 fig.Position(3) = 2*75;
-fig.Position(2) = fig.Position(2) - max(Hpans) + fig.Position(4);
-fig.Position(4) = max(Hpans);
+fig.Position(2) = fig.Position(2) - max(sum(Hpans, 1)) + fig.Position(4);
+fig.Position(4) = max(sum(Hpans, 1));
 fig.MenuBar = 'none';
+fig.Resize = false;
 
 
-shockPan = uipanel('Parent',fig, 'Units', 'normalized', 'Title', 'Shock detection');
-spectrumPan = uipanel('Parent',fig, 'Units', 'normalized', 'Title', 'Spectrums');
+shockPan = uipanel('Parent', fig, 'Units', 'normalized', 'Title', 'Shock detection');
+spectrumPan = uipanel('Parent', fig, 'Units', 'normalized', 'Title', 'Spectrums');
+PCAPan = uipanel('Parent', fig, 'Units', 'normalized', 'Title', 'Principal component analysis');
 
 margin = 0.01;
-hpans = (1 - 2*margin) * Hpans/max(Hpans);
-for iz = 1:length(hpans)
-    zpans(iz) = margin + max(hpans) - hpans(iz);
+hpans = Hpans/max(sum(Hpans, 1)) - 2*margin;
+for iz = 1:size(hpans, 1)
+    for jz = 1:size(hpans, 2)
+        if iz == 1
+            zpans(iz, jz) = 1 - hpans(iz, jz) - margin;
+        else
+            zpans(iz, jz) = zpans(iz-1, jz) - hpans(iz, jz) - 2*margin;
+        end
+    end
 end
 
-shockPan.Position = [0.01, zpans(1), 0.485, hpans(1)];
-spectrumPan.Position = [0.505, zpans(2), 0.485, hpans(2)];
+shockPan.Position = [0.01, zpans(1, 1), 0.485, hpans(1, 1)];
+spectrumPan.Position = [0.505, zpans(1, 2), 0.485, hpans(1, 2)];
+PCAPan.Position = [0.505, zpans(2, 2), 0.485, hpans(2, 2)];
 
 % shock panel
 
@@ -126,6 +142,21 @@ end
 freqSpectrumPan.Position = [0.02, zpansSpectrum(2), 0.96, hpansSpectrum(2)];
 wvltSpectrumPan.Position = [0.02, zpansSpectrum(3), 0.96, hpansSpectrum(3)];
 plotSpectrumPan.Position = [0.02, zpansSpectrum(4), 0.96, hpansSpectrum(4)];
+
+% PCA panel
+
+paramPCAPan = uipanel('Parent', PCAPan, 'Units', 'normalized', 'Title', 'Parameters');
+plotPCAPan = uipanel('Parent', PCAPan, 'Units', 'normalized', 'Title', 'Plot');
+
+margin = 0.02;
+hpansPCA = (1 - margin*(length(HpansPCA)+1)) * HpansPCA/sum(HpansPCA);
+zpansPCA = margin * ones(size(hpansPCA));
+for iz = length(zpansPCA)-1:-1:1
+    zpansPCA(iz) = zpansPCA(iz+1) + hpansPCA(iz+1) + margin;
+end
+
+paramPCAPan.Position = [0.02, zpansPCA(1), 0.96, hpansPCA(1)];
+plotPCAPan.Position = [0.02, zpansPCA(2), 0.96, hpansPCA(2)];
 
 %% shock panel
 
@@ -274,14 +305,46 @@ computeSpectrumInput = uicontrol('Parent', spectrumPan, 'Style', 'pushbutton', '
     'Units', 'normalized', 'Position', [0.3, zpansSpectrum(5), 0.4, hpansSpectrum(5)]);
 
 
-%% ok button
+%% PCA panel
 
-% okInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'OK',...
-%     'Units', 'characters', 'Position', [80, 0.5, 15, 2.5]);
+% param panel
+uicontrol(paramPCAPan, 'Style', 'text', 'String', 'number of principal components:',...
+    'Units', 'characters', 'Position', [1, 2.3, 33, 1.5], 'HorizontalAlignment', 'left');
+NpcPCAInput = uicontrol(paramPCAPan, 'Style', 'edit', 'String', NpcPCAInit,...
+    'Units', 'characters', 'Position', [34, 2.4, 7, 1.6]);
+scalePCAInput = uicontrol(paramPCAPan, 'Style', 'checkbox', 'String', 'scale by std dev',...
+    'Units', 'characters', 'Position', [1, 0.7, 20, 1.6], 'Value', scalePCAInit);
+
+% plot panel
+plotScatterPCAInput = uicontrol(plotPCAPan, 'Style', 'checkbox', 'String', 'plot scatter',...
+    'Units', 'characters', 'Position', [1, 3.7, 40, 1.6], 'Value', plotScatterPCAInit);
+plotPCPCAInput = uicontrol(plotPCAPan, 'Style', 'checkbox', 'String', 'plot principal components',...
+    'Units', 'characters', 'Position', [1, 2.2, 40, 1.6], 'Value', plotPCPCAInit);
+plotDistribPCAInput = uicontrol(plotPCAPan, 'Style', 'checkbox', 'String', 'plot variance distribution',...
+    'Units', 'characters', 'Position', [1, 0.7, 40, 1.6], 'Value', plotDistribPCAInit);
+
+% compute button
+computePCAInput = uicontrol(PCAPan, 'Style', 'pushbutton', 'String', 'compute',...
+    'Units', 'normalized', 'Position', [0.3, zpansPCA(3), 0.4, hpansPCA(3)]);
+
+% max Npc far scatter == 3
+    function NpcPCAInputCallback(~,~)
+        if str2double(get(NpcPCAInput, 'String')) > 3
+            set(plotScatterPCAInput, 'Value', false);
+            set(plotScatterPCAInput, 'Enable', 'off');
+        elseif str2double(get(NpcPCAInput, 'String')) <= 3
+            set(plotScatterPCAInput, 'Enable', 'on');
+        end
+    end
+
+NpcPCAInput.Callback = @NpcPCAInputCallback;
 
 %% shocks return function
 
 computeShockInput.Callback = @(~, ~) computeShockReturn();
+
+flagNewCWTShock = true;
+flagNewShockDetection = true;
 
 fminMean = nan;
 fmaxMean = nan;
@@ -292,11 +355,15 @@ MotherWaveletMean = '';
 ctEdgeEffectsMean = nan;
 meanFunc = @() 0;
 
+multiChannelMean = -1;
+thresholdValue = nan;
+thresholdMode = '';
+maxDetectionMethod = '';
+
 freqsMean = [];
-
 meanWvltTot = nan(size(X));
-meanWvlt = [];
 
+meanWvlt = [];
 shockIndexes = {};
 thresholdAbsoluteValues = {};
 
@@ -308,7 +375,7 @@ thresholdAbsoluteValues = {};
         %%%% input
         
         % multi channel mode
-        multiChannelMean = get(multiChannelMeanInput, 'Value');
+        multiChannelMeanNew = get(multiChannelMeanInput, 'Value');
         
         % freq panel
         fminMeanNew = str2double(get(fminMeanInput, 'String'));
@@ -323,31 +390,45 @@ thresholdAbsoluteValues = {};
         
         % shock panel
         meanFuncNew = str2func(get(meanFuncInput, 'String'));
-        thresholdValue = str2double(get(thresholdValueInput, 'String'));
-        thresholdMode = thresholdModeValues{get(thresholdModeInput, 'Value')};
-        maxDetectionMethod = maxDetectionMethodValues{get(maxDetectionMethodInput, 'Value')};
+        thresholdValueNew = str2double(get(thresholdValueInput, 'String'));
+        thresholdModeNew = thresholdModeValues{get(thresholdModeInput, 'Value')};
+        maxDetectionMethodNew = maxDetectionMethodValues{get(maxDetectionMethodInput, 'Value')};
         
         % plot panel
         plotMean = get(plotMeanInput, 'Value');
         scaleMean = scaleMeanValues{get(scaleMeanInput, 'Value')};
         
         
-        %%%% check if new CWT
+        %%%% check if new
         
-        if fminMeanNew ~= fminMean || fmaxMeanNew ~= fmaxMean || nbFreqMeanNew ~= nbFreqMean ||...
-                ~strcmp(scaleFreqMeanNew, scaleFreqMean) || QMeanNew ~= QMean ||...
-                ~strcmp(MotherWaveletMeanNew, MotherWaveletMean) || ~isequal(ctEdgeEffectsMeanNew, ctEdgeEffectsMean) ||...
-                ~strcmp(func2str(meanFuncNew), func2str(meanFunc))
-            %
-            fminMean = fminMeanNew;
-            fmaxMean = fmaxMeanNew;
-            nbFreqMean = nbFreqMeanNew;
-            scaleFreqMean = scaleFreqMeanNew;
-            QMean = QMeanNew;
-            MotherWaveletMean = MotherWaveletMeanNew;
-            ctEdgeEffectsMean = ctEdgeEffectsMeanNew;
-            meanFunc = meanFuncNew;
-            
+        flagNewCWTShock = fminMeanNew ~= fminMean || fmaxMeanNew ~= fmaxMean || nbFreqMeanNew ~= nbFreqMean ||...
+            ~strcmp(scaleFreqMeanNew, scaleFreqMean) || QMeanNew ~= QMean ||...
+            ~strcmp(MotherWaveletMeanNew, MotherWaveletMean) || ~isequal(ctEdgeEffectsMeanNew, ctEdgeEffectsMean) ||...
+            ~strcmp(func2str(meanFuncNew), func2str(meanFunc));
+        
+        flagNewShockDetection = multiChannelMean ~= multiChannelMeanNew || thresholdValue ~=thresholdValueNew ||...
+            ~strcmp(thresholdMode, thresholdModeNew) || ~strcmp(maxDetectionMethod, maxDetectionMethodNew);
+        
+        flagNewShockDetection = flagNewShockDetection || flagNewCWTShock;
+        
+        fminMean = fminMeanNew;
+        fmaxMean = fmaxMeanNew;
+        nbFreqMean = nbFreqMeanNew;
+        scaleFreqMean = scaleFreqMeanNew;
+        QMean = QMeanNew;
+        MotherWaveletMean = MotherWaveletMeanNew;
+        ctEdgeEffectsMean = ctEdgeEffectsMeanNew;
+        meanFunc = meanFuncNew;
+        
+        multiChannelMean = multiChannelMeanNew;
+        thresholdValue = thresholdValueNew;
+        thresholdMode = thresholdModeNew;
+        maxDetectionMethod = maxDetectionMethodNew;
+        
+        
+        %%%% compute CWT
+        
+        if flagNewCWTShock
             % frequencies array
             switch scaleFreqMean
                 case 'lin'
@@ -364,6 +445,7 @@ thresholdAbsoluteValues = {};
             end
         end
         
+        
         %%%% shock detection
         
         if multiChannelMean
@@ -378,9 +460,9 @@ thresholdAbsoluteValues = {};
             figName = ['mean fcn: ', func2str(meanFunc), ' ; ',...
                 num2str(fminMean), ' < f < ', num2str(fmaxMean), ' (', scaleFreqMean, ' scale) ; '];
             if multiChannelMean
-                figName = [figName, 'all channels'];
+                figName = [figName, 'all selected channels'];
             else
-                figName = [figName, sprintf('channel %d', k_ch)];
+                figName = [figName, sprintf('channel %d', signalChannels(k_ch))];
             end
             [shockIndexes{k_ch}, thresholdAbsoluteValues{k_ch}] = ...
                 maxDetection(t, meanWvlt(k_ch, :), freqsMean, QMean, MotherWaveletMean, ctEdgeEffectsMean,...
@@ -399,6 +481,24 @@ thresholdAbsoluteValues = {};
 
 computeSpectrumInput.Callback = @(~, ~) computeSpectrumReturn();
 
+flagNewCWTSpectrums = true;
+
+fminSpectrum = nan;
+fmaxSpectrum = nan;
+nbFreqSpectrum = nan;
+scaleFreqSpectrum = '';
+QSpectrum = nan;
+MotherWaveletSpectrum =  '';
+
+spectrumsTot0 = {};
+averageShockSpectrum0 = {};
+averageSpectrum0 = {};
+averageUnderThresholdSpectrum0 = {};
+averageAboveThresholdSpectrum0 = {};
+
+freqsSpectrum = [];
+spectrumsTot = {};
+
 
     function computeSpectrumReturn()
         % cursor
@@ -416,21 +516,40 @@ computeSpectrumInput.Callback = @(~, ~) computeSpectrumReturn();
         multiChannelMean = get(multiChannelMeanInput, 'Value');
         
         % freq panel
-        fminSpectrum = str2double(get(fminSpectrumInput, 'String'));
-        fmaxSpectrum = str2double(get(fmaxSpectrumInput, 'String'));
-        nbFreqSpectrum = str2double(get(nbFreqSpectrumInput, 'String'));
-        scaleFreqSpectrum = scaleFreqSpectrumValues{get(scaleFreqSpectrumInput, 'Value')};
+        fminSpectrumNew = str2double(get(fminSpectrumInput, 'String'));
+        fmaxSpectrumNew = str2double(get(fmaxSpectrumInput, 'String'));
+        nbFreqSpectrumNew = str2double(get(nbFreqSpectrumInput, 'String'));
+        scaleFreqSpectrumNew = scaleFreqSpectrumValues{get(scaleFreqSpectrumInput, 'Value')};
         
         % wvlt panel
-        QSpectrum = str2double(get(QSpectrumInput, 'String'));
-        MotherWaveletSpectrum =  MotherWaveletSpectrumValues{get(MotherWaveletSpectrumInput, 'Value')};
+        QSpectrumNew = str2double(get(QSpectrumInput, 'String'));
+        MotherWaveletSpectrumNew =  MotherWaveletSpectrumValues{get(MotherWaveletSpectrumInput, 'Value')};
         
         % plot panel
         plotShockSpectrums = get(plotSpectrumInput, 'Value');
         scaleSpectrum = scaleSpectrumValues{get(scaleSpectrumInput, 'Value')};
         
         % average spectrum mode
-        averageShockSpectrum = get(averageSpectrumInput, 'Value');
+        plotAverageShockSpectrum = get(averageSpectrumInput, 'Value');
+        
+        
+        %%%% check if new
+        
+        flagNewCWTSpectrums = fminSpectrum ~= fminSpectrumNew ||...
+            fmaxSpectrum ~= fmaxSpectrumNew ||...
+            nbFreqSpectrum ~= nbFreqSpectrumNew ||...
+            ~strcmp(scaleFreqSpectrum, scaleFreqSpectrumNew) ||...
+            QSpectrum ~= QSpectrumNew ||...
+            ~strcmp(MotherWaveletSpectrum, MotherWaveletSpectrumNew);
+        
+        flagNewCWTSpectrums = flagNewCWTSpectrums || flagNewShockDetection;
+        
+        fminSpectrum = fminSpectrumNew;
+        fmaxSpectrum = fmaxSpectrumNew;
+        nbFreqSpectrum = nbFreqSpectrumNew;
+        scaleFreqSpectrum = scaleFreqSpectrumNew;
+        QSpectrum = QSpectrumNew;
+        MotherWaveletSpectrum = MotherWaveletSpectrumNew;
         
         
         %%%% compute spectrum
@@ -451,15 +570,27 @@ computeSpectrumInput.Callback = @(~, ~) computeSpectrumReturn();
             AboveThresholdAverageIndexes{k_ch} = meanWvlt(k_ch, :) >= thresholdAbsoluteValues{k_ch};
         end
         
-        getSpectrums(t, X, shockIndexes, freqsSpectrum, QSpectrum, MotherWaveletSpectrum,...
+        % already computed CWT
+        if flagNewCWTSpectrums
+            argsSavedCWT = {};
+        else
+            argsSavedCWT = {'spectrumsTot0', spectrumsTot0, 'averageShockSpectrum0', averageShockSpectrum0,...
+                'averageSpectrum0', averageSpectrum0, 'averageUnderThresholdSpectrum0', averageUnderThresholdSpectrum0,...
+                'averageAboveThresholdSpectrum0', averageAboveThresholdSpectrum0};
+        end
+        
+        [spectrumsTot, spectrumsTot0, averageShockSpectrum0, averageSpectrum0,...
+            averageUnderThresholdSpectrum0, averageAboveThresholdSpectrum0]...
+            = getSpectrums(t, X, signalChannels, shockIndexes, freqsSpectrum, QSpectrum, MotherWaveletSpectrum,...
             scaleFreqSpectrum, scaleSpectrum,...
             multiChannelMean, multiChannelSpectrum, plotShockSpectrums,...
-            'plotAverageShockSpectrum', averageShockSpectrum,...
-            'plotAverageSpectrum', averageShockSpectrum,...
-            'plotUnderThresholdAverage', averageShockSpectrum,...
+            'plotAverageShockSpectrum', plotAverageShockSpectrum,...
+            'plotAverageSpectrum', plotAverageShockSpectrum,...
+            'plotUnderThresholdAverage', plotAverageShockSpectrum,...
             'plotUnderThresholdAverageIndexes', UnderThresholdAverageIndexes,...
-            'plotAboveThresholdAverage', averageShockSpectrum,...
-            'plotAboveThresholdAverageIndexes', AboveThresholdAverageIndexes);
+            'plotAboveThresholdAverage', plotAverageShockSpectrum,...
+            'plotAboveThresholdAverageIndexes', AboveThresholdAverageIndexes,...
+            argsSavedCWT{:});
         
         
         %%%% cursor
@@ -468,6 +599,53 @@ computeSpectrumInput.Callback = @(~, ~) computeSpectrumReturn();
         
     end
 
+
+
+
+%% PCA return function
+
+computePCAInput.Callback = @(~, ~) computePCAReturn();
+
+    function computePCAReturn()
+        % cursor
+        set(fig, 'pointer', 'watch');
+        drawnow;
+        
+        %%%% compute spectrums
+        computeSpectrumReturn();
+        
+        
+        %%%% input
+        
+        % multi channel spectrum
+        multiChannelSpectrum = get(multiChannelSpectrumInput, 'Value');
+        % param panel
+        NpcPCA = str2double(get(NpcPCAInput, 'String'));
+        scalePCA = get(scalePCAInput, 'Value');
+        % plot panel
+        plotScatterPCA = get(plotScatterPCAInput, 'Value');
+        plotPCPCA = get(plotPCPCAInput, 'Value');
+        plotDistribPCA = get(plotDistribPCAInput, 'Value');
+        
+        
+        %%%% compute PCA
+        
+        for k_s = 1:length(spectrumsTot)
+            if multiChannelSpectrum
+                plotTitleSuffix = 'all selected channels';
+            else
+                plotTitleSuffix = sprintf('channel %u', signalChannels(k_s));
+            end
+            getPCA(spectrumsTot{k_s}, NpcPCA, scalePCA, freqsSpectrum, scaleFreqSpectrum,...
+                plotScatterPCA, plotPCPCA, plotDistribPCA, 'plotTitleSuffix', plotTitleSuffix);
+        end
+        
+        
+        %%%% cursor
+        set(fig, 'pointer', 'arrow');
+        drawnow;
+        
+    end
 
 end
 

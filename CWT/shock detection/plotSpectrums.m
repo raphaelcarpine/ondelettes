@@ -1,5 +1,5 @@
 function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale, figName,...
-    plotAverageShockSpectrum, plotAverageSpectrum, plotUnderThresholdAverage, plotAboveThresholdAverage)
+    plotAverageShockSpectrum, plotAverageSpectrum, plotUnderThresholdAverage, plotAboveThresholdAverage, customLegend)
 %PLOTSPECTRUMS Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -8,6 +8,9 @@ if nargin <=5
     plotAverageSpectrum = false;
     plotUnderThresholdAverage = false;
     plotAboveThresholdAverage = false;
+end
+if nargin <= 9
+    customLegend = {};
 end
 
 fig = figure('Name', figName);
@@ -45,7 +48,7 @@ if plotAverageShockSpectrum || plotAverageSpectrum || plotUnderThresholdAverage 
         
     end
     
-else
+elseif isempty(customLegend)
     % legend
     shockTimeNames = cell(size(Spectrums, 1), 1);
     for k_shock = 1:size(Spectrums, 1)
@@ -54,6 +57,15 @@ else
     legendStrings = shockTimeNames;
     
     plts = plot(ax, Freqs, Spectrums);
+    
+else
+    legendStrings = customLegend;
+    plts = plot(ax, Freqs, Spectrums);
+end
+
+% x-axis
+if any(Spectrums < 0, 'all')
+    yline(ax, 0, '--');
 end
 
 

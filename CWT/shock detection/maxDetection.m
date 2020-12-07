@@ -1,5 +1,5 @@
-function [shockIndexes, thresholdAbsoluteValue] = maxDetection(t, meanWvlt, Freqs, Q, MotherWavelet, ctEdgeEffects, thresholdMode,...
-    thresholdValue, maxDetectionMethod, plotMean, meanScale, figName)
+function [shockIndexes, thresholdAbsoluteValue] = maxDetection(t, meanWvlt, Freqs, Q, MotherWavelet,...
+    ctEdgeEffects, thresholdMode, thresholdValue, maxDetectionMethod, plotMean, meanScale, figName)
 %% array size
 
 % array size
