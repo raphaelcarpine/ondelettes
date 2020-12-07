@@ -180,7 +180,15 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     C_ind = 2;
     while (ridge.time{C_r}(C_ind-1)+et<=nx) % On chaine vers l'avant
         
-        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * mean(diff(WvltFreq)))); % pente max dans le plan tps-freq
+        % pente max dans le plan tps-freq
+        if ind_freq(C_ind-1) == 1
+            WvltFreqIncrement = WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1));
+        elseif ind_freq(C_ind-1) == length(WvltFreq)
+            WvltFreqIncrement = WvltFreq(ind_freq(C_ind-1)) - WvltFreq(ind_freq(C_ind-1)-1);
+        else
+            WvltFreqIncrement = (WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1)-1))/2;
+        end
+        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny), bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
@@ -207,7 +215,15 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
     
     while ridge.time{C_r}(C_ind-1)-et>=1 %On chaine vers l'arrière
         
-        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * mean(diff(WvltFreq)))); % pente max dans le plan tps-freq
+        % pente max dans le plan tps-freq
+        if ind_freq(C_ind-1) == 1
+            WvltFreqIncrement = WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1));
+        elseif ind_freq(C_ind-1) == length(WvltFreq)
+            WvltFreqIncrement = WvltFreq(ind_freq(C_ind-1)) - WvltFreq(ind_freq(C_ind-1)-1);
+        else
+            WvltFreqIncrement = (WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1)-1))/2;
+        end
+        ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)-(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne

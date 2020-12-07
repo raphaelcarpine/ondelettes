@@ -53,6 +53,9 @@ classdef XLimDisplay < handle
             updateLimAxes = updateLimAxes(:);
             for k_ax = 1:length(Axes)
                 ax = Axes(k_ax);
+                if ismember(ax, obj.Axes)
+                    continue
+                end
                 obj.Axes(end+1) = ax;
                 obj.updateLimAxes(end+1) = updateLimAxes(k_ax);
                 
