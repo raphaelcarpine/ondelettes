@@ -19,8 +19,13 @@ defaultRidgeMinModu = 0;
 defaultCtEdgeEffects = 3;
 defaultCf = 5;
 defaultZeroPaddingFourier = 0;
+defaultFourierAveraging = false;
+defaultFourierAveragingNb = 10;
 defaultMultiSignalMode = false;
+defaultRdtMode = false;
 defaultAutocorrelationMode = false;
+defaultAutocorrelationSVDMode = false;
+defaultAutocorrelationFourierSVDMode = true;
 defaultMaxLagCorr = nan;
 defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
@@ -59,8 +64,13 @@ addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'Cf', defaultCf);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
+addParameter(p,'FourierAveraging', defaultFourierAveraging);
+addParameter(p,'FourierAveragingNb', defaultFourierAveragingNb);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
+addParameter(p,'RdtMode', defaultRdtMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
+addParameter(p,'AutocorrelationSVDMode', defaultAutocorrelationSVDMode);
+addParameter(p,'AutocorrelationFourierSVDMode', defaultAutocorrelationFourierSVDMode);
 addParameter(p,'AutocorrelationMaxLag', defaultMaxLagCorr);
 addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
@@ -149,9 +159,14 @@ RidgeMinModu = p.Results.RidgeMinModu;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 cf = p.Results.Cf;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
+FourierAveraging = p.Results.FourierAveraging;
+FourierAveragingNb = p.Results.FourierAveragingNb;
 
 multiSignalMode = p.Results.MultiSignalMode;
+rdtMode = p.Results.RdtMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
+autocorrelationSVDMode = p.Results.AutocorrelationSVDMode;
+autocorrelationFourierSVDMode = p.Results.AutocorrelationFourierSVDMode;
 tRy = nan; Ry = nan; SVry = nan; SVvectry = nan;
 resetCrossCorr();
 
@@ -206,6 +221,11 @@ end
 %% affichage XLim
 
 XLimDisplayObj = XLimDisplay(XLim, XLimRidge, ShowXLim, ShowXLim, plotAxes, true(size(plotAxes)));
+
+%% random decrement technique
+
+Xrdt = [];
+Yrdt = [];
 
 
 %% bouton ondelettes et panneaux param et sorties
@@ -504,32 +524,6 @@ set(WvltScaleMenuChoices(find(strcmp(WvltScaleValues, WvltScale))), 'Checked', '
 set(WvltScaleMenuChoices(1), 'CallBack', @(~,~) selectWvltScaleMenu(1));
 set(WvltScaleMenuChoices(2), 'CallBack', @(~,~) selectWvltScaleMenu(2));
 
-% fourier scale
-FourierScaleMenu = uimenu(paramMenu, 'Text','Fourier Scale');
-FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin');
-FourierScaleMenuChoices(2) = uimenu(FourierScaleMenu, 'Text', 'squared');
-FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
-FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'spectral density (lin)');
-FourierScaleMenuChoices(5) = uimenu(FourierScaleMenu, 'Text', 'spectral density (log)');
-FourierScaleMenuChoices(6) = uimenu(FourierScaleMenu, 'Text', 'phase');
-FourierScaleValues = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
-set(FourierScaleMenuChoices(find(strcmp(FourierScaleValues, FourierScale))), 'Checked', 'on');
-
-    function selectFourierScaleMenu(kchoice)
-        for kchoices = 1:length(FourierScaleMenuChoices)
-            set(FourierScaleMenuChoices(kchoices), 'Checked', 'off');
-        end
-        set(FourierScaleMenuChoices(kchoice), 'Checked', 'on');
-        
-        FourierScale = FourierScaleNames{kchoice};
-    end
-set(FourierScaleMenuChoices(1), 'CallBack', @(~,~) selectFourierScaleMenu(1));
-set(FourierScaleMenuChoices(2), 'CallBack', @(~,~) selectFourierScaleMenu(2));
-set(FourierScaleMenuChoices(3), 'CallBack', @(~,~) selectFourierScaleMenu(3));
-set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
-set(FourierScaleMenuChoices(5), 'CallBack', @(~,~) selectFourierScaleMenu(5));
-set(FourierScaleMenuChoices(6), 'CallBack', @(~,~) selectFourierScaleMenu(6));
-
 % frequency scale
 FrequencyScaleMenu = uimenu(paramMenu, 'Text', 'Frequency Scale');
 FrequencyScaleMenuChoices(1) = uimenu(FrequencyScaleMenu, 'Text', 'lin');
@@ -575,6 +569,7 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
         try
             XLim(1) = str2double(answer{1});
             XLim(2) = str2double(answer{2});
+            maxLagCorr = min(maxLagCorr, XLim(2) - XLim(1));
             XLimDisplayObj.updateXLim(XLim);
         catch
         end
@@ -659,18 +654,72 @@ multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode',...
         multiSignalMode = status;
         if status
             switchMultipleAxesDisplay(false);
-            switchAutocorrelationModeDisplay(false);
+            if autocorrelationSVDMode
+                switchAutocorrelationModeDisplay(false);
+            end
         end
     end
 
 multiSignalModeMenu.MenuSelectedFcn = @(~, ~) switchMultiSignalModeDisplay(~strcmp(multiSignalModeMenu.Checked, 'on'));
 
-%autocorrelationMode
+
+% rdt mode
+
+rdtModeMenu = uimenu(paramMenu, 'Text','Random decrement mode', 'Checked', rdtMode);
+rdtSetMenu = uimenu(paramMenu, 'Text','Set random decrement');
+
+    function switchRdtModeDisplay(status)
+        if status
+            getXY();
+            [Xrdt, Yrdt, axRdt] = RDTmenu(x, y, signalChannels);
+            if isempty(Xrdt)
+                status = false;
+            else
+                XLimDisplayObj.addAxesXLimRidges(axRdt, true)
+            end
+        end
+        
+        rdtModeMenu.Checked = status;
+        rdtMode = status;
+        set(rdtSetMenu, 'Enable', status);
+        if status
+            switchAutocorrelationModeDisplay(false);
+        end
+    end
+
+    function rdtSetMenuCallback(~,~)
+        getXY();
+        [Xrdt0, Yrdt0, axRdt] = RDTmenu(x, y, signalChannels);
+        if ~isempty(Xrdt0)
+            Xrdt = Xrdt0;
+            Yrdt = Yrdt0;
+            XLimDisplayObj.addAxesXLimRidges(axRdt, true)
+        end
+    end
+
+rdtModeMenu.MenuSelectedFcn = @(~, ~) switchRdtModeDisplay(~strcmp(rdtModeMenu.Checked, 'on'));
+rdtSetMenu.Callback = @rdtSetMenuCallback;
+
+% autocorr mode
 
 autocorrelationModeMenu = uimenu(paramMenu, 'Text','Cross-corr mode', 'Checked', autocorrelationMode);
 
 autocorrelationParamsMenu = uimenu(paramMenu, 'Text', 'Cross-corr params');
 autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'plot cross-corr');
+autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode');
+if autocorrelationSVDMode
+    set('autocorrelationSVDMenu', 'Checked', 'on');
+end
+    function autocorrSVDCallback(~,~)
+        if autocorrelationSVDMode
+            set(autocorrelationSVDMenu, 'Checked', 'off');
+            autocorrelationSVDMode = false;
+        else
+            set(autocorrelationSVDMenu, 'Checked', 'on');
+            autocorrelationSVDMode = true;
+        end
+    end
+autocorrelationSVDMenu.Callback = @autocorrSVDCallback;
 autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'set max lag');
 autocorrelationFourierMenu = uimenu(autocorrelationParamsMenu, 'Text', 'fourier svd', 'Checked', 'on');
 
@@ -680,8 +729,11 @@ autocorrelationFourierMenu = uimenu(autocorrelationParamsMenu, 'Text', 'fourier 
         set(autocorrelationParamsMenu, 'Enable', status);
         
         if status
+            switchRdtModeDisplay(false);
             switchMultipleAxesDisplay(false);
-            switchMultiSignalModeDisplay(false);
+            if autocorrelationSVDMode
+                switchMultiSignalModeDisplay(false);
+            end
         end
     end
 autocorrelationModeMenu.MenuSelectedFcn = @(~, ~) switchAutocorrelationModeDisplay(~strcmp(autocorrelationModeMenu.Checked, 'on'));
@@ -706,13 +758,20 @@ set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
 set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
 
     function switchAutocorrelationFourierMenu()
-        autocorrelationFourierMenu.Checked = ~strcmp(autocorrelationFourierMenu.Checked, 'on');
+        if autocorrelationFourierSVDMode
+            autocorrelationFourierSVDMode = false;
+            set(autocorrelationFourierMenu, 'Checked', 'off');
+        else
+            autocorrelationFourierSVDMode = true;
+            set(autocorrelationFourierMenu, 'Checked', 'on');
+        end
     end
 set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierMenu());
 
 %set
 
 switchMultiSignalModeDisplay(multiSignalMode);
+switchRdtModeDisplay(rdtMode);
 switchAutocorrelationModeDisplay(autocorrelationMode);
 
 
@@ -914,6 +973,65 @@ AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
 set(AverageNoiseMenu, 'CallBack', @(~,~) getAverageNoise);
 
 
+%% fourier menu
+
+fourierMenu = uimenu(fig,'Text','Fourier');
+
+% fourier scale
+FourierScaleMenu = uimenu(fourierMenu, 'Text','Fourier Scale');
+FourierScaleMenuChoices(1) = uimenu(FourierScaleMenu, 'Text', 'lin');
+FourierScaleMenuChoices(2) = uimenu(FourierScaleMenu, 'Text', 'squared');
+FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
+FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'spectral density (lin)');
+FourierScaleMenuChoices(5) = uimenu(FourierScaleMenu, 'Text', 'spectral density (log)');
+FourierScaleMenuChoices(6) = uimenu(FourierScaleMenu, 'Text', 'phase');
+FourierScaleValues = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
+set(FourierScaleMenuChoices(find(strcmp(FourierScaleValues, FourierScale))), 'Checked', 'on');
+
+    function selectFourierScaleMenu(kchoice)
+        for kchoices = 1:length(FourierScaleMenuChoices)
+            set(FourierScaleMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(FourierScaleMenuChoices(kchoice), 'Checked', 'on');
+        
+        FourierScale = FourierScaleNames{kchoice};
+    end
+set(FourierScaleMenuChoices(1), 'CallBack', @(~,~) selectFourierScaleMenu(1));
+set(FourierScaleMenuChoices(2), 'CallBack', @(~,~) selectFourierScaleMenu(2));
+set(FourierScaleMenuChoices(3), 'CallBack', @(~,~) selectFourierScaleMenu(3));
+set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
+set(FourierScaleMenuChoices(5), 'CallBack', @(~,~) selectFourierScaleMenu(5));
+set(FourierScaleMenuChoices(6), 'CallBack', @(~,~) selectFourierScaleMenu(6));
+
+% Fourier Averaging
+
+FourierAveragingMenu = uimenu(fourierMenu, 'Text', 'Averaging', 'Checked', FourierAveraging, 'Separator', 'on');
+FourierAveragingNbMenu = uimenu(fourierMenu, 'Text', sprintf('Set averaging (%u)', FourierAveragingNb));
+
+    function updateFourierAveragingMenu(~,~)
+        FourierAveraging = ~FourierAveraging;
+        set(FourierAveragingMenu, 'Checked', FourierAveraging);
+        if FourierAveraging
+            set(FourierAveragingNbMenu, 'Enable', 'on');
+            FourierAveragingNbMenuCallback;
+        else
+            set(FourierAveragingNbMenu, 'Enable', 'off');
+        end
+    end
+
+    function FourierAveragingNbMenuCallback(~,~)
+        disp('TODO');
+        
+        set(FourierAveragingNbMenu, 'Text', sprintf('Set averaging (%u)', FourierAveragingNb));
+    end
+
+FourierAveragingMenu.MenuSelectedFcn = @updateFourierAveragingMenu;
+FourierAveragingNbMenu.MenuSelectedFcn = @FourierAveragingNbMenuCallback;
+
+FourierAveraging = ~FourierAveraging;
+updateFourierAveragingMenu(FourierAveraging);
+
+
 %% shock menu
 
 shocksMenu = uimenu(fig, 'Text', 'Shocks');
@@ -1075,7 +1193,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if autocorrelationMode
             NmaxLagCorr = floor(maxLagCorr/Dx);
             plotCrossCorr(Dx, y, NmaxLagCorr);
-            if isempty(SVry)
+            if autocorrelationSVDMode && isempty(SVry)
                 [SVry, SVvectry] = svdCWT(tRy, Ry, WvltFreqs, Q, autocorrelationNsvd);
             end
         end
@@ -1090,16 +1208,31 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         end
         
         if checkboxModule.Value || checkboxPhase.Value
-            if ~multiSignalMode && ~autocorrelationMode
+            if (~multiSignalMode && ~autocorrelationMode) ||...
+                (~multiSignalMode && autocorrelationMode && ~autocorrelationSVDMode)
                 for kPlot = 1:nbPlots
-                    wavelet = WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
-                    titleCWTPlot = ['channel ', num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
+                    if ~autocorrelationMode && ~rdtMode
+                        xCWTplot = x(kPlot,:);
+                        yCWTplot = y(kPlot,:);
+                        titleCWTPlot = ['channel ', num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
+                    elseif autocorrelationMode && ~autocorrelationSVDMode
+                        xCWTplot = tRy;
+                        yCWTplot = Ry(kPlot,kPlot,:);
+                        yCWTplot = transpose(yCWTplot(:));
+                        titleCWTPlot = ['R', num2str(signalChannels(kPlot)), num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
+                    elseif rdtMode
+                        xCWTplot = Xrdt;
+                        yCWTplot = Yrdt(kPlot,:);
+                        titleCWTPlot = ['RDT channel ', num2str(signalChannels(kPlot)), num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
+                    end
+                    wavelet = WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
+                    
                     if checkboxModule.Value
-                        WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
+                        WvltPlot2(xCWTplot, WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
                             WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                     if checkboxPhase.Value
-                        WvltPlot2(x(kPlot,:), WvltFreqs, wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
+                        WvltPlot2(xCWTplot, WvltFreqs, wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
                             WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
                 end
@@ -1107,23 +1240,40 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             elseif multiSignalMode
                 wavelet = 0; % calcul de la somme des carrés de transformées
                 for kPlot = 1:nbPlots
+                    if ~autocorrelationMode && ~rdtMode
+                        xCWTplot = x(kPlot,:);
+                        yCWTplot = y(kPlot,:);
+                    elseif autocorrelationMode && ~autocorrelationSVDMode
+                        xCWTplot = tRy;
+                        yCWTplot = Ry(kPlot,kPlot,:);
+                        yCWTplot = transpose(yCWTplot(:));
+                    elseif rdtMode
+                        xCWTplot = Xrdt;
+                        yCWTplot = Yrdt(kPlot,:);
+                    end
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
                 end
                 
-                titleCWTPlot = ['sum_wvlt^2 (all selected channels) ; Q=', num2str(Q),' ; scale: ', WvltScale];
+                if ~autocorrelationMode && ~rdtMode
+                    titleCWTPlot = ['sum_wvlt^2 (all selected channels) ; Q=', num2str(Q),' ; scale: ', WvltScale];
+                elseif autocorrelationMode && ~autocorrelationSVDMode
+                    titleCWTPlot = ['sum_wvlt^2 (all Rxx) ; Q=', num2str(Q),' ; scale: ', WvltScale];
+                elseif rdtMode
+                    titleCWTPlot = ['sum_wvlt^2 (all RDT channels) ; Q=', num2str(Q),' ; scale: ', WvltScale];
+                end
                 if checkboxModule.Value
-                    WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
+                    WvltPlot2(xCWTplot, WvltFreqs, wavelet,...
                         'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                         titleCWTPlot, wvltAxesTitle, FrequencyScale);
                 end
                 if checkboxPhase.Value
-                    WvltPlot2(x(kPlot,:), WvltFreqs, wavelet,...
+                    WvltPlot2(xCWTplot, WvltFreqs, wavelet,...
                         'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                         titleCWTPlot, wvltAxesTitle, FrequencyScale);
                 end
                 
-            elseif autocorrelationMode
+            elseif autocorrelationMode && autocorrelationSVDMode
                 for ksvd = 1:autocorrelationNsvd
                     titleCWTPlot = ['xcorr->CWT->SVD (all selected channels) ; sing. value ', num2str(ksvd),...
                         ' ; Q=', num2str(Q),' ; scale: ', WvltScale];
@@ -1144,10 +1294,22 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         %% calcul des ridges
         if any([Checkboxs2.Value]) || (exist('checkboxTimeAmplPlot', 'var') && checkboxTimeAmplPlot.Value)
             
-            if ~multiSignalMode && ~autocorrelationMode
+            if (~multiSignalMode && ~autocorrelationMode) ||...
+                    (~multiSignalMode && autocorrelationMode && ~autocorrelationSVDMode)
                 ridges = cell(1, nbPlots);
                 for kPlot = 1:nbPlots
-                    ridges{kPlot} = RidgeExtract(x(kPlot,:), y(kPlot,:), Q, fmin, fmax, NbFreq,...
+                    if ~autocorrelationMode && ~rdtMode
+                        xRidgePlot = x(kPlot,:);
+                        yRidgePlot = y(kPlot,:);
+                    elseif autocorrelationMode && ~autocorrelationSVDMode
+                        xRidgePlot = tRy;
+                        yRidgePlot = Ry(kPlot,kPlot,:);
+                        yRidgePlot = transpose(yRidgePlot(:));
+                    elseif rdtMode
+                        xRidgePlot = Xrdt;
+                        yRidgePlot = Yrdt(kPlot,:);
+                    end
+                    ridges{kPlot} = RidgeExtract(xRidgePlot, yRidgePlot, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
@@ -1157,19 +1319,30 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             elseif multiSignalMode
                 wavelet = 0;
                 for kPlot = 1:nbPlots
+                    if ~autocorrelationMode && ~rdtMode
+                        xRidgePlot = x(kPlot,:);
+                        yRidgePlot = y(kPlot,:);
+                    elseif autocorrelationMode && ~autocorrelationSVDMode
+                        xRidgePlot = tRy;
+                        yRidgePlot = Ry(kPlot,kPlot,:);
+                        yRidgePlot = transpose(yRidgePlot(:));
+                    elseif rdtMode
+                        xRidgePlot = Xrdt;
+                        yRidgePlot = Yrdt(kPlot,:);
+                    end
                     wavelet = wavelet +...
-                        WvltComp(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                        WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
                 end
                 
                 ridges = cell(1, 1);
-                ridges{1} = RidgeExtract(x(kPlot,:), nan, Q, fmin, fmax, NbFreq,...
+                ridges{1} = RidgeExtract(xRidgePlot, nan, Q, fmin, fmax, NbFreq,...
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                     'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                     'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
             
-            elseif autocorrelationMode
+            elseif autocorrelationMode && autocorrelationSVDMode
                 ridges = cell(1, autocorrelationNsvd);
                 for ksvd = 1:autocorrelationNsvd
                     ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
@@ -1205,7 +1378,9 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             % plot des ridges
             for kPlot = 1:length(ridges)
                 if autocorrelationMode
-                    XLimRidgePlot = [tRy(1), tRy(end)];
+                    XLimRidgePlot = tRy([1 end]);
+                elseif rdtMode
+                    XLimRidgePlot = Xrdt([1 end]);
                 else
                     XLimRidgePlot = XLim;
                 end
@@ -1263,10 +1438,17 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         
         %% calcul des deformees
         if any([Checkboxs3.Value]) || any([Checkboxs4.Value])
-            if multiSignalMode || autocorrelationMode
+            if multiSignalMode || (autocorrelationMode && ~autocorrelationSVDMode)
                 if multiSignalMode
+                    if rdtMode
+                        xMode = Xrdt;
+                        yMode = Yrdt;
+                    else
+                        xMode = x(1,:);
+                        yMode = y;
+                    end
                     [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
-                        getModesSingleRidge(x(1,:), y, Q, fmin, fmax, NbFreq,...
+                        getModesSingleRidge(xMode, yMode, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
@@ -1345,6 +1527,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         figuresName = ['mode ', num2str(meanFreqsModes(kmode)), 'Hz (', plotAxesName, ')'];
                         if autocorrelationMode
                             figuresName = ['SVD', num2str(ksvd), ' ', figuresName];
+                        elseif rdtMode
+                            figuresName = ['RDT ', figuresName];
                         end
                         if checkboxRealShapes.Value
                             figShape = figure('Name', figuresName);
@@ -1406,7 +1590,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     end
                 end
             else
-                warning('! multi signal or autocorrelation modes only !');
+                warning('! multi signal or autocorrelation SVD modes only !');
             end
         end
         
@@ -1432,6 +1616,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if forcePlot
             figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
             axRy = axes(figRy);
+            XLimDisplayObj.addAxesXLimRidges(axRy, true)
             hold (axRy, 'on');
             
             Ndof = size(y, 1);
@@ -1515,12 +1700,12 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         fmin = fminNew;
         fmax = fmaxNew;
         
-        if ~autocorrelationMode
+        if ~autocorrelationMode || (autocorrelationMode && ~autocorrelationFourierSVDMode)
             ffourier = figure;
             fourierPlotAxes = [];
             
             nbAxes = nbPlots;
-            if autocorrelationMode
+            if autocorrelationMode && ~autocorrelationSVDMode && ~multiSignalMode
                 nbAxes = nbPlots^2; % maximum
             end
             
@@ -1542,8 +1727,17 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             
             if ~multiSignalMode % plot des courbes
                 for kPlot = 1:nbAxes
-                    Xfour = x(kPlot,:);
-                    Yfour = y(kPlot,:);
+                    if autocorrelationMode && ~autocorrelationFourierSVDMode
+                        Xfour = tRy;
+                        Yfour = Ry(kPlot,kPlot,:);
+                        Yfour = transpose(Yfour(:));
+                    elseif rdtMode
+                        Xfour = Xrdt;
+                        Yfour = Yrdt(kPlot,:);
+                    else
+                        Xfour = x(kPlot,:);
+                        Yfour = y(kPlot,:);
+                    end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
                     Tfour = mean(diff(Xfour))*length(Yfour);
                     
@@ -1570,11 +1764,20 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
                 end
-            else
+            else % muli signal mode
                 FourierTot = 0;
                 for kPlot = 1:nbAxes
-                    Xfour = x(kPlot,:);
-                    Yfour = y(kPlot,:);
+                    if autocorrelationMode && ~autocorrelationFourierSVDMode
+                        Xfour = tRy;
+                        Yfour = Ry(kPlot,kPlot,:);
+                        Yfour = transpose(Yfour(:));
+                    elseif rdtMode
+                        Xfour = Xrdt;
+                        Yfour = Yrdt(kPlot,:);
+                    else
+                        Xfour = x(kPlot,:);
+                        Yfour = y(kPlot,:);
+                    end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
                     Tfour = mean(diff(Xfour)) * length(Yfour);
                     four = fft(Yfour) / length(Yfour);
@@ -1608,7 +1811,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             NmaxLagCorr = floor(maxLagCorr/Dx);
             plotCrossCorr(Dx, y, NmaxLagCorr);
             
-            if strcmp(autocorrelationFourierMenu.Checked, 'on')
+            if autocorrelationFourierSVDMode
                 [SVfftrx, ~] = svdFFT(Ry, autocorrelationNsvd);
                 
                 for ksv = 1:autocorrelationNsvd
@@ -1635,6 +1838,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         plot(fourierPlotAxes, freqs, angle(fftRx));
                     end
                     
+                    set(fourierPlotAxes, 'Xlim', [fmin fmax]);
+                    set(fourierPlotAxes, 'XScale', FrequencyScale);
                 end
             else
                 fourierFig = figure;
@@ -1673,6 +1878,9 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         legendRij{(i-1)*nbPlots + j} = ['R', num2str(i), num2str(j)];
                     end
                 end
+                
+                set(fourierPlotAxes, 'Xlim', [fmin fmax]);
+                set(fourierPlotAxes, 'XScale', FrequencyScale);
                 
                 hold(fourierPlotAxes, 'off');
                 

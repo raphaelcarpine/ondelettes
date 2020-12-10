@@ -1,15 +1,15 @@
-function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale, figName,...
+function plotSpectrums(Freqs, Spectrums, spectrumFrequencyScale, spectrumScale, deltaFwvlt, figName,...
     plotAverageShockSpectrum, plotAverageSpectrum, plotUnderThresholdAverage, plotAboveThresholdAverage, customLegend)
 %PLOTSPECTRUMS Summary of this function goes here
 %   Detailed explanation goes here
 
-if nargin <=5
+if nargin <=6
     plotAverageShockSpectrum = false;
     plotAverageSpectrum = false;
     plotUnderThresholdAverage = false;
     plotAboveThresholdAverage = false;
 end
-if nargin <= 9
+if nargin <= 10
     customLegend = {};
 end
 
@@ -20,6 +20,7 @@ set(ax, 'XScale', spectrumFrequencyScale, 'YScale', spectrumScale);
 set(ax, 'XLim', [Freqs(1), Freqs(end)]);
 xlabel(ax, 'Frequency [Hz]');
 ylabel(ax, 'Squared amplitude CWT');
+set(fig,'defaultLegendAutoUpdate','off');
 
 
 %% plot
@@ -149,7 +150,7 @@ logFreqMenu.Callback = @logFreqMenuCallback;
 %%%% spectrum selection
 showAllMenu = uimenu(optionsMenu, 'Text', 'Show all spectrums', 'Checked', 'on',  'Separator', 'on');
 
-selectSpectrumMenu = uimenu(optionsMenu, 'Text', 'Selected displayed spectrums');
+selectSpectrumMenu = uimenu(optionsMenu, 'Text', 'Select displayed spectrums');
 
     function showAllMenuCallback(~, ~)
         set(showAllMenu, 'Checked', 'on');
@@ -196,6 +197,30 @@ selectSpectrumMenu = uimenu(optionsMenu, 'Text', 'Selected displayed spectrums')
 
 showAllMenu.Callback = @showAllMenuCallback;
 selectSpectrumMenu.Callback = @selectSpectrumMenuCallback;
+
+%% wavelet precision display
+
+freqPrecisionPlts = gobjects(1, 0);
+freqPrecisionTxts = gobjects(1, 0);
+
+    function displayFreqPrecision(~, evt)
+        switch evt.Button
+            case 1
+                pos = evt.IntersectionPoint;
+                deltaF = deltaFwvlt(pos(1));
+                freqPrecisionPlts(end+1) =...
+                    plot(ax, pos(1) + deltaF/2 * [-1 1], pos(2) * [1 1], '-+', 'Color', [0 0 0]); % , 'LineWidth', 2
+                freqPrecisionTxts(end+1) =...
+                    text(ax, pos(1), pos(2), '\Deltaf', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
+            case 3
+                delete(freqPrecisionPlts);
+                delete(freqPrecisionTxts);
+                freqPrecisionPlts = gobjects(1, 0);
+                freqPrecisionTxts = gobjects(1, 0);
+        end
+    end
+
+ax.ButtonDownFcn = @displayFreqPrecision;
 
 end
 

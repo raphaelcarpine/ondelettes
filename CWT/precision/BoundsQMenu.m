@@ -15,6 +15,20 @@ catch
 end
 
 %%
+if size(TLim, 1) > 1
+    TLim = transpose(TLim);
+end
+if size(TLimRidge, 1) > 1
+    TLimRidge = transpose(TLimRidge);
+end
+if size(ct, 1) > 1
+    ct = transpose(ct);
+end
+if size(ctRidge, 1) > 1
+    ctRidge = transpose(ctRidge);
+end
+
+%%
 
 f2 = [f2, -f];  % cos(xt) = 1/2(exp(iwt) + exp(-iwt))
 

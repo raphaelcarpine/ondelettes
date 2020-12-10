@@ -71,8 +71,10 @@ end
 
 % plot
 if plotMean
+    deltaT = DeltaT(Freqs([1, end]));
+    
     plotMeanAndShocks(t, meanWvlt, meanWvlttEdgeEffects, shockIndexes,...
-        threshold, meanTmeanWvlt, meanScale, figName);
+        threshold, meanTmeanWvlt, meanScale, deltaT, figName);
     drawnow;
 end
 

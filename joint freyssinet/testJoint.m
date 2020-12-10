@@ -34,8 +34,11 @@ end
 
 %% selection
 
-ti = 0;
-tf = 200;
+ti = 20;
+tf = 970;
+
+% ti = 20;
+% tf = 200;
 
 X = X(:, t >= ti & t <= tf);
 t = t(t >= ti & t <= tf);

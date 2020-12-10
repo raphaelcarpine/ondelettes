@@ -16,6 +16,7 @@ fig.Units = 'characters';
 fig.Position(3) = 52;
 fig.Position(4) = 12.5;
 fig.MenuBar = 'none';
+fig.Resize = false;
 
 
 % freq

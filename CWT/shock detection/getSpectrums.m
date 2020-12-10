@@ -118,15 +118,17 @@ end
 % plotUnderThresholdAverage
 % plotAboveThresholdAverage
 
+deltaFwvlt = @(f) f/(2*Q);
+
 % all shocks plot
 if plotShockSpectrum
     if multiSignalSpectrum
         figName = '|CWT(t=t_k, f)|² ; all selected channels';
-        plotSpectrums(freqs, spectrumsTot{1}, spectrumFrequencyScale, spectrumScale, figName);
+        plotSpectrums(freqs, spectrumsTot{1}, spectrumFrequencyScale, spectrumScale, deltaFwvlt, figName);
     else
         for k_ch = 1:length(spectrumsTot)
             figName = sprintf('|CWT(t=t_k, f)|² ; channel %d', signalChannels(k_ch));
-            plotSpectrums(freqs, spectrumsTot{k_ch}, spectrumFrequencyScale, spectrumScale, figName);
+            plotSpectrums(freqs, spectrumsTot{k_ch}, spectrumFrequencyScale, spectrumScale, deltaFwvlt, figName);
         end
     end
 end
@@ -145,12 +147,12 @@ if plotAverageShockSpectrum || plotAverageSpectrum || plotUnderThresholdAverage 
     % plot
     if multiSignalSpectrum
         figName = 'mean(|CWT(~, f)|²) ; all selected channels';
-        plotSpectrums(freqs, spectrumsArray{1}, spectrumFrequencyScale, spectrumScale, figName,...
+        plotSpectrums(freqs, spectrumsArray{1}, spectrumFrequencyScale, spectrumScale, deltaFwvlt, figName,...
             plotAverageShockSpectrum, plotAverageSpectrum, plotUnderThresholdAverage, plotAboveThresholdAverage);
     else
         for k_ch = 1:length(spectrumsTot)
             figName = sprintf('mean(|CWT(~, f)|²) ; channel %d', signalChannels(k_ch));
-            plotSpectrums(freqs, spectrumsArray{k_ch}, spectrumFrequencyScale, spectrumScale, figName,...
+            plotSpectrums(freqs, spectrumsArray{k_ch}, spectrumFrequencyScale, spectrumScale, deltaFwvlt, figName,...
                 plotAverageShockSpectrum, plotAverageSpectrum, plotUnderThresholdAverage, plotAboveThresholdAverage);
         end
     end

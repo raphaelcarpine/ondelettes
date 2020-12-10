@@ -54,43 +54,27 @@ if plotScatter
         end
         
         if Npc == 1
-            hold(ax, 'on');
-            shockPoints = gobjects(1, size(T, 1));
-            for k_s = 1:size(T, 1)
-                ax.ColorOrderIndex = 1;
-                shockPoints(k_s) = scatter(ax, T(k_s, 1), zeros(size(T(k_s, 1))), 'x', 'LineWidth', 2);
-            end
+            shockPoints = scatter(ax, T(:, 1), zeros(size(T(:, 1))), 'x', 'LineWidth', 2);
             shockTexts = text(ax, T(:, 1), zeros(size(T(:, 1))), shockTimeNames, 'VerticalAlignment', 'baseline');
             hold(ax, 'on');
-            yline(ax, 0);
+            yline(ax, 0, '--');
             xlabel(ax, 'principal component 1');
             ax.YAxis.Visible = 'off';
         elseif Npc == 2
-            hold(ax, 'on');
-            shockPoints = gobjects(1, size(T, 1));
-            for k_s = 1:size(T, 1)
-                ax.ColorOrderIndex = 1;
-                shockPoints(k_s) = scatter(ax, T(k_s, 1), T(k_s, 2), 'x', 'LineWidth', 2);
-            end
+            shockPoints = scatter(ax, T(:, 1), T(:, 2), 'x', 'LineWidth', 2);
             shockTexts = text(ax, T(:, 1), T(:, 2), shockTimeNames, 'VerticalAlignment', 'baseline');
             hold(ax, 'on');
-            xline(ax, 0);
-            yline(ax, 0);
+            xline(ax, 0, '--');
+            yline(ax, 0, '--');
             xlabel(ax, 'principal component 1');
             ylabel(ax, 'principal component 2');
         elseif Npc == 3
-            shockPoints = gobjects(1, size(T, 1));
-            shockPoints(1) = scatter3(ax, T(1, 1), T(1, 2), T(1, 3), 'x', 'LineWidth', 2);
-            hold(ax, 'on');
-            for k_s = 2:size(T, 1)
-                ax.ColorOrderIndex = 1;
-                shockPoints(k_s) = scatter3(ax, T(k_s, 1), T(k_s, 2), T(k_s, 3), 'x', 'LineWidth', 2);
-            end
+            shockPoints = scatter3(ax, T(:, 1), T(:, 2), T(:, 3), 'x', 'LineWidth', 2);
             shockTexts = text(ax, T(:, 1), T(:, 2), T(:, 3), shockTimeNames, 'VerticalAlignment', 'baseline');
             hold(ax, 'on');
-            xline(ax, 0);
-            yline(ax, 0);
-            plot3([0 0], [0 0], zlim, 'Color', [0 0 0]);
+            xline(ax, 0, '--');
+            yline(ax, 0, '--');
+            plot3([0 0], [0 0], zlim, '--', 'Color', [0 0 0]);
             xlabel(ax, 'principal component 1');
             ylabel(ax, 'principal component 2');
             zlabel(ax, 'principal component 3');
@@ -113,8 +97,16 @@ end
         set(showAllMenu, 'Checked', 'on');
         set(selectShocksMenu, 'Checked', 'off');
         
-        set(shockPoints, 'Visible', 'on');
         set(shockTexts, 'Visible', 'on');
+        
+        if isempty(shockPoints.ZData)
+            set(shockPoints, 'XData', T(:, 1),...
+                'YData', T(:, 2));
+        else
+            set(shockPoints, 'XData', T(:, 1),...
+                'YData', T(:, 2),...
+                'ZData', T(:, 3));
+        end
     end
 
     function selectShocksMenuCallback(~, ~)
@@ -132,7 +124,7 @@ end
             
             visibleShocks = str2num(answer{1});
             if isempty(visibleShocks) || ~all(mod(visibleShocks, 1) == 0)...
-                    || min(visibleShocks) < 1 || max(visibleShocks) > length(shockPoints)
+                    || min(visibleShocks) < 1 || max(visibleShocks) > length(shockTexts)
                 errorFig = errordlg('Incorrect input format', 'Error');
                 waitfor(errorFig);
             else
@@ -140,14 +132,22 @@ end
             end
         end
         
-        
         set(showAllMenu, 'Checked', 'off');
         set(selectShocksMenu, 'Checked', 'on');
         
-        set(shockPoints, 'Visible', 'off');
+        
+        if isempty(shockPoints.ZData)
+            set(shockPoints, 'XData', T(visibleShocks, 1),...
+                'YData', T(visibleShocks, 2));
+        else
+            set(shockPoints, 'XData', T(visibleShocks, 1),...
+                'YData', T(visibleShocks, 2),...
+                'ZData', T(visibleShocks, 3));
+        end
+        
         set(shockTexts, 'Visible', 'off');
-        set(shockPoints(visibleShocks), 'Visible', 'on');
         set(shockTexts(visibleShocks), 'Visible', 'on');
+        drawnow
     end
 
 %% eigenvectors plot

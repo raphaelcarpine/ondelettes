@@ -29,7 +29,7 @@ if nargin == 0 % test
     X = [1; -2] * X;
     figure;
     plot(t, X);
-    signalChannels = 3 + 1:size(X, 1);
+    signalChannels = 3 + (1:size(X, 1));
     
     QMeanInit = 5;
     MotherWaveletMeanInit = 'morlet';
@@ -57,7 +57,7 @@ elseif size(t, 1) == size(X, 1) && size(t, 2) == size(X, 2)
     dt = mean(diff(t(1, :)));
     for k_t = 2:size(t, 1)
         if max(abs(t(k_t, :) - t(1, :))) > dt * 1e-3
-            error(' ');
+            error('different time arrays');
         end
     end
     t = t(1, :);
