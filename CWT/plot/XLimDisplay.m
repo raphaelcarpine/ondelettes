@@ -62,10 +62,12 @@ classdef XLimDisplay < handle
                 obj.AxesXLim(end+1) = ax;
                 obj.updateLimAxesXLim(end+1) = updateLimAxes(k_ax);
                 
-                obj.XminLines(end+1) = xline(ax, obj.XLim(1), '-', 'Xmin',...
-                    'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal', 'Visible', obj.XLimVisible);
-                obj.XmaxLines(end+1) = xline(ax, obj.XLim(2), '-', 'Xmax',...
-                    'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal', 'Visible', obj.XLimVisible);
+                obj.XminLines(end+1) = xline(ax, XLimDisplay.infTo0(obj.XLim(1)), '-', 'Xmin',...
+                    'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal',...
+                    'Visible', obj.XLimVisible && isfinite(obj.XLim(1)));
+                obj.XmaxLines(end+1) = xline(ax, XLimDisplay.infTo0(obj.XLim(2)), '-', 'Xmax',...
+                    'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal',...
+                    'Visible', obj.XLimVisible && isfinite(obj.XLim(2)));
                 obj.XminLines(end).Annotation.LegendInformation.IconDisplayStyle = 'off';
                 obj.XmaxLines(end).Annotation.LegendInformation.IconDisplayStyle = 'off';
                 
@@ -84,10 +86,12 @@ classdef XLimDisplay < handle
                 obj.AxesXLimRidges(end+1) = ax;
                 obj.updateLimAxesXLimRidges(end+1) = updateLimAxes(k_ax);
                 
-                obj.XminRidgesLines(end+1) = xline(ax, obj.XLimRidges(1), '--', {'', 'Xmin ridges'},...
-                    'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal', 'Visible', obj.XLimRidgesVisible);
-                obj.XmaxRidgesLines(end+1) = xline(ax, obj.XLimRidges(2), '--', {'', 'Xmax ridges'},...
-                    'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal', 'Visible', obj.XLimRidgesVisible);
+                obj.XminRidgesLines(end+1) = xline(ax, XLimDisplay.infTo0(obj.XLimRidges(1)), '--',...
+                    {'', 'Xmin ridges'}, 'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal',...
+                    'Visible', obj.XLimRidgesVisible && isfinite(obj.XLimRidges(1)));
+                obj.XmaxRidgesLines(end+1) = xline(ax, XLimDisplay.infTo0(obj.XLimRidges(2)), '--',...
+                    {'', 'Xmax ridges'}, 'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal',...
+                    'Visible', obj.XLimRidgesVisible && isfinite(obj.XLimRidges(2)));
                 obj.XminRidgesLines(end).Annotation.LegendInformation.IconDisplayStyle = 'off';
                 obj.XmaxRidgesLines(end).Annotation.LegendInformation.IconDisplayStyle = 'off';
                 
@@ -103,8 +107,10 @@ classdef XLimDisplay < handle
                 if ~obj.updateLimAxesXLim(k_ax)
                     continue
                 end
-                obj.XminLines(k_ax).Value = obj.XLim(1);
-                obj.XmaxLines(k_ax).Value = obj.XLim(2);
+                obj.XminLines(k_ax).Value = XLimDisplay.infTo0(obj.XLim(1));
+                obj.XmaxLines(k_ax).Value = XLimDisplay.infTo0(obj.XLim(2));
+                obj.XminLines(k_ax).Visible = obj.XLimVisible && isfinite(obj.XLim(1));
+                obj.XmaxLines(k_ax).Visible = obj.XLimVisible && isfinite(obj.XLim(2));
             end
             
             drawnow
@@ -118,8 +124,10 @@ classdef XLimDisplay < handle
                 if ~obj.updateLimAxesXLimRidges(k_ax)
                     continue
                 end
-                obj.XminRidgesLines(k_ax).Value = obj.XLimRidges(1);
-                obj.XmaxRidgesLines(k_ax).Value = obj.XLimRidges(2);
+                obj.XminRidgesLines(k_ax).Value = XLimDisplay.infTo0(obj.XLimRidges(1));
+                obj.XmaxRidgesLines(k_ax).Value = XLimDisplay.infTo0(obj.XLimRidges(2));
+                obj.XminRidgesLines(k_ax).Visible = obj.XLimRidgesVisible && isfinite(obj.XLimRidges(1));
+                obj.XmaxRidgesLines(k_ax).Visible = obj.XLimRidgesVisible && isfinite(obj.XLimRidges(2));
             end
             
             drawnow
@@ -134,10 +142,10 @@ classdef XLimDisplay < handle
             
             obj.XLimVisible = XLimVisible;
             obj.XLimRidgesVisible = XLimRidgesVisible;
-            set(obj.XminLines, 'Visible', obj.XLimVisible);
-            set(obj.XmaxLines, 'Visible', obj.XLimVisible);
-            set(obj.XminRidgesLines, 'Visible', obj.XLimRidgesVisible);
-            set(obj.XmaxRidgesLines, 'Visible', obj.XLimRidgesVisible);
+            set(obj.XminLines, 'Visible', obj.XLimVisible && isfinite(obj.XLim(1)));
+            set(obj.XmaxLines, 'Visible', obj.XLimVisible && isfinite(obj.XLim(2)));
+            set(obj.XminRidgesLines, 'Visible', obj.XLimRidgesVisible && isfinite(obj.XLimRidges(1)));
+            set(obj.XmaxRidgesLines, 'Visible', obj.XLimRidgesVisible && isfinite(obj.XLimRidges(2)));
         end
     end
     
@@ -151,6 +159,14 @@ classdef XLimDisplay < handle
             obj.updateLimAxesXLimRidges = obj.updateLimAxesXLimRidges(isvalid(obj.AxesXLimRidges));
             obj.AxesXLim = obj.AxesXLim(isvalid(obj.AxesXLim));
             obj.AxesXLimRidges = obj.AxesXLimRidges(isvalid(obj.AxesXLimRidges));
+        end
+    end
+    
+    methods (Access = private, Static)
+        function x = infTo0(x)
+            if ~isfinite(x)
+                x = 0;
+            end
         end
     end
 end

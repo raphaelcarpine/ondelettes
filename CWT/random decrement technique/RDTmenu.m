@@ -1,4 +1,4 @@
-function [trdt, Xrdt, axRdt] = RDTmenu(t, X, signalChannels)
+function [trdt, Xrdt, axRdt] = RDTmenu(t, X, signalChannels, signalUnit)
 %RDTMENU Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -53,7 +53,7 @@ fig.Resize = false;
 
 %% display
 
-plotRDTtimes = PlotRDTtimes(t, X, removeMean0, refCh0, signalChannels);
+plotRDTtimes = PlotRDTtimes(t, X, removeMean0, refCh0, signalChannels, signalUnit);
 
 %% menu
 
@@ -211,6 +211,8 @@ axRdt = gobjects(1, 0);
         plot(axRdt, trdt, Xrdt);
 %         set(axRdt, 'XLim', [trdt(1), trdt(end)]);
         legend(axRdt, refChNames);
+        xlabel(axRdt, 'Time [s]');
+        ylabel(axRdt, ['Random decrement signature [', signalUnit, ']']);
         
         % end
         try

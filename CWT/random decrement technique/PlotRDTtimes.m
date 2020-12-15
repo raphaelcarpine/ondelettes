@@ -7,6 +7,8 @@ classdef PlotRDTtimes < handle
         X
         removeMean
         referenceChannel
+        signalChannels
+        signalUnit
         ax
         linePlots
         scatterPlot
@@ -15,7 +17,7 @@ classdef PlotRDTtimes < handle
     end
     
     methods
-        function obj = PlotRDTtimes(t, X, removeMean, referenceChannel, signalChannels)
+        function obj = PlotRDTtimes(t, X, removeMean, referenceChannel, signalChannels, signalUnit)
             %PLOTRDTTIMES Construct an instance of this class
             %   Detailed explanation goes here
             if nargin < 3
@@ -32,16 +34,20 @@ classdef PlotRDTtimes < handle
             obj.X = X;
             obj.removeMean = removeMean;
             obj.referenceChannel = referenceChannel;
+            obj.signalChannels = signalChannels;
+            obj.signalUnit = signalUnit;
             
             fig = figure('Name', 'RDT times', 'NumberTitle','off');
             obj.ax = axes(fig);
+            xlabel(obj.ax, 'Time [s]');
+            ylabel(obj.ax, ['Signal [', signalUnit, ']']);
             hold(obj.ax, 'on');
             
             yline(obj.ax, 0, '--');
             obj.linePlots = plot(obj.ax, t, X - obj.removeMean * mean(X, 2), 'LineStyle', ':');
             set(obj.linePlots(obj.referenceChannel), 'LineStyle', '-');
             obj.thresholdLine = yline(obj.ax, 0, '-r', 'threshold', 'LabelHorizontalAlignment', 'left',...
-                'Visible', false);
+                'Visible', false, 'LineWidth', 1, 'FontWeight', 'bold');
             obj.scatterPlot = scatter(obj.ax, [], [], '+b', 'LineWidth', 2);
             
             % legend
@@ -57,7 +63,8 @@ classdef PlotRDTtimes < handle
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             if ~isvalid(obj.ax)
-                obj = PlotRDTtimes(obj.t, obj.X, obj.removeMean, obj.referenceChannel);
+                obj = PlotRDTtimes(obj.t, obj.X, obj.removeMean, obj.referenceChannel,...
+                    obj.signalChannels, obj.signalUnit);
             end
             
             % update

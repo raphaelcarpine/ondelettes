@@ -1,23 +1,21 @@
-function [SVfftrx, SVfftvectrx] = svdFFT(Rx, Nsv)
+function [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRx, Rx, Nsv, varargin)
 %SVDCWT Summary of this function goes here
 %   Rx : crossed correlation
 %   Nsv : number of singular values
-%   SVrx{k}(kf, kt) : k^th singular values of CWT(Rx) for each time and freq
-%   SVvectrx{k}(:, kf, kt) : k^th singular vectors of CWT(Rx) for each time and freq
-
-if nargin < 6
-    Nsv = 1;
-end
+%   SVfftrx{k}(kf) : k^th singular values of CWT(Rx) for each time and freq
+%   SVvectrx{k}(:, kf) : k^th singular vectors of CWT(Rx) for each time and freq
 
 Ndof = size(Rx, 1);
 Nt = size(Rx, 3);
 
 %% CWT
 
-FFTrx = nan(Ndof, Ndof, Nt);
+Nf = floor(Nt/2);
+
+FFTrx = nan(Ndof, Ndof, Nf);
 for iddl = 1:Ndof
     for jddl = 1:Ndof
-        FFTrx(iddl, jddl, :) = fft(reshape(Rx(iddl, jddl, :), [1, Nt]));
+        [freqs, FFTrx(iddl, jddl, :)] = fourierTransform(tRx, reshape(Rx(iddl, jddl, :), [1, Nt]), varargin{:});
     end
 end
 
@@ -26,12 +24,12 @@ end
 SVfftrx = cell(1, Nsv);
 SVfftvectrx = cell(1, Nsv);
 for ksv = 1:Nsv %
-    SVfftrx{ksv} = nan(1, Nt);
-    SVfftvectrx{ksv} = nan(Ndof, Nt);
+    SVfftrx{ksv} = nan(1, Nf);
+    SVfftvectrx{ksv} = nan(Ndof, Nf);
 end
 
 
-for kfreq = 1:Nt
+for kfreq = 1:Nf
     [U, S, ~] = svd(FFTrx(:, :, kfreq));
     for ksv = 1:Nsv
         SVfftrx{ksv}(kfreq) = S(ksv, ksv);

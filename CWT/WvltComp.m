@@ -71,7 +71,7 @@ if size(X, 2) ~= 1 || size(Y, 2) ~= 1 || ~isequal(size(X), size(Y))
 end
 
 %% shanon
-if max(WvltFreq) > Fs/2
+if max(WvltFreq) / (Fs/2) > 1 + 1e-6
     warning('Shanon');
 end
 

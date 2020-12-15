@@ -14,7 +14,7 @@ X = [X11, X12; X21, X22];
 
 t = (1/Fs) * (0:size(X, 2)-1);
 
-if 1
+if 0
     % fréquence de rééchantillonage
     Fs_new = 10000;
     
@@ -34,8 +34,8 @@ end
 
 %% selection
 
-ti = 20;
-tf = 970;
+ti = 16;
+tf = 972;
 
 % ti = 20;
 % tf = 200;
@@ -51,19 +51,23 @@ t = t(t >= ti & t <= tf);
 fig = figure;
 ax = axes(fig);
 plt = plot(ax, t, X);
+xlabel(ax, 'Time [s]');
+ylabel(ax, 'Signal [V]');
+legend(ax, {'channel 1', 'channel 2'});
 
-
+XLim = [16, 972];
 fmin = 300;
 fmax = 3000;
 Q = 30;
-XLim = [126, 132];
 FrequencyScale = 'log';
 WvltScale = 'lin';
 MotherWavelet =  'morlet';
+SignalUnit = 'V';
+SquaredSignalUnit = 'V²';
 
 WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
-    'WvltScale', WvltScale, 'FrequencyScale', FrequencyScale, 'MotherWavelet', MotherWavelet);%,...
-%     'XLim', XLim);
+    'WvltScale', WvltScale, 'FrequencyScale', FrequencyScale, 'MotherWavelet', MotherWavelet, 'XLim', XLim,...
+    'SignalUnit', SignalUnit, 'SquaredSignalUnit', SquaredSignalUnit);
 
 
 

@@ -21,11 +21,13 @@ defaultCf = 5;
 defaultZeroPaddingFourier = 0;
 defaultFourierAveraging = false;
 defaultFourierAveragingNb = 10;
+defaultFourierWindow = 'rectangular';
+defaultFourierWindowParams = [];
 defaultMultiSignalMode = false;
 defaultRdtMode = false;
 defaultAutocorrelationMode = false;
 defaultAutocorrelationSVDMode = false;
-defaultAutocorrelationFourierSVDMode = true;
+defaultAutocorrelationFourierSVDMode = false;
 defaultMaxLagCorr = nan;
 defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
@@ -37,7 +39,7 @@ defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
 defaultMotherWavelet = 'cauchy';
-defaultXLimRidge = [];
+defaultXLimRidge = [-inf inf];
 defaultctRidge = 0;
 defaultRemoveMean = false;
 defaultSignalUnit = 'm/s²';
@@ -66,6 +68,8 @@ addParameter(p,'Cf', defaultCf);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
 addParameter(p,'FourierAveraging', defaultFourierAveraging);
 addParameter(p,'FourierAveragingNb', defaultFourierAveragingNb);
+addParameter(p,'FourierWindow', defaultFourierWindow);
+addParameter(p,'FourierWindowParams', defaultFourierWindowParams);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'RdtMode', defaultRdtMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
@@ -97,6 +101,7 @@ if fig == 0
     fig.Position(3) = 110;
     fig.Position(4) = 26;
     fig.MenuBar = 'none';
+    fig.Resize = false;
 %     fig.ToolBar = 'none';
 end
 
@@ -161,6 +166,8 @@ cf = p.Results.Cf;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
 FourierAveraging = p.Results.FourierAveraging;
 FourierAveragingNb = p.Results.FourierAveragingNb;
+FourierWindow = p.Results.FourierWindow;
+FourierWindowParams = p.Results.FourierWindowParams;
 
 multiSignalMode = p.Results.MultiSignalMode;
 rdtMode = p.Results.RdtMode;
@@ -190,9 +197,6 @@ squaredSignalUnit = p.Results.SquaredSignalUnit;
 x0 = getX();
 if isnan(XLim)
     XLim = [x0(1), x0(end)];
-end
-if isempty(XLimRidge)
-    XLimRidge = [x0(1), x0(end)];
 end
 
 if isnan(maxLagCorr)
@@ -559,7 +563,7 @@ signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on')
 signalChannelsMenu.Callback = @(~,~) setSignalChannels();
 
 % Xlim
-XlimMenu = uimenu(paramMenu, 'Text','Set Xlim');
+XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
     function setXlim()
         prompt = {'Enter Xmin :', 'Enter Xmax :'};
         dlgtitle = 'Input Xlim';
@@ -586,7 +590,7 @@ XlimDisplayMenu = uimenu(paramMenu, 'Text','Show Xlim', 'Checked', ShowXLim);
 set(XlimDisplayMenu, 'CallBack', @(~,~) setXlimDisplay);
 
 % ct
-CtMenu = uimenu(paramMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')']);
+CtMenu = uimenu(paramMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')'], 'Separator', 'on');
     function setCt()
         prompt = {'Enter ct :'};
         dlgtitle = 'Input ct';
@@ -636,7 +640,7 @@ set(CfMenu, 'CallBack', @(~,~) setCf);
 
 % remove mean
 
-removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean);
+removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean, 'Separator', 'on');
     function switchRemoveMeanDisplay(status)
         removeMeanMenu.Checked = status;
         removeMean = status;
@@ -645,10 +649,13 @@ removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean);
 removeMeanMenu.MenuSelectedFcn = @(~, ~) switchRemoveMeanDisplay(~strcmp(removeMeanMenu.Checked, 'on'));
 
 
+%% mode menu
+
+modeMenu = uimenu(fig, 'Text', 'Mode');
+
 %multiSignalMode
 
-multiSignalModeMenu = uimenu(paramMenu, 'Text','Multi signal mode',...
-    'Checked', multiSignalMode, 'Separator', 'on');
+multiSignalModeMenu = uimenu(modeMenu, 'Text','Multi signal mode', 'Checked', multiSignalMode);
     function switchMultiSignalModeDisplay(status)
         multiSignalModeMenu.Checked = status;
         multiSignalMode = status;
@@ -665,13 +672,13 @@ multiSignalModeMenu.MenuSelectedFcn = @(~, ~) switchMultiSignalModeDisplay(~strc
 
 % rdt mode
 
-rdtModeMenu = uimenu(paramMenu, 'Text','Random decrement mode', 'Checked', rdtMode);
-rdtSetMenu = uimenu(paramMenu, 'Text','Set random decrement');
+rdtModeMenu = uimenu(modeMenu, 'Text','Random decrement mode', 'Checked', rdtMode, 'Separator', 'on');
+rdtSetMenu = uimenu(modeMenu, 'Text','Set random decrement');
 
     function switchRdtModeDisplay(status)
         if status
             getXY();
-            [Xrdt, Yrdt, axRdt] = RDTmenu(x, y, signalChannels);
+            [Xrdt, Yrdt, axRdt] = RDTmenu(x, y, signalChannels, signalUnit);
             if isempty(Xrdt)
                 status = false;
             else
@@ -689,7 +696,7 @@ rdtSetMenu = uimenu(paramMenu, 'Text','Set random decrement');
 
     function rdtSetMenuCallback(~,~)
         getXY();
-        [Xrdt0, Yrdt0, axRdt] = RDTmenu(x, y, signalChannels);
+        [Xrdt0, Yrdt0, axRdt] = RDTmenu(x, y, signalChannels, signalUnit);
         if ~isempty(Xrdt0)
             Xrdt = Xrdt0;
             Yrdt = Yrdt0;
@@ -702,11 +709,70 @@ rdtSetMenu.Callback = @rdtSetMenuCallback;
 
 % autocorr mode
 
-autocorrelationModeMenu = uimenu(paramMenu, 'Text','Cross-corr mode', 'Checked', autocorrelationMode);
+autocorrelationModeMenu = uimenu(modeMenu, 'Text','Cross-corr mode', 'Checked', autocorrelationMode, 'Separator', 'on');
 
-autocorrelationParamsMenu = uimenu(paramMenu, 'Text', 'Cross-corr params');
-autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'plot cross-corr');
-autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode');
+autocorrelationParamsMenu = uimenu(modeMenu, 'Text', 'Cross-corr params');
+
+ % plot
+autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot cross-corr');
+
+    function displayCrossCorr()
+        getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        NmaxLagCorr = floor(maxLagCorr/Dx);
+        plotCrossCorr(Dx, y, NmaxLagCorr, true);
+    end
+set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
+
+
+ % max lag
+autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Set max lag', 'Separator', 'on');
+
+    function flag = setMaxLagCorr()
+        flag = true;
+        answer = inputdlg({'Enter max lag:'}, 'Input MaxLag', [1 35], {num2str(maxLagCorr)});
+        try
+            maxLagCorr = str2double(answer{1});
+        catch
+            flag = false;
+            return
+        end
+        resetCrossCorr();
+        getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        NmaxLagCorr = floor(maxLagCorr/Dx);
+        plotCrossCorr(Dx, y, NmaxLagCorr, true);
+    end
+set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
+
+ % set nb of SV
+
+AutocorrelationNsvdMenu = uimenu(autocorrelationParamsMenu, 'Text', sprintf('Set nb of SV (%u)', autocorrelationNsvd));
+
+    function AutocorrelationNsvdMenuCallback(~,~)
+        while true
+            answer = inputdlg({'Enter nb. of singular values:'}, 'Input nb of SV', [1 35], {num2str(autocorrelationNsvd)});
+            try
+                autocorrelationNsvd0 = str2double(answer{1});
+                if isnan(autocorrelationNsvd0) || mod(autocorrelationNsvd0, 1) ~= 0 ||...
+                        autocorrelationNsvd0 <= 0 || autocorrelationNsvd0 > nbPlots
+                    figError = errordlg('Incorrect input', 'Error', 'modal');
+                    waitfor(figError);
+                else
+                    break
+                end
+            catch
+                return
+            end
+        end
+        autocorrelationNsvd = autocorrelationNsvd0;
+        set(AutocorrelationNsvdMenu, 'Text', sprintf('Set nb of SV (%u)', autocorrelationNsvd));
+    end
+AutocorrelationNsvdMenu.MenuSelectedFcn = @AutocorrelationNsvdMenuCallback;
+
+ % svd modes
+
+autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode CWT', 'Separato', 'on');
 if autocorrelationSVDMode
     set('autocorrelationSVDMenu', 'Checked', 'on');
 end
@@ -720,51 +786,42 @@ end
         end
     end
 autocorrelationSVDMenu.Callback = @autocorrSVDCallback;
-autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'set max lag');
-autocorrelationFourierMenu = uimenu(autocorrelationParamsMenu, 'Text', 'fourier svd', 'Checked', 'on');
+
+
+autocorrelationFourierMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode Fourier', 'Checked', autocorrelationFourierSVDMode);
 
     function switchAutocorrelationModeDisplay(status)
+        if status
+            if setMaxLagCorr()
+                switchRdtModeDisplay(false);
+                switchMultipleAxesDisplay(false);
+                if autocorrelationSVDMode
+                    switchMultiSignalModeDisplay(false);
+                end
+            else
+                status = false;
+            end
+        end
         autocorrelationModeMenu.Checked = status;
         autocorrelationMode = status;
         set(autocorrelationParamsMenu, 'Enable', status);
-        
-        if status
-            switchRdtModeDisplay(false);
-            switchMultipleAxesDisplay(false);
-            if autocorrelationSVDMode
-                switchMultiSignalModeDisplay(false);
-            end
-        end
+        switchAutocorrelationFourierMenu(autocorrelationFourierSVDMode);
     end
 autocorrelationModeMenu.MenuSelectedFcn = @(~, ~) switchAutocorrelationModeDisplay(~strcmp(autocorrelationModeMenu.Checked, 'on'));
 
-    function displayCrossCorr()
-        getXY();
-        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-        NmaxLagCorr = floor(maxLagCorr/Dx);
-        plotCrossCorr(Dx, y, NmaxLagCorr, true);
-    end
-set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
-
-    function setMaxLagCorr()
-        answer = inputdlg({'Enter max lag :'}, 'Input MaxLag', [1 35], {num2str(maxLagCorr)});
-        try
-            maxLagCorr = str2double(answer{1});
-        catch
-            return
+    function switchAutocorrelationFourierMenu(flag)
+        if nargin == 0
+            flag = ~autocorrelationFourierSVDMode;
         end
-        resetCrossCorr();
-    end
-set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
-
-    function switchAutocorrelationFourierMenu()
-        if autocorrelationFourierSVDMode
-            autocorrelationFourierSVDMode = false;
-            set(autocorrelationFourierMenu, 'Checked', 'off');
+        
+        autocorrelationFourierSVDMode = flag;
+            set(autocorrelationFourierMenu, 'Checked', flag);
+        if flag && autocorrelationMode
+            set(FourierAveragingMenu, 'Enable', 'off');
         else
-            autocorrelationFourierSVDMode = true;
-            set(autocorrelationFourierMenu, 'Checked', 'on');
+            set(FourierAveragingMenu, 'Enable', 'on');
         end
+        
     end
 set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierMenu());
 
@@ -772,7 +829,7 @@ set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierM
 
 switchMultiSignalModeDisplay(multiSignalMode);
 switchRdtModeDisplay(rdtMode);
-switchAutocorrelationModeDisplay(autocorrelationMode);
+% switchAutocorrelationModeDisplay(autocorrelationMode); % after FourierAveragingMenu
 
 
 %% ridge menu
@@ -788,7 +845,6 @@ freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
 WvltScaleNames = {'lin', 'log'};
-FourierScaleNames = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
 FrequencyScaleNames = {'lin', 'log'};
 
 %freq
@@ -838,21 +894,6 @@ set(dampingMenuChoices(1), 'CallBack', @(~,~) selectDampingMenu(1));
 set(dampingMenuChoices(2), 'CallBack', @(~,~) selectDampingMenu(2));
 set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
 
-%multipleAxesDisplay
-
-multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes',...
-    'Checked', multipleAxesDisplay, 'Separator', 'on');
-    function switchMultipleAxesDisplay(status)
-        multipleAxesDisplayMenu.Checked = status;
-        setMultipleAxesDisplay(status);
-        if status
-            switchMultiSignalModeDisplay(false);
-            switchAutocorrelationModeDisplay(false)
-        end
-    end
-
-multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
-
 % Xlim
 XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge', 'Separator', 'on');
     function setXlimRidge()
@@ -887,7 +928,7 @@ CtRidgeMenu = uimenu(ridgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')'
 set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
 
 % threshold
-ThresholdRidgeMenu = uimenu(ridgeMenu, 'Text','Set ridge threshold');
+ThresholdRidgeMenu = uimenu(ridgeMenu, 'Text','Set ridge threshold', 'Separator', 'on');
     function setThresholdRidge()
         prompt = {['Enter ridge threshold [', signalUnit, ']:']};
         dlgtitle = 'Input ridge threshold';
@@ -973,7 +1014,28 @@ AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
 set(AverageNoiseMenu, 'CallBack', @(~,~) getAverageNoise);
 
 
+%multipleAxesDisplay
+
+multipleAxesDisplayMenu = uimenu(ridgeMenu, 'Text','Multiple axes',...
+    'Checked', multipleAxesDisplay, 'Separator', 'on');
+    function switchMultipleAxesDisplay(status)
+        multipleAxesDisplayMenu.Checked = status;
+        setMultipleAxesDisplay(status);
+        if status
+            switchMultiSignalModeDisplay(false);
+            switchAutocorrelationModeDisplay(false)
+        end
+    end
+
+multipleAxesDisplayMenu.MenuSelectedFcn = @(~, ~) switchMultipleAxesDisplay(~strcmp(multipleAxesDisplayMenu.Checked, 'on'));
+
+
+
 %% fourier menu
+
+FourierScaleNames = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
+FourierWindowNames = {'rectangular', 'hamming', 'exponential'};
+
 
 fourierMenu = uimenu(fig,'Text','Fourier');
 
@@ -985,8 +1047,7 @@ FourierScaleMenuChoices(3) = uimenu(FourierScaleMenu, 'Text', 'log');
 FourierScaleMenuChoices(4) = uimenu(FourierScaleMenu, 'Text', 'spectral density (lin)');
 FourierScaleMenuChoices(5) = uimenu(FourierScaleMenu, 'Text', 'spectral density (log)');
 FourierScaleMenuChoices(6) = uimenu(FourierScaleMenu, 'Text', 'phase');
-FourierScaleValues = {'lin', 'squared', 'log', 'spectral density (lin)', 'spectral density (log)', 'phase'};
-set(FourierScaleMenuChoices(find(strcmp(FourierScaleValues, FourierScale))), 'Checked', 'on');
+set(FourierScaleMenuChoices(find(strcmp(FourierScaleNames, FourierScale))), 'Checked', 'on');
 
     function selectFourierScaleMenu(kchoice)
         for kchoices = 1:length(FourierScaleMenuChoices)
@@ -1002,6 +1063,38 @@ set(FourierScaleMenuChoices(3), 'CallBack', @(~,~) selectFourierScaleMenu(3));
 set(FourierScaleMenuChoices(4), 'CallBack', @(~,~) selectFourierScaleMenu(4));
 set(FourierScaleMenuChoices(5), 'CallBack', @(~,~) selectFourierScaleMenu(5));
 set(FourierScaleMenuChoices(6), 'CallBack', @(~,~) selectFourierScaleMenu(6));
+
+
+% fourier window
+FourierWindowMenu = uimenu(fourierMenu, 'Text','Window', 'Separator', 'on');
+FourierWindowMenuChoices(1) = uimenu(FourierWindowMenu, 'Text', 'rectangular');
+FourierWindowMenuChoices(2) = uimenu(FourierWindowMenu, 'Text', 'hamming');
+FourierWindowMenuChoices(3) = uimenu(FourierWindowMenu, 'Text', 'exponential');
+set(FourierWindowMenuChoices(find(strcmp(FourierWindowNames, FourierWindow))), 'Checked', 'on');
+
+    function selectFourierWindowMenu(kchoice)
+        for kchoices = 1:length(FourierWindowMenuChoices)
+            set(FourierWindowMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(FourierWindowMenuChoices(kchoice), 'Checked', 'on');
+        
+        FourierWindow = FourierWindowNames{kchoice};
+        
+        switch FourierWindow
+            case 'exponential'
+                while true
+                    answer = inputdlg({'Enter \tau [s]:'}, 'Input exponential window params', [1 35], {''});
+                    try
+                        FourierWindowParams = str2double(answer{1});
+                        break
+                    catch
+                    end
+                end
+        end
+    end
+set(FourierWindowMenuChoices(1), 'CallBack', @(~,~) selectFourierWindowMenu(1));
+set(FourierWindowMenuChoices(2), 'CallBack', @(~,~) selectFourierWindowMenu(2));
+set(FourierWindowMenuChoices(3), 'CallBack', @(~,~) selectFourierWindowMenu(3));
 
 % Fourier Averaging
 
@@ -1020,8 +1113,27 @@ FourierAveragingNbMenu = uimenu(fourierMenu, 'Text', sprintf('Set averaging (%u)
     end
 
     function FourierAveragingNbMenuCallback(~,~)
-        disp('TODO');
+        dlgtitle = 'Input averaging number';
+        prompt = {'Enter  averaging number:'};
+        dims = [1 35];
+        definput = {num2str(FourierAveragingNb)};
+        while true
+            answer = inputdlg(prompt,dlgtitle,dims,definput);
+            try
+                FourierAveragingNb0 = str2double(answer{1});
+            catch
+                return
+            end
+            
+            if mod(FourierAveragingNb0, 1) ~= 0 || FourierAveragingNb0 < 1
+                errorFig = errordlg('Incorrect input', 'Error', 'modal');
+                waitfor(errorFig);
+            else
+                break
+            end
+        end
         
+        FourierAveragingNb = FourierAveragingNb0;
         set(FourierAveragingNbMenu, 'Text', sprintf('Set averaging (%u)', FourierAveragingNb));
     end
 
@@ -1030,6 +1142,8 @@ FourierAveragingNbMenu.MenuSelectedFcn = @FourierAveragingNbMenuCallback;
 
 FourierAveraging = ~FourierAveraging;
 updateFourierAveragingMenu(FourierAveraging);
+
+switchAutocorrelationModeDisplay(autocorrelationMode);
 
 
 %% shock menu
@@ -1616,24 +1730,29 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         if forcePlot
             figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
             axRy = axes(figRy);
+            xlabel(axRy, 'Time [s]');
+            ylabel(axRy, ['Cross-correlation [', squaredSignalUnit, ']']);
             XLimDisplayObj.addAxesXLimRidges(axRy, true)
             hold (axRy, 'on');
             
             Ndof = size(y, 1);
             legendRij = cell(1, Ndof^2);
             
+            legendRij = {};
+            for i = 1:Ndof
+                plot(axRy, tRy, reshape(Ry(i, i, :), [1, size(Ry, 3)]));
+                legendRij{end+1} = ['R', num2str(i), num2str(i)];
+            end
             for i = 1:Ndof
                 for j = 1:Ndof
-                    if i == j
-                        plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]));
-                    else
+                    if i ~= j
                         plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
+                    legendRij{end+1} = ['R', num2str(i), num2str(j)];
                     end
-                    legendRij{(i-1)*Ndof + j} = ['R', num2str(i), num2str(j)];
                 end
             end
             
-            xlim(axRy, [tRy(1), tRy(end)]);
+%             xlim(axRy, [tRy(1), tRy(end)]);
             legend(axRy, legendRij{:});
             drawnow;
         end
@@ -1689,7 +1808,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 %% fourier
 
-    function fourierTransform()
+    function fourierTransformDisplay()
         getXY();
         
         fminNew = eval(get(editfmin, 'String'));
@@ -1700,14 +1819,17 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         fmin = fminNew;
         fmax = fmaxNew;
         
+        if autocorrelationMode
+            Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+            NmaxLagCorr = floor(maxLagCorr/Dx);
+            plotCrossCorr(Dx, y, NmaxLagCorr);
+        end
+        
         if ~autocorrelationMode || (autocorrelationMode && ~autocorrelationFourierSVDMode)
             ffourier = figure;
             fourierPlotAxes = [];
             
             nbAxes = nbPlots;
-            if autocorrelationMode && ~autocorrelationSVDMode && ~multiSignalMode
-                nbAxes = nbPlots^2; % maximum
-            end
             
             if multipleAxesDisplay %création des axes où sont plot les courbes
                 for kPlot = 1:nbAxes
@@ -1729,7 +1851,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 for kPlot = 1:nbAxes
                     if autocorrelationMode && ~autocorrelationFourierSVDMode
                         Xfour = tRy;
-                        Yfour = Ry(kPlot,kPlot,:);
+                        Yfour = Ry(kPlot,kPlot,:); % fft cross-corr TODO
                         Yfour = transpose(Yfour(:));
                     elseif rdtMode
                         Xfour = Xrdt;
@@ -1739,28 +1861,27 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         Yfour = y(kPlot,:);
                     end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                    Tfour = mean(diff(Xfour))*length(Yfour);
+                    Xfour = mean(diff(Xfour)) * (0:length(Yfour)-1);
                     
-                    four = fft(Yfour) / length(Yfour);
-                    four = four(1:floor(end/2));
-                    four(2:end) = 2*four(2:end);
-                    freqs = 1/Tfour * (0:length(four)-1);
+                    [freqs, four] = fourierTransform(Xfour, Yfour,...
+                        'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...
+                        'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                     
                     hold(fourierPlotAxes(kPlot), 'on');
                     if isequal(FourierScale, 'lin')
-                        plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, abs(four));
                     elseif isequal(FourierScale, 'squared')
-                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, abs(four).^2);
                     elseif isequal(FourierScale, 'log')
-                        plot(fourierPlotAxes(kPlot), freqs, abs(four));
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, abs(four));
                         set(fourierPlotAxes(kPlot), 'YScale', 'log');
                     elseif isequal(FourierScale, 'spectral density (lin)')
-                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
                     elseif isequal(FourierScale, 'spectral density (log)')
-                        plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, abs(four).^2 * Tfour);
                         set(fourierPlotAxes(kPlot), 'YScale', 'log');
                     elseif isequal(FourierScale, 'phase')
-                        plot(fourierPlotAxes(kPlot), freqs, angle(four));
+                        pltFourier = plot(fourierPlotAxes(kPlot), freqs, angle(four));
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
                 end
@@ -1779,13 +1900,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                         Yfour = y(kPlot,:);
                     end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
-                    Tfour = mean(diff(Xfour)) * length(Yfour);
-                    four = fft(Yfour) / length(Yfour);
-                    four = four(1:floor(end/2));
-                    four(2:end) = 2*four(2:end);
+                    Xfour = mean(diff(Xfour)) * (0:length(Yfour)-1);
+                    
+                    [freqs, four] = fourierTransform(Xfour, Yfour,...
+                        'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...
+                        'Window', FourierWindow, 'WindowParams', FourierWindowParams);
+                    
                     FourierTot = FourierTot + four.^2;
                 end
-                freqs = 1/Tfour * (0:length(four)-1);
                 four = sqrt(FourierTot);
                 hold(fourierPlotAxes(kPlot), 'on');
                 if isequal(FourierScale, 'lin')
@@ -1807,41 +1929,40 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
             end
             
         else % autocorr
-            Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-            NmaxLagCorr = floor(maxLagCorr/Dx);
-            plotCrossCorr(Dx, y, NmaxLagCorr);
-            
             if autocorrelationFourierSVDMode
-                [SVfftrx, ~] = svdFFT(Ry, autocorrelationNsvd);
+                [freqs, SVfftrx] = svdFFT(tRy, Ry, autocorrelationNsvd,...
+                    'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                 
+                fourierFig = figure;
+                fourierPlotAxes = axes(fourierFig);
+                hold(fourierPlotAxes, 'on');
                 for ksv = 1:autocorrelationNsvd
-                    fourierFig = figure;
-                    fourierPlotAxes = axes(fourierFig);
-                    
-                    Tfour = mean(diff(tRy)) * length(tRy);
-                    fftRx = SVfftrx{ksv}(1:floor(end/2));
-                    freqs = 1/Tfour * (0:length(fftRx)-1);
+                    fftRx = SVfftrx{ksv};
+                    Tfour = length(tRy) * mean(diff(tRy));
                     
                     if isequal(FourierScale, 'lin')
-                        plot(fourierPlotAxes, freqs, abs(fftRx));
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, abs(fftRx));
                     elseif isequal(FourierScale, 'squared')
-                        plot(fourierPlotAxes, freqs, abs(fftRx).^2);
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, abs(fftRx).^2);
                     elseif isequal(FourierScale, 'log')
-                        plot(fourierPlotAxes, freqs, abs(fftRx));
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, abs(fftRx));
                         set(fourierPlotAxes, 'YScale', 'log');
                     elseif isequal(FourierScale, 'spectral density (lin)')
-                        plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
                     elseif isequal(FourierScale, 'spectral density (log)')
-                        plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, abs(fftRx).^2 * Tfour);
                         set(fourierPlotAxes, 'YScale', 'log');
                     elseif isequal(FourierScale, 'phase')
-                        plot(fourierPlotAxes, freqs, angle(fftRx));
+                        pltSVDfourier = plot(fourierPlotAxes, freqs, angle(fftRx));
                     end
+                    
+                    set(pltSVDfourier, 'DisplayName', sprintf('SV%u', ksv));
                     
                     set(fourierPlotAxes, 'Xlim', [fmin fmax]);
                     set(fourierPlotAxes, 'XScale', FrequencyScale);
                 end
-            else
+                legend(fourierPlotAxes);
+            else % deprecated
                 fourierFig = figure;
                 fourierPlotAxes = axes(fourierFig);
                 hold(fourierPlotAxes, 'on');
@@ -1851,9 +1972,14 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 legendRij = cell(1, nbPlots^2);
                 for i = 1:nbPlots
                     for j = 1:nbPlots
-                        fftRx = fft(reshape(Ry(i, j, :), [1, size(Ry, 3)]));
-                        fftRx = fftRx(1:floor(end/2));
-                        freqs = 1/Tfour * (0:length(fftRx)-1);
+                        Yfour = reshape(Ry(i, j, :), [1, size(Ry, 3)]);
+                        Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
+                        Xfour = tRy;
+                        Xfour = mean(diff(Xfour)) * (0:length(Xfour)-1);
+                        
+                        [freqs, fftRx] = fourierTransform(Xfour, Yfour,...
+                            'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...
+                        'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                         
                         if isequal(FourierScale, 'lin')
                             fourierPlot = plot(fourierPlotAxes, freqs, abs(fftRx));
@@ -1881,6 +2007,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
                 
                 set(fourierPlotAxes, 'Xlim', [fmin fmax]);
                 set(fourierPlotAxes, 'XScale', FrequencyScale);
+                legend(fourierPlotAxes, legendRij);
                 
                 hold(fourierPlotAxes, 'off');
                 
@@ -1909,7 +2036,7 @@ deleteButton.Callback = @(~,~) deletePlots();
 
 buttonHilbert.Callback = @(~,~) hilbertTransform();
 
-buttonFourier.Callback = @(~,~) fourierTransform();
+buttonFourier.Callback = @(~,~) fourierTransformDisplay();
 
 
 end
