@@ -1,5 +1,9 @@
 function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, MotherWavelet, WvltScale, figureTitle, axesTitle, FreqScale)
 
+
+plotScale = true;
+autoScale = true;
+
 if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');
 end
@@ -22,7 +26,7 @@ switch WvltScale
     case 'lin'
         moduleScale = @(x) x;
     case 'log'
-        moduleScale = @(x) log(x);
+        moduleScale = @(x) log10(x);
     otherwise
         error('wrong scale');
 end
@@ -47,34 +51,45 @@ end
 
 fig = figure('Name', figureTitle);
 ax = axes(fig);
+set(ax,'TickDir','out');
 hold(ax, 'on');
 
 %% plot
 
 [T, Freqs] = meshgrid(t, freqs);
 
-if isequal(plotQuantity, 'abs') || isequal(plotQuantity, 'module')
-    wavelet = abs(wavelet);
-%     plt = pcolor(ax, T, Freqs, wavelet);
-    plt = surf(ax, T, Freqs, wavelet, moduleScale(wavelet));
-    set(ax, 'ZScale', WvltScale);
-    colormap(ax, jet);
-    
-    ZedgeEffects = max(max(wavelet)) + 1;
-    
-elseif isequal(plotQuantity, 'arg') || isequal(plotQuantity, 'phase')
-    wavelet = angle(wavelet);
-    plt = pcolor(T, Freqs, wavelet);
-    colormap(ax, hsv);
-    
-    ZedgeEffects = 1;
+switch plotQuantity
+    case {'abs', 'module'}
+        wavelet = abs(wavelet);
+%         plt = pcolor(ax, T, Freqs, wavelet);
+        plt = surf(ax, T, Freqs, wavelet);
+        shading(ax, 'flat');
+        set(ax, 'ZScale', WvltScale);
+        set(ax, 'ColorScale', WvltScale);
+        colormap(ax, jet);
+        if ~autoScale
+            caxis(ax, [min(wavelet(wavelet ~= 0)), max(wavelet, [], 'all')]);
+        end
+        if plotScale
+            c = colorbar(ax);
+            set(c,'TickDir','out');
+        end
+        
+        ZedgeEffects = 1.1 * max(wavelet, [], 'all');
+        
+    case {'arg', 'phase'}
+        wavelet = angle(wavelet);
+        plt = pcolor(T, Freqs, wavelet);
+        colormap(ax, hsv);
+        
+        ZedgeEffects = 1;
 end
 
 xlabel(ax, 'Time [s]');
 ylabel(ax, 'Frequency [Hz]');
 set(ax, 'YScale', FreqScale);
 title(ax, axesTitle);
-shading flat
+
 
 %% zones d'effets de bord
 
@@ -99,9 +114,10 @@ if ctEdgeEffects > 0
     plot3(ax, t2, freqs, ZedgeEffects * ones(size(t2)), 'black--', 'LineWidth', 1.5);
     
     % limites axes
-    axis tight
+%     axis tight
 end
 
-set(ax, 'XLim', [t(1), t(end)]);
+set(ax, 'XLim', t([1, end]));
+set(ax, 'YLim', freqs([1, end]));
 
 end

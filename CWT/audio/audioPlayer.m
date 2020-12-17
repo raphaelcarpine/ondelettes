@@ -5,7 +5,7 @@ function audioPlayer(T, X, initFcn, updateFcn, closeFcn)
 volume = 1;
 timeSpeed = 1;
 
-if nargin == 0
+if nargin == 0 % test
     Fs = 1000;
     T = (0:10*Fs) / Fs;
     X = randn(2, length(T));
@@ -41,6 +41,13 @@ if any(abs(diff(T)/mean(diff(T)) - 1) > 1e-3)
 end
 
 Fs = 1/mean(diff(T));
+
+%% begining
+
+n_begining = round(Fs);
+T = [(-n_begining:-1)/Fs + T(1), T];
+% X = [zeros(size(X, 1), n_begining), X]; % hard begining
+X = [X(:, 1) * (0:n_begining-1)/n_begining, X]; % soft begining
 
 %% stereo
 

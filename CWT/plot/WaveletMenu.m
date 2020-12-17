@@ -713,16 +713,27 @@ autocorrelationModeMenu = uimenu(modeMenu, 'Text','Cross-corr mode', 'Checked', 
 
 autocorrelationParamsMenu = uimenu(modeMenu, 'Text', 'Cross-corr params');
 
- % plot
-autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot cross-corr');
+ % plot cross-corr
+crosscorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot cross-corr');
 
     function displayCrossCorr()
         getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
         NmaxLagCorr = floor(maxLagCorr/Dx);
-        plotCrossCorr(Dx, y, NmaxLagCorr, true);
+        plotCrossCorr(Dx, y, NmaxLagCorr, 1);
     end
-set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
+set(crosscorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
+
+ % plot autocorr
+autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot autocorr');
+
+    function displayAutoCorr()
+        getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        NmaxLagCorr = floor(maxLagCorr/Dx);
+        plotCrossCorr(Dx, y, NmaxLagCorr, 2);
+    end
+set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayAutoCorr);
 
 
  % max lag
@@ -1171,24 +1182,6 @@ getShocksMenu = uimenu(shocksMenu, 'Text', 'Shocks detection menu');
 
 getShocksMenu.MenuSelectedFcn = @(~, ~) getShocksMenuCallback();
 
-% audio
-audioMenu = uimenu(shocksMenu, 'Text', 'Audio');
-
-    function audioMenuCallback()
-        % evaluation des parametres
-        getXY();
-        
-        % plot time on axes
-        Fs = 1/mean(diff(x(1, :)));
-        audioAxes = findAxesAudio(Fs);
-        [initFcnAudio, updateFcnAudio, closeFcnAudio] = audioTimeOnAxes(audioAxes);
-        
-        % audio menu
-        audioPlayer(x, y, initFcnAudio, updateFcnAudio, closeFcnAudio);
-    end
-
-audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
-
 
 %% tools menu
 
@@ -1243,6 +1236,16 @@ plotExtractMenu = uimenu(toolsMenu,'Text','Plot Extract');
     end
 
 plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
+
+
+% audio
+audioMenu = uimenu(toolsMenu, 'Text', 'Audio');
+
+    function audioMenuCallback()
+        audioMain(WaveletPlot(1).Parent)
+    end
+
+audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
 
 
 %%
@@ -1718,6 +1721,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
     function plotCrossCorr(Dx, y, NmaxLagCorr, forcePlot)
         % plot iif Ry change | forcePlot
+        % forcePlot == 1 for cross-corr, == 2 for autocorr
         if nargin < 4
             forcePlot = isempty(tRy);
         end
@@ -1728,26 +1732,30 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         end
         
         if forcePlot
-            figRy = figure('Name', ['crossCorr (', plotAxesName, ')']);
+            figRy = figure('Name', ['auto/cross-corr (', plotAxesName, ')']);
             axRy = axes(figRy);
             xlabel(axRy, 'Time [s]');
-            ylabel(axRy, ['Cross-correlation [', squaredSignalUnit, ']']);
+            if forcePlot == 1
+                ylabel(axRy, ['Cross-correlation [', squaredSignalUnit, ']']);
+            elseif forcePlot == 2
+                ylabel(axRy, ['Autocorrelation [', squaredSignalUnit, ']']);
+            end
             XLimDisplayObj.addAxesXLimRidges(axRy, true)
             hold (axRy, 'on');
             
             Ndof = size(y, 1);
-            legendRij = cell(1, Ndof^2);
-            
             legendRij = {};
             for i = 1:Ndof
                 plot(axRy, tRy, reshape(Ry(i, i, :), [1, size(Ry, 3)]));
                 legendRij{end+1} = ['R', num2str(i), num2str(i)];
             end
-            for i = 1:Ndof
-                for j = 1:Ndof
-                    if i ~= j
-                        plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
-                    legendRij{end+1} = ['R', num2str(i), num2str(j)];
+            if forcePlot == 1
+                for i = 1:Ndof
+                    for j = 1:Ndof
+                        if i ~= j
+                            plot(axRy, tRy, reshape(Ry(i, j, :), [1, size(Ry, 3)]), ':');
+                            legendRij{end+1} = ['R', num2str(i), num2str(j)];
+                        end
                     end
                 end
             end
@@ -2016,13 +2024,22 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
         
         for kPlot = 1:length(fourierPlotAxes)
             xlabel(fourierPlotAxes(kPlot), 'Frequency [Hz]');
+            
+            if autocorrelationMode
+                signalUnitFourier = squaredSignalUnit;
+                squaredSignalUnitFourier = ['(', squaredSignalUnit, ')²'];
+            else
+                signalUnitFourier = signalUnit;
+                squaredSignalUnitFourier = squaredSignalUnit;
+            end
+            
             switch FourierScale
                 case {'lin', 'log'}
-                    ylabel(fourierPlotAxes(kPlot), ['Amplitude [', signalUnit, ']']);
+                    ylabel(fourierPlotAxes(kPlot), ['Amplitude [', signalUnitFourier, ']']);
                 case 'squared'
-                    ylabel(fourierPlotAxes(kPlot), ['Squared amplitude [', squaredSignalUnit, ']']);
+                    ylabel(fourierPlotAxes(kPlot), ['Squared amplitude [', squaredSignalUnitFourier, ']']);
                 case {'spectral density (lin)', 'spectral density (log)'}
-                    ylabel(fourierPlotAxes(kPlot), ['Spectral density [', squaredSignalUnit, '/Hz]']);
+                    ylabel(fourierPlotAxes(kPlot), ['Spectral density [', squaredSignalUnitFourier, '/Hz]']);
                 case 'phase'
                     ylabel(fourierPlotAxes(kPlot), 'Phase [rad]');
             end
