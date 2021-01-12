@@ -8,6 +8,8 @@ fig = dialog('Name', 'Linked axes selection menu', 'Units', 'characters', 'Windo
 fig.Position(3) = 40;
 fig.Position(4) = 7.5;
 
+WinOnTop(fig);
+
 uicontrol(fig, 'Style', 'text', 'String', 'Linked axes selection', 'FontWeight', 'bold',...
     'Units', 'characters', 'Position', [0 5.5 40 1]);
 txtAxes = uicontrol(fig, 'Style', 'text', 'String', 'Click on axes (0 axes selected)',...

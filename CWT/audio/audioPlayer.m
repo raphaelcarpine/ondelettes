@@ -1,4 +1,4 @@
-function audioPlayer(T, X, initFcn, updateFcn, closeFcn)
+function audioPlayer(dataPlt, linkedAxes)
 %AUDIOPLAYER Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -10,64 +10,93 @@ if nargin == 0 % test
     T = (0:10*Fs) / Fs;
     X = randn(2, length(T));
     volume  = 0.2;
+    figure;
+    dataPlt = plot(T, X);
 end
 
-if nargin <= 2
-    initFcn = @(~) 0;
-    updateFcn = @(~) 0;
-    closeFcn = @() 0;
+if nargin <= 1
+    linkedAxes = [dataPlt.Parent];
+    linkedAxes = unique(linkedAxes);
 end
 
-%% array size
+T = [];
+X = [];
+Xaudio = [];
 
-% array size
-if size(T, 1) == 1 && size(T, 2) == size(X, 2)
-    % ok
-elseif size(T, 1) == size(X, 1) && size(T, 2) == size(X, 2)
-    dt = mean(diff(T(1, :)));
-    for k_t = 2:size(T, 1)
-        if max(abs(T(k_t, :) - T(1, :))) > dt * 1e-3
-            error('different time arrays');
+    function getTX()
+        
+        try
+            T = get(dataPlt, 'XData');
+            X = get(dataPlt, 'YData');
+            for iT = 1:length(T)
+                T{iT} = T{iT}.';
+            end
+            T = [T{:}].';
+            for iX = 1:length(X)
+                X{iX} = X{iX}.';
+            end
+            X = [X{:}].';
+            
+            T = T(1, :);
+        catch
+            % deletes plots
         end
+        
+        %% array size
+        
+        % array size
+        if size(T, 1) == 1 && size(T, 2) == size(X, 2)
+            % ok
+        elseif size(T, 1) == size(X, 1) && size(T, 2) == size(X, 2)
+            dt = mean(diff(T(1, :)));
+            for k_t = 2:size(T, 1)
+                if max(abs(T(k_t, :) - T(1, :))) > dt * 1e-3
+                    error('different time arrays');
+                end
+            end
+            T = T(1, :);
+        else
+            error(sprintf('array size error (size(t) = [%d, %d] & size(X) = [%d, %d]', [size(T), size(X)]));
+        end
+        
+        % time step
+        if any(abs(diff(T)/mean(diff(T)) - 1) > 1e-3)
+            error('non-constant time step');
+        end
+        
+        Fs = 1/mean(diff(T));
+        
+        %% begining
+        
+        n_begining = round(Fs);
+        T = [(-n_begining:-1)/Fs + T(1), T];
+        % X = [zeros(size(X, 1), n_begining), X]; % hard begining
+        X = [X(:, 1) * (0:n_begining-1)/n_begining, X]; % soft begining
+        
+        %% stereo
+        
+        if size(X, 1) == 1
+            Xaudio = [X; X];
+        elseif size(X, 1) == 2
+            Xaudio = X;
+        else
+            Xaudio = X(1:2, :);
+        end
+        
+        % normalization
+        Xaudio = Xaudio - min(Xaudio, [], 'all');
+        Xaudio = Xaudio / max(Xaudio, [], 'all');
+        Xaudio = 2*Xaudio - 1;
+        
     end
-    T = T(1, :);
-else
-    error(sprintf('array size error (size(t) = [%d, %d] & size(X) = [%d, %d]', [size(T), size(X)]));
-end
-
-% time step
-if any(abs(diff(T)/mean(diff(T)) - 1) > 1e-3)
-    error('non-constant time step');
-end
-
-Fs = 1/mean(diff(T));
-
-%% begining
-
-n_begining = round(Fs);
-T = [(-n_begining:-1)/Fs + T(1), T];
-% X = [zeros(size(X, 1), n_begining), X]; % hard begining
-X = [X(:, 1) * (0:n_begining-1)/n_begining, X]; % soft begining
-
-%% stereo
-
-if size(X, 1) == 1
-    Xaudio = [X; X];
-elseif size(X, 1) == 2
-    Xaudio = X;
-else
-    Xaudio = X(1:2, :);
-end
-
-% normalization
-Xaudio = Xaudio - min(Xaudio, [], 'all');
-Xaudio = Xaudio / max(Xaudio, [], 'all');
-Xaudio = 2*Xaudio - 1;
 
 %% initialization
 
+getTX()
+
 audioP = audioplayer(volume*transpose(Xaudio), round(timeSpeed*Fs));
-initFcn(T(1));
+
+audioTimeOnAxes = AudioTimeOnAxes(T(1), linkedAxes);
 
 
 %% display
@@ -109,6 +138,16 @@ uicontrol('Parent', fig, 'Style', 'text', 'String', 'speed',...
     'Units', 'characters', 'Position', [50, 2, 10, 1]);
 speedInput = uicontrol('Parent', fig, 'Style', 'edit', 'String', num2str(timeSpeed),...
     'Units', 'characters', 'Position', [60, 1.5, 6, 2]);
+
+% add linked axes
+addAxesInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String', 'add linked axes',...
+    'Units', 'characters', 'Position', [75, 2.5, 20, 1.8]);
+addAxesInput.Callback = @(~,~) audioTimeOnAxes.addAxes(findLinkedAxesAudio());
+
+% sound generator
+soundGeneratorInput = uicontrol('Parent', fig, 'Style', 'pushbutton', 'String','sound generator',...
+    'Units', 'characters', 'Position', [75, 0.5, 20, 1.8]);
+soundGeneratorInput.Callback = @(~,~) generateSoundMenu();
 
 %
 set(tiTxt, 'Units', 'normalized');
@@ -158,7 +197,7 @@ kt0 = 0; % index of t0
         t = T(1) + xt * (T(end)-T(1));
         set(tTxt, 'String', char(duration(seconds(t), 'Format', 'mm:ss')));
         
-        updateFcn(t);
+        audioTimeOnAxes.updateT(t);
     end
 
     function updateTime(startingFlag)
@@ -177,7 +216,7 @@ kt0 = 0; % index of t0
             set(playPauseBut, 'String', 'play');
         end
         
-        updateFcn(t);
+        audioTimeOnAxes.updateT(t);
     end
 
     function playPauseFunc()
@@ -201,6 +240,8 @@ kt0 = 0; % index of t0
 %             return
 %         end
         pause(audioP);
+        
+        getTX()
         
         kt0 = 0;
         
@@ -276,7 +317,7 @@ initAudioP();
 
     function closeFigFcn(~, ~)
         try
-            closeFcn();
+            audioTimeOnAxes.close();
         catch
         end
         try

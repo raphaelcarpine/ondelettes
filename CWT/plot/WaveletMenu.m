@@ -108,9 +108,9 @@ end
     function M = cellmat2mat(M)
         if isa(M, 'cell')
             for iM = 1:length(M)
-                M{iM} = M{iM}';
+                M{iM} = M{iM}.';
             end
-            M = [M{:}]';
+            M = [M{:}].';
         end
     end
 
@@ -491,11 +491,13 @@ paramMenu = uimenu(fig,'Text','Options');
 MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley', 'exponential'};
 
 motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
-motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy', 'Checked' ,'on');
+motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy');
 motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Morlet');
 motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Harmonic');
 motherWaveletMenuChoices(4) = uimenu(motherWaveletMenu, 'Text', 'Littlewood-Paley');
 motherWaveletMenuChoices(5) = uimenu(motherWaveletMenu, 'Text', 'Exponential');
+set(motherWaveletMenuChoices(find(strcmp(MotherWaveletNames, MotherWavelet))), 'Checked' ,'on');
+
     function selectMotherWaveletMenu(kchoice)
         for kchoices = 1:length(motherWaveletMenuChoices)
             set(motherWaveletMenuChoices(kchoices), 'Checked', 'off');
@@ -1200,7 +1202,7 @@ QboundsMenu.MenuSelectedFcn = @QboundsMenuCallback;
 
 filteringMenu = uimenu(toolsMenu,'Text','Filtering');
 
-filteringMenu.MenuSelectedFcn = @(~, ~) LinearFilterMenu(WaveletPlot);
+filteringMenu.MenuSelectedFcn = @(~, ~) LinearFilterMain(WaveletPlot);
 
 % regressions
 
@@ -1242,7 +1244,7 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 audioMenu = uimenu(toolsMenu, 'Text', 'Audio');
 
     function audioMenuCallback()
-        audioMain(WaveletPlot(1).Parent)
+        audioMain(WaveletPlot)
     end
 
 audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();

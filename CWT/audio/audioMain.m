@@ -1,4 +1,4 @@
-function audioMain(ax)
+function audioMain(dataPlotOrAxis)
 %AUDIOMAIN Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,32 +7,20 @@ if nargin == 0 % test
     T = (0:10*Fs) / Fs;
     X = 0.2 * randn(2, length(T));
     ax = axes(figure);
-    plot(ax, T, X);
+    dataPlotOrAxis = plot(ax, T, X);
 end
 
 
 %% data
-ax = findAxesAudio(ax);
+plts = findLinesMenu(dataPlotOrAxis, 'Audio data selection menu');
 
-linesAx = findobj(ax, 'Type', 'line');
-if isempty(linesAx)
-    warning('no line on axis');
+if isempty(plts)
+    warning('no line selected');
     return
 end
-T = get(linesAx(1), 'XData');
-X = get(linesAx(1), 'YData');
-for k_l = 2:length(linesAx)
-    if isequal(T, get(linesAx(k_l), 'XData'))
-        X = [X; get(linesAx(k_l), 'YData')];
-    end
-end
-
-%% axes
-linkedAxes = [ax, findLinkedAxesAudio()];
-[initFcn, updateFcn, closeFcn] = audioTimeOnAxes(linkedAxes);
 
 %% audio
-audioPlayer(T, X, initFcn, updateFcn, closeFcn);
+audioPlayer(plts);
 
 
 end

@@ -1,11 +1,13 @@
-function getPCA(Spectrums, Npc, scaleByStd, Freqs, spectrumFrequencyScale, plotScatter, plotPC, plotDistribution, varargin)
+function getPCA(Spectrums, Npc, logScale, scaleByStd, Freqs, spectrumFrequencyScale, plotScatter, plotPC, plotDistribution, varargin)
 %GETPCA Summary of this function goes here
 %   Detailed explanation goes here
 
 p = inputParser;
 addParameter(p, 'plotTitleSuffix', '');
+addParameter(p, 'QSpectrum', 0);
 parse(p, varargin{:});
 plotTitleSuffix = p.Results.plotTitleSuffix;
+QSpectrum = p.Results.QSpectrum;
 if ~isempty(plotTitleSuffix)
     plotTitleSuffix = [' ; ', plotTitleSuffix];
 end
@@ -28,6 +30,9 @@ end
 
 %% SVD
 X = Spectrums;
+if logScale
+    X = log(X);
+end
 X = X - mean(X, 1);
 if scaleByStd
     X = X ./ std(X);
@@ -158,7 +163,7 @@ for k_pc = 1:Npc
 end
 
 if plotPC
-    plotSpectrums(Freqs, W(:, 1:Npc)', spectrumFrequencyScale, spectrumScale,...
+    plotSpectrums(Freqs, W(:, 1:Npc)', spectrumFrequencyScale, spectrumScale, @(f) f/(2*QSpectrum),...
         ['Principal component basis', plotTitleSuffix], false, false, false, false, pcNames)
 end
 

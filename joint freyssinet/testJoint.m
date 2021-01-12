@@ -56,11 +56,11 @@ ylabel(ax, 'Signal [V]');
 legend(ax, {'channel 1', 'channel 2'});
 
 XLim = [16, 972];
-fmin = 300;
-fmax = 3000;
+fmin = 10;
+fmax = 24000;
 Q = 30;
 FrequencyScale = 'log';
-WvltScale = 'lin';
+WvltScale = 'log';
 MotherWavelet =  'morlet';
 SignalUnit = 'V';
 SquaredSignalUnit = 'V²';

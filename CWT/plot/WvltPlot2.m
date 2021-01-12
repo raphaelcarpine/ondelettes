@@ -73,6 +73,7 @@ switch plotQuantity
         if plotScale
             c = colorbar(ax);
             set(c,'TickDir','out');
+%             c.Label.String = '|CWT|';
         end
         
         ZedgeEffects = 1.1 * max(wavelet, [], 'all');

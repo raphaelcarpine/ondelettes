@@ -1,9 +1,11 @@
-function ax = plotMeanAndShocks(t, meanWvlt, meanWvlttEdgeEffects, shockIndexes, threshold, meanT, meanScale, deltaT, figName)
+function plotMeanAndShocks(t, meanWvlt, meanWvlttEdgeEffects, shockIndexes, threshold, meanT, meanScale, deltaT, figName)
 %PLOTMEANANDSHOCKS Summary of this function goes here
 %   Detailed explanation goes here
 
-displayDeltaTfmin = true;
-displayDeltaTfmax = true;
+displayShocks = true;
+
+displayDeltaTfmin = false;
+displayDeltaTfmax = false;
 
 %% mean plot
 
@@ -16,39 +18,42 @@ set(ax, 'YScale', meanScale);
 set(ax, 'XLim', [t(1), t(end)]);
 xlabel(ax, 'Time [s]');
 ylabel(ax, 'Average F(CWT(t,~))');
+ylabel(ax, 'Average |CWT(t,~)|²');
 
 
 %% shocks
 
-shockTimes = t(shockIndexes);
-shockValues = meanWvlt(shockIndexes);
-shockTimeNames = cell(length(shockTimes), 1);
-for k_shock = 1:length(shockTimes)
-    shockTimeNames{k_shock} = ['t_{', num2str(k_shock), '}'];
-end
-
-% graph
-plot(ax, shockTimes, meanWvlt(shockIndexes), '+',...
-    'Color', get(plt, 'Color'), 'LineWidth', 2*get(plt, 'LineWidth'));
-for kt = 1:length(shockTimes)
-    plot(ax, [shockTimes(kt), shockTimes(kt)], [0, shockValues(kt)], ':', 'Color', 0.5*[1 1 1]);
-end
-
-% ticks
-% XTick2 = get(ax, 'XTick');
-% XTicklabel2 = get(ax, 'XTickLabel');
-% XTicklabel2 = XTicklabel2(~any(XTick2 == shockTimes'));
-% XTick2 = XTick2(~any(XTick2 == shockTimes'));
-% XTick2 = [XTick2, shockTimes];
-% XTicklabel2 = [XTicklabel2; shockTimeNames];
-% [XTick2, Ixtick] = sort(XTick2);
-% XTicklabel2 = XTicklabel2(Ixtick);
-% set(ax, 'XTick', XTick2);
-% set(ax, 'XTickLabel', XTicklabel2);
-
-% times
-for k_t = 1:length(shockTimes)
-    text(ax, shockTimes(k_t), shockValues(k_t), shockTimeNames{k_t}, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
+if displayShocks
+    shockTimes = t(shockIndexes);
+    shockValues = meanWvlt(shockIndexes);
+    shockTimeNames = cell(length(shockTimes), 1);
+    for k_shock = 1:length(shockTimes)
+        shockTimeNames{k_shock} = ['t_{', num2str(k_shock), '}'];
+    end
+    
+    % graph
+    plot(ax, shockTimes, meanWvlt(shockIndexes), '+',...
+        'Color', get(plt, 'Color'), 'LineWidth', 2*get(plt, 'LineWidth'));
+    for kt = 1:length(shockTimes)
+        plot(ax, [shockTimes(kt), shockTimes(kt)], [0, shockValues(kt)], ':', 'Color', 0.5*[1 1 1]);
+    end
+    
+    % ticks
+    % XTick2 = get(ax, 'XTick');
+    % XTicklabel2 = get(ax, 'XTickLabel');
+    % XTicklabel2 = XTicklabel2(~any(XTick2 == shockTimes'));
+    % XTick2 = XTick2(~any(XTick2 == shockTimes'));
+    % XTick2 = [XTick2, shockTimes];
+    % XTicklabel2 = [XTicklabel2; shockTimeNames];
+    % [XTick2, Ixtick] = sort(XTick2);
+    % XTicklabel2 = XTicklabel2(Ixtick);
+    % set(ax, 'XTick', XTick2);
+    % set(ax, 'XTickLabel', XTicklabel2);
+    
+    % times
+    for k_t = 1:length(shockTimes)
+        text(ax, shockTimes(k_t), shockValues(k_t), shockTimeNames{k_t}, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
+    end
 end
 
 
@@ -61,6 +66,7 @@ yline(ax, threshold, '-', 'threshold', 'Color', colorThreshold, 'LabelHorizontal
 % mean
 colorMean = 0*[1 1 1];
 yline(ax, meanT, '--', 'average', 'Color', colorMean, 'LabelHorizontalAlignment', 'right');
+
 
 
 %% delta T

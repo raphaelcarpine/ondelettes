@@ -17,7 +17,8 @@ averageSpectrumInit = false;
 % computeWholeWaveletInit = false; % à coder ?
 
 NpcPCAInit = 2;
-scalePCAInit = true;
+logScalePCAInit = false;
+stdScalePCAInit = false;
 plotScatterPCAInit = true;
 plotPCPCAInit = true;
 plotDistribPCAInit = true;
@@ -74,7 +75,7 @@ end
 
 HpansShock = [2, 5, 5, 9, 5, 2.5];
 HpansSpectrum = [2, 5, 5, 7.5, 2.5];
-HpansPCA = [7, 8.5, 2.5];
+HpansPCA = [9, 8.5, 2.5];
 
 Hpans = [sum(HpansShock), sum(HpansSpectrum); 0, sum(HpansPCA)];
 
@@ -309,11 +310,13 @@ computeSpectrumInput = uicontrol('Parent', spectrumPan, 'Style', 'pushbutton', '
 
 % param panel
 uicontrol(paramPCAPan, 'Style', 'text', 'String', 'number of principal components:',...
-    'Units', 'characters', 'Position', [1, 2.3, 33, 1.5], 'HorizontalAlignment', 'left');
+    'Units', 'characters', 'Position', [1, 4.1, 33, 1.5], 'HorizontalAlignment', 'left');
 NpcPCAInput = uicontrol(paramPCAPan, 'Style', 'edit', 'String', NpcPCAInit,...
-    'Units', 'characters', 'Position', [34, 2.4, 7, 1.6]);
-scalePCAInput = uicontrol(paramPCAPan, 'Style', 'checkbox', 'String', 'scale by std dev',...
-    'Units', 'characters', 'Position', [1, 0.7, 20, 1.6], 'Value', scalePCAInit);
+    'Units', 'characters', 'Position', [34, 4.2, 7, 1.6]);
+logScalePCAInput = uicontrol(paramPCAPan, 'Style', 'checkbox', 'String', 'log scale (amplitude)',...
+    'Units', 'characters', 'Position', [1, 2.5, 40, 1.6], 'Value', logScalePCAInit);
+stdScalePCAInput = uicontrol(paramPCAPan, 'Style', 'checkbox', 'String', 'scale by std dev',...
+    'Units', 'characters', 'Position', [1, 0.7, 40, 1.6], 'Value', stdScalePCAInit);
 
 % plot panel
 plotScatterPCAInput = uicontrol(plotPCAPan, 'Style', 'checkbox', 'String', 'plot scatter',...
@@ -621,7 +624,8 @@ computePCAInput.Callback = @(~, ~) computePCAReturn();
         multiChannelSpectrum = get(multiChannelSpectrumInput, 'Value');
         % param panel
         NpcPCA = str2double(get(NpcPCAInput, 'String'));
-        scalePCA = get(scalePCAInput, 'Value');
+        logScalePCA = get(logScalePCAInput, 'Value');
+        stdScalePCA = get(stdScalePCAInput, 'Value');
         % plot panel
         plotScatterPCA = get(plotScatterPCAInput, 'Value');
         plotPCPCA = get(plotPCPCAInput, 'Value');
@@ -636,8 +640,8 @@ computePCAInput.Callback = @(~, ~) computePCAReturn();
             else
                 plotTitleSuffix = sprintf('channel %u', signalChannels(k_s));
             end
-            getPCA(spectrumsTot{k_s}, NpcPCA, scalePCA, freqsSpectrum, scaleFreqSpectrum,...
-                plotScatterPCA, plotPCPCA, plotDistribPCA, 'plotTitleSuffix', plotTitleSuffix);
+            getPCA(spectrumsTot{k_s}, NpcPCA, logScalePCA, stdScalePCA, freqsSpectrum, scaleFreqSpectrum,...
+                plotScatterPCA, plotPCPCA, plotDistribPCA, 'plotTitleSuffix', plotTitleSuffix, 'QSpectrum', QSpectrum);
         end
         
         
