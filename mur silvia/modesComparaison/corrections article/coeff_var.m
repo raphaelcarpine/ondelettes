@@ -25,7 +25,7 @@ for p = 1:3
         d = AllModalQuantities.damps{p}{k};
         fprintf('\nk = %u : %.2f%%', [k, 100*mean(d)]);
         if length(d) > 1
-            fprintf(' +- %.2f%% (%.2f%%)', [100*std(d), 100*std(d)/mean(d)]);
+            fprintf(' +- %.2f%% (%.1f%%)', [100*std(d), 100*std(d)/mean(d)]);
         end
     end
     disp(' ');
