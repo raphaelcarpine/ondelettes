@@ -1215,6 +1215,13 @@ regConstant.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'c', 'Param', '
 regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 'Param', 'a  lambda',...
     'Param0', [1 1], 'Fit', 'log(y)');
 
+
+% averaging
+averagingMenu = uimenu(toolsMenu, 'Text', 'Averaging');
+
+averagingMenu.MenuSelectedFcn = @(~, ~) ScatterAveragingMenu();
+
+
 % plot extract
 
 plotExtractMenu = uimenu(toolsMenu,'Text','Plot Extract');

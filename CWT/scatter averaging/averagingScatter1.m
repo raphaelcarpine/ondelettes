@@ -1,4 +1,4 @@
-function [X, Y, K, stdY] = averagingScatter1(x, y, dx)
+function [X, Y, stdY, K, Xlims] = averagingScatter1(x, y, dx)
 %AVERAGINGSCATTER Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -19,6 +19,7 @@ nf = max(n);
 N = nf - ni + 1;
 
 X = ((ni:nf)+1/2) * dx;
+Xlims = (ni:nf+1) * dx;
 Y0 = cell(1, N);
 
 for kx = 1:length(x)

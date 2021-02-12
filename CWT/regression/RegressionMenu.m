@@ -65,7 +65,7 @@ parameters = [];
 % lignes pans
 Hpans = [4, 17, 5, 3, 3];
 
-fig = figure('Name', figureName);
+fig = figure('Name', figureName, 'numbertitle', 'off', 'Resize', 'off');
 fig.Units = 'characters';
 fig.Position(3) = 70;
 fig.Position(4) = sum(Hpans);

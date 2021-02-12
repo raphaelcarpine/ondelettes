@@ -113,7 +113,7 @@ if SquaredCWT
 end
 mesu(mesu<MinModu) = NaN; % retrait des max. locaux < MinModu
 
-%retrait des max locaux paralleles excessifs
+% retrait des max locaux paralleles excessifs
 for iT = 1:length(X)
     localMax = mesu(:, iT);
     localMax = localMax(~isnan(localMax));
@@ -189,6 +189,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
             WvltFreqIncrement = (WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1)-1))/2;
         end
         ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
+        ef = min(ef, ny); % inutile de chercher en dehors des bornes de frequence
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny), bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
@@ -224,6 +225,7 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
             WvltFreqIncrement = (WvltFreq(ind_freq(C_ind-1)+1) - WvltFreq(ind_freq(C_ind-1)-1))/2;
         end
         ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
+        ef = min(ef, ny); % inutile de chercher en dehors des bornes de frequence
         
         [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)-(1:et),1,nx))); % Max par colonne
         [M2,I2] = max(M1); % Max des max par colonne
