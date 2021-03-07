@@ -1,0 +1,11 @@
+Permet d'avoir une estimation de l'amplitude moyenne du signal à une fréquence donnée.
+
+\bullet Dans le cas "Time average", pour une fréquence f_0 :
+    [amplitude moyenne] = (1/(Tmax-Tmin-2c_t\Deltat)) * \int_{T_{min}+c_t\Deltat}^{T_{max}-c_t\Deltat} |CWT[u](t, f_0)| dt
+
+\bullet Dans le cas "Logarithmic time average", pour une fréquence f_0 :
+    [amplitude moyenne] = exp[ (1/(Tmax-Tmin-2c_t\Deltat)) * \int_{T_{min}+c_t\Deltat}^{T_{max}-c_t\Deltat} ln|CWT[u](t, f_0)| dt ]
+
+\bullet Dans le cas où "Ignore Tlim" est acitivé, on remplace Tmin et Tmax par les temps de début et de fin du signal (au cas où ils auraient été changés).
+
+\bullet Cet outil permet notamment d'avoir une estimation du niveau moyen de bruit du signal à une fréquence donnée, pour régler le threshold pour les ridges.

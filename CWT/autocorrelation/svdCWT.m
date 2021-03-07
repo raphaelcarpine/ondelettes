@@ -20,25 +20,17 @@ NbFreq = length(WvltFreqs);
 
 CWTrx = nan(Ndof, Ndof, NbFreq, Nt);
 
-tic;
+[initWaitBar, updateWaitBar, closeWaitBar] =...
+    getWaitBar(Ndof^2, 'windowTitle', 'Computing CWTs', 'displayTime', 0);
+initWaitBar();
 for iddl = 1:Ndof
     for jddl = 1:Ndof
-        r = (Ndof*(iddl-1) + jddl)/Ndof^2;
-        if ~isnan(timeWaitBarCWT) && toc > timeWaitBarCWT
-            w = waitbar(r, [num2str(round(100*r)), '%'], 'Name', 'Computing CWT');
-            timeWaitBarCWT = nan;
-        elseif isnan(timeWaitBarCWT) && isvalid(w)
-            waitbar(r, w, [num2str(round(100*r)), '%']);
-        end
+        updateWaitBar();
         
         CWTrx(iddl, jddl, :, :) = WvltComp(t, reshape(Rx(iddl, jddl, :), [1, Nt]), WvltFreqs, Q);
     end
 end
-
-if isnan(timeWaitBarCWT) && isvalid(w)
-    waitbar(1, w, '100%');
-    close(w);
-end
+closeWaitBar();
 
 %% SVD
 
@@ -49,16 +41,11 @@ for ksv = 1:Nsv %
     SVvectrx{ksv} = nan(Ndof, NbFreq, Nt);
 end
 
-
-tic;
+[initWaitBar, updateWaitBar, closeWaitBar] =...
+    getWaitBar(NbFreq, 'windowTitle', 'Computing SVDs', 'displayTime', 0);
+initWaitBar();
 for kfreq = 1:NbFreq
-    r = (kfreq-1)/NbFreq;
-    if ~isnan(timeWaitBarSVD) && toc > timeWaitBarSVD
-        w = waitbar(r, [num2str(round(100*r)), '%'], 'Name', 'Computing SVD');
-        timeWaitBarSVD = nan;
-    elseif isnan(timeWaitBarSVD) && isvalid(w)
-        waitbar(r, w, [num2str(round(100*r)), '%']);
-    end
+    updateWaitBar();
     
     for kt = 1:Nt
         [U, S, ~] = svd(CWTrx(:, :, kfreq, kt));
@@ -70,10 +57,7 @@ for kfreq = 1:NbFreq
     end
 end
 
-if isnan(timeWaitBarSVD) && isvalid(w)
-    waitbar(1, w, '100%');
-    close(w);
-end
+closeWaitBar();
 
 end
 

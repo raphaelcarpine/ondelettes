@@ -1,0 +1,1 @@
+Permet d'afficher les différents ridges sur différents axes (au lieu de tous les afficher sur le même).

@@ -1,0 +1,1 @@
+Sélection des voies du signal. Par défaut toutes les voies sont sélectionnées, mais on peut choisir d'en déselectionner certaines. Les voies non sélectionnées seront ignorées.

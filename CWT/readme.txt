@@ -1,0 +1,4 @@
+- Mettre le dossier "CWT" dans le dossier de travail Matlab
+- Dans Matlab, sur le dossier "CWT", faire click droit -> Add to Path -> Selected Folders and Subfolders
+- Lancer WaveletMenu avec la commande "WaveletMenu();"
+- Aide dans Help -> Documentation

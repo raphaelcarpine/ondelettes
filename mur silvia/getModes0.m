@@ -84,7 +84,7 @@ cf = 5;
 
 WaveletMenu('WaveletPlot', plts, 'fmin', fmin, 'fmax', fmax, 'NbFreq', NbFreq,...
     'Q', Q, 'MaxRidges', MaxRidges, 'MaxParallelRidges', MaxParallelRidges...
-    , 'CtEdgeEffects', ct, 'MultiSignalMode', MultiSignalMode);
+    , 'CtEdgeEffects', ct, 'MultiSignalMode', MultiSignalMode, 'RealShapePlot', @plotModShape);
 
 
 return

@@ -1,0 +1,19 @@
+Calcul des déformées modales instantanées et moyennées.
+
+\bullet Les déformées instantanées sont toujours calculées à partir d'un unique ridge f_r commun à toutes les voies d'acquisition. Le calcul des déformées est donc possible uniquement en mode "Multi channel", ou en mode "Cross-corr" avec "SVD mode CWT".
+
+Pour un temps t, en mode "Multi channel", la déformée instantannée est \phi définie comme :
+    \phi(t) = CWT[u](t, f_r(t))
+
+où le signal u est un vecteur colone, et f_r est un ridge commun à toutes les voies (on n'utilise pas de ridges calculés à partir des signaux u_i des différentes voies i).
+
+\bullet On "norme" ensuite les déformées de façon à ce que l'on ait
+    \phi \phi^T = 1
+
+Attention, c'est plus qu'une simple normalisation, car a priori \phi \phi^T \in C (car \phi \in C). Si on imposait simplement que le module au carré de \phi soit égal à 1 (ie \phi \phi^{*T} = 1), \phi serait défini à une rotation dans le plan complexe près.
+
+\bullet On peut ensuite afficher la partie réelle, la partie imaginaire, le module ou l'angle des composantes de \phi(t) en fonction du temps t, de l'amplitude du ridge, ou de sa fréquence.
+
+\bullet On peut ensuite moyenner \phi sur toute la durée du ridge. L'étape de normalisation n'est pas refaite après ce moyennage. On peut pondérer la moyenne par l'amplitude du ridge, en appuyant sur "weighted (ampl)".
+
+\bullet Les fonctions d'affichage des déformées réelle et complexe (que l'on utilise avec "plot real" et "plot complex") sont personnalisables. Il faut spécifier les paramètres 'RealShapePlot' et 'ComplexShapePlot' lors de l'appel de WaveletMenu.

@@ -1,4 +1,4 @@
-function Rx = crossCorrelation(x, maxLag)
+function Rx = crossCorrelation(x, maxLag, bias)
 %CROSSCORRELATION Summary of this function goes here
 %   x(kDOF, kt)
 
@@ -18,7 +18,7 @@ for i = 1:Ndof
             waitbar(r, w, [num2str(round(100*r)), '%']);
         end
         
-        Rxij = xcorr(x(i, :), x(j, :), maxLag, 'biased');
+        Rxij = xcorr(x(i, :), x(j, :), maxLag, bias);
         Rx(i, j, :) = Rxij(ceil(length(Rxij)/2):end);
         
         Rxji = flip(Rxij);

@@ -16,6 +16,7 @@ defaultMaxParallelRidges = inf;
 defaultMaxSlopeRidge = 1;
 defaultMultipleAxesDisplay = false;
 defaultRidgeMinModu = 0;
+defaultStopRidgeWhenIncreasing = false;
 defaultCtEdgeEffects = 3;
 defaultCf = 5;
 defaultZeroPaddingFourier = 0;
@@ -26,6 +27,7 @@ defaultFourierWindowParams = [];
 defaultMultiSignalMode = false;
 defaultRdtMode = false;
 defaultAutocorrelationMode = false;
+defaultAutocorrelationBias = 'biased'; %'biased', unbiased';
 defaultAutocorrelationSVDMode = false;
 defaultAutocorrelationFourierSVDMode = false;
 defaultMaxLagCorr = nan;
@@ -63,6 +65,7 @@ addParameter(p,'MaxParallelRidges', defaultMaxParallelRidges);
 addParameter(p,'MaxSlopeRidge', defaultMaxSlopeRidge);
 addParameter(p,'MultipleAxesDisplay', defaultMultipleAxesDisplay);
 addParameter(p,'RidgeMinModu', defaultRidgeMinModu);
+addParameter(p,'StopRidgeWhenIncreasing', defaultStopRidgeWhenIncreasing);
 addParameter(p,'CtEdgeEffects', defaultCtEdgeEffects);
 addParameter(p,'Cf', defaultCf);
 addParameter(p,'ZeroPaddingFourier', defaultZeroPaddingFourier);
@@ -73,6 +76,7 @@ addParameter(p,'FourierWindowParams', defaultFourierWindowParams);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
 addParameter(p,'RdtMode', defaultRdtMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
+addParameter(p,'AutocorrelationBias', defaultAutocorrelationBias);
 addParameter(p,'AutocorrelationSVDMode', defaultAutocorrelationSVDMode);
 addParameter(p,'AutocorrelationFourierSVDMode', defaultAutocorrelationFourierSVDMode);
 addParameter(p,'AutocorrelationMaxLag', defaultMaxLagCorr);
@@ -89,8 +93,8 @@ addParameter(p, 'MotherWavelet', defaultMotherWavelet);
 addParameter(p, 'XLimRidge', defaultXLimRidge);
 addParameter(p, 'ctRidge', defaultctRidge);
 addParameter(p, 'RemoveMean', defaultRemoveMean);
-addParameter(p, 'SignalUnit', defaultSignalUnit);
-addParameter(p, 'SquaredSignalUnit', defaultSquaredSignalUnit);
+addParameter(p, 'SignalUnits', defaultSignalUnit);
+addParameter(p, 'SquaredSignalUnits', defaultSquaredSignalUnit);
 
 parse(p, varargin{:})
 
@@ -161,6 +165,7 @@ MaxParallelRidges = p.Results.MaxParallelRidges;
 MaxSlopeRidge = p.Results.MaxSlopeRidge;
 multipleAxesDisplay = p.Results.MultipleAxesDisplay;
 RidgeMinModu = p.Results.RidgeMinModu;
+StopRidgeWhenIncreasing = p.Results.StopRidgeWhenIncreasing;
 ctEdgeEffects = p.Results.CtEdgeEffects;
 cf = p.Results.Cf;
 ZeroPaddingFourier = p.Results.ZeroPaddingFourier;
@@ -172,6 +177,7 @@ FourierWindowParams = p.Results.FourierWindowParams;
 multiSignalMode = p.Results.MultiSignalMode;
 rdtMode = p.Results.RdtMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
+autocorrelationBias = p.Results.AutocorrelationBias;
 autocorrelationSVDMode = p.Results.AutocorrelationSVDMode;
 autocorrelationFourierSVDMode = p.Results.AutocorrelationFourierSVDMode;
 tRy = nan; Ry = nan; SVry = nan; SVvectry = nan;
@@ -191,8 +197,8 @@ RealShapePlot = p.Results.RealShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
 ctRidge = p.Results.ctRidge;
 removeMean = p.Results.RemoveMean;
-signalUnit = p.Results.SignalUnit;
-squaredSignalUnit = p.Results.SquaredSignalUnit;
+signalUnit = p.Results.SignalUnits;
+squaredSignalUnit = p.Results.SquaredSignalUnits;
 
 x0 = getX();
 if isnan(XLim)
@@ -235,7 +241,7 @@ Yrdt = [];
 %% bouton ondelettes et panneaux param et sorties
 
 %ondelette
-waveletPan = uipanel('Parent',fig, 'Units', 'normalized');
+waveletPan = uipanel('Parent', fig, 'Units', 'normalized');
 waveletPan.Position = [0 0.15 1 0.85];
 
 buttonWavelet = uicontrol('Parent',waveletPan, 'Units', 'normalized','Style','pushbutton',...
@@ -292,7 +298,7 @@ strmaxR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
 editmaxR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
     'String', num2str(MaxRidges));
 
-strPR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','text',...
+strPR = uicontrol('Parent', paramPan, 'Units', 'normalized','Style','text',...
     'String', 'max parallel ridges');
 editPR = uicontrol('Parent',paramPan, 'Units', 'normalized','Style','edit',...
     'String', num2str(MaxParallelRidges));
@@ -319,21 +325,25 @@ checkboxGeneral = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','che
 
 checkboxModule = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'module plot', 'Value', false);
+WvltScaleButton = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
 
 checkboxPhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'phase plot', 'Value', false);
 
+checkboxTimeAmplPlot = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'time, ampl on plot', 'Value', false);
+timeAmplPlots = [];
+deleteButton = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','pushbutton',...
+    'String', 'delete');
 
 
-Checkboxs1 = [checkboxGeneral, checkboxModule, checkboxPhase];
+Checkboxs1 = [checkboxGeneral, checkboxModule, checkboxPhase, checkboxTimeAmplPlot];
 
-if ~isempty(plotAxes)
-    checkboxTimeAmplPlot = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox',...
-        'String', 'time, ampl on plot', 'Value', false);
-    Checkboxs1 = [Checkboxs1, checkboxTimeAmplPlot];
-    timeAmplPlots = [];
-    deleteButton = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','pushbutton',...
-        'String', 'delete');
+
+if isempty(plotAxes)
+    set(checkboxTimeAmplPlot, 'Enable', 'off');
+    set(deleteButton, 'Enable', 'off');
 end
 
 
@@ -392,9 +402,12 @@ n = n1+n2;
 for k=1:n1
     Checkboxs1(k).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
 end
+Checkboxs1(end).Position(3) = 0.7;
+
 for k=(n1+1:n1+n2)
     Checkboxs2(k-n1).Position = [0.01, 0.01+(n-k)/n, 0.48, 1/n-0.02];
 end
+WvltScaleButton.Position = [0.76, 0.01+(n-2)/n, 0.23, 1/n-0.02];
 for k=2:n1
     deleteButton.Position = [0.76, 0.01+(n-k)/n, 0.23, 1/n-0.02];
 end
@@ -415,11 +428,30 @@ for scale = LogScales
     set(scale, 'String', scalesNames{scale.Value+1});
 end
 
+switch WvltScale
+    case 'lin'
+    case 'log'
+        WvltScaleButton.Value = true;
+        WvltScaleButton.String = 'log';
+end
 
+    function WvltScaleButtonCallback(~,~)
+        if WvltScaleButton.Value
+            WvltScale = 'log';
+            WvltScaleButton.String = 'log';
+        else
+            WvltScale = 'lin';
+            WvltScaleButton.String = 'linear';
+        end
+    end
+WvltScaleButton.Callback = @WvltScaleButtonCallback;
 
 
 
 %% sorties mode shapes
+
+strShapesInstantaneous = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
+    'String', 'instantaneous:', 'HorizontalAlignment', 'left', 'FontWeight', 'bold');
 
 strxAxisShapes = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
     'String', 'x-axis:', 'HorizontalAlignment', 'left');
@@ -445,7 +477,7 @@ Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes, chec
 
 
 strShapesMean = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style', 'text',...
-    'String', 'average:', 'HorizontalAlignment', 'left');
+    'String', 'average:', 'HorizontalAlignment', 'left', 'FontWeight', 'bold');
 weightOptionShapesMean = uicontrol('Parent', shapesPan, 'Units', 'normalized', 'Style','togglebutton',...
     'String', 'weighted (ampl)', 'Value', false);
 
@@ -465,10 +497,11 @@ n3 = ceil(length(Checkboxs3)/2);
 n4 = ceil(length(Checkboxs4)/2);
 n = n3 + n4 + 5.5;
 
-strxAxisShapes.Position = [0.05, (n-1.5)/n, 0.94, 1/n-0.02];
-xAxisShapes.Position = [0.01, (n-2.5)/n+0.01, 0.48, 1/n-0.02];
+strShapesInstantaneous.Position = [0.05, (n-1.2)/n, 0.94, 1/n-0.02];
+strxAxisShapes.Position = [0.05, (n-2.2)/n, 0.94, 1/n-0.02];
+xAxisShapes.Position = [0.01, (n-3)/n+0.01, 0.48, 1/n-0.02];
 
-stryAxisShapes.Position = [0.05, (n-4)/n, 0.94, 1/n-0.02];
+stryAxisShapes.Position = [0.05, (n-4.2)/n, 0.94, 1/n-0.02];
 for k=1:length(Checkboxs3)
     Checkboxs3(k).Position = [0.5*mod(k-1, 2)+0.01, 0.01+(n-floor((k-1)/2)-5)/n, 0.48, 1/n-0.02];
 end
@@ -490,7 +523,7 @@ paramMenu = uimenu(fig,'Text','Options');
 % mother wavelet
 MotherWaveletNames = {'cauchy', 'morlet', 'harmonic', 'littlewood-paley', 'exponential'};
 
-motherWaveletMenu = uimenu(paramMenu, 'Text','Mother Wavelet');
+motherWaveletMenu = uimenu(paramMenu, 'Text','Mother wavelet');
 motherWaveletMenuChoices(1) = uimenu(motherWaveletMenu, 'Text', 'Cauchy');
 motherWaveletMenuChoices(2) = uimenu(motherWaveletMenu, 'Text', 'Morlet');
 motherWaveletMenuChoices(3) = uimenu(motherWaveletMenu, 'Text', 'Harmonic');
@@ -512,26 +545,8 @@ set(motherWaveletMenuChoices(3), 'CallBack', @(~,~) selectMotherWaveletMenu(3));
 set(motherWaveletMenuChoices(4), 'CallBack', @(~,~) selectMotherWaveletMenu(4));
 set(motherWaveletMenuChoices(5), 'CallBack', @(~,~) selectMotherWaveletMenu(5));
 
-% wavelet scale
-WvltScaleMenu = uimenu(paramMenu, 'Text','Wavelet Scale');
-WvltScaleMenuChoices(1) = uimenu(WvltScaleMenu, 'Text', 'lin');
-WvltScaleMenuChoices(2) = uimenu(WvltScaleMenu, 'Text', 'log');
-WvltScaleValues = {'lin', 'log'};
-set(WvltScaleMenuChoices(find(strcmp(WvltScaleValues, WvltScale))), 'Checked', 'on');
-
-    function selectWvltScaleMenu(kchoice)
-        for kchoices = 1:length(WvltScaleMenuChoices)
-            set(WvltScaleMenuChoices(kchoices), 'Checked', 'off');
-        end
-        set(WvltScaleMenuChoices(kchoice), 'Checked', 'on');
-        
-        WvltScale = WvltScaleNames{kchoice};
-    end
-set(WvltScaleMenuChoices(1), 'CallBack', @(~,~) selectWvltScaleMenu(1));
-set(WvltScaleMenuChoices(2), 'CallBack', @(~,~) selectWvltScaleMenu(2));
-
 % frequency scale
-FrequencyScaleMenu = uimenu(paramMenu, 'Text', 'Frequency Scale');
+FrequencyScaleMenu = uimenu(paramMenu, 'Text', 'Frequency scale');
 FrequencyScaleMenuChoices(1) = uimenu(FrequencyScaleMenu, 'Text', 'lin');
 FrequencyScaleMenuChoices(2) = uimenu(FrequencyScaleMenu, 'Text', 'log');
 FrequencyScaleValues = {'lin', 'log'};
@@ -565,10 +580,10 @@ signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on')
 signalChannelsMenu.Callback = @(~,~) setSignalChannels();
 
 % Xlim
-XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
+XlimMenu = uimenu(paramMenu, 'Text','Set time limits (Tlim)', 'Separator', 'on');
     function setXlim()
-        prompt = {'Enter Xmin :', 'Enter Xmax :'};
-        dlgtitle = 'Input Xlim';
+        prompt = {'Enter Tmin :', 'Enter Tmax :'};
+        dlgtitle = 'Input time limits (Tlim)';
         dims = [1 35];
         definput = {num2str(XLim(1)), num2str(XLim(2))};
         answer = inputdlg(prompt,dlgtitle,dims,definput);
@@ -583,13 +598,24 @@ XlimMenu = uimenu(paramMenu, 'Text','Set Xlim', 'Separator', 'on');
 set(XlimMenu, 'CallBack', @(~,~) setXlim);
 
 % show XLim
-XlimDisplayMenu = uimenu(paramMenu, 'Text','Show Xlim', 'Checked', ShowXLim);
+XlimDisplayMenu = uimenu(paramMenu, 'Text','Show Tlim', 'Checked', ShowXLim);
     function setXlimDisplay()
         ShowXLim = ~ShowXLim;
         set(XlimDisplayMenu, 'Checked', ShowXLim);
         XLimDisplayObj.setVisible(ShowXLim, ShowXLim);
     end
 set(XlimDisplayMenu, 'CallBack', @(~,~) setXlimDisplay);
+
+
+% remove mean
+
+removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean, 'Separator', 'on');
+    function switchRemoveMeanDisplay(status)
+        removeMeanMenu.Checked = status;
+        removeMean = status;
+    end
+
+removeMeanMenu.MenuSelectedFcn = @(~, ~) switchRemoveMeanDisplay(~strcmp(removeMeanMenu.Checked, 'on'));
 
 % ct
 CtMenu = uimenu(paramMenu, 'Text', ['Set ct (', num2str(ctEdgeEffects), ')'], 'Separator', 'on');
@@ -638,17 +664,6 @@ set(CfMenu, 'CallBack', @(~,~) setCf);
 %         end
 %     end
 % set(zeroPaddingFourierMenu, 'CallBack', @(~,~) setZeroPaddingFourier);
-
-
-% remove mean
-
-removeMeanMenu = uimenu(paramMenu, 'Text','Remove mean', 'Checked', removeMean, 'Separator', 'on');
-    function switchRemoveMeanDisplay(status)
-        removeMeanMenu.Checked = status;
-        removeMean = status;
-    end
-
-removeMeanMenu.MenuSelectedFcn = @(~, ~) switchRemoveMeanDisplay(~strcmp(removeMeanMenu.Checked, 'on'));
 
 
 %% mode menu
@@ -758,6 +773,30 @@ autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Set max l
     end
 set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
 
+% bias
+autocorrelationBiasMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Bias');
+autocorrelationBiasValues = {'biased', 'unbiased'};
+autocorrelationBiasMenuChoices(1) = uimenu(autocorrelationBiasMenu, 'Text', 'Biased');
+autocorrelationBiasMenuChoices(2) = uimenu(autocorrelationBiasMenu, 'Text', 'Unbiased');
+set(autocorrelationBiasMenuChoices(find(strcmp(autocorrelationBiasValues, autocorrelationBias))), 'Checked', 'on');
+
+    function selectAutocorrelationBiasMenu(kchoice)
+        for kchoices = 1:length(autocorrelationBiasMenuChoices)
+            set(autocorrelationBiasMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(autocorrelationBiasMenuChoices(kchoice), 'Checked', 'on');
+        
+        autocorrelationBias = autocorrelationBiasValues{kchoice};
+        resetCrossCorr();
+        getXY();
+        Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
+        NmaxLagCorr = floor(maxLagCorr/Dx);
+        plotCrossCorr(Dx, y, NmaxLagCorr, true);
+    end
+set(autocorrelationBiasMenuChoices(1), 'CallBack', @(~,~) selectAutocorrelationBiasMenu(1));
+set(autocorrelationBiasMenuChoices(2), 'CallBack', @(~,~) selectAutocorrelationBiasMenu(2));
+
+
  % set nb of SV
 
 AutocorrelationNsvdMenu = uimenu(autocorrelationParamsMenu, 'Text', sprintf('Set nb of SV (%u)', autocorrelationNsvd));
@@ -857,7 +896,6 @@ dampingRidgeName = 'damping3';
 freqRidgeNames = {'freq', 'freq2'};
 phaseRidgeNames = {'pha', 'pha2'};
 dampingRidgeNames = {'damping', 'damping2', 'damping3'};
-WvltScaleNames = {'lin', 'log'};
 FrequencyScaleNames = {'lin', 'log'};
 
 %freq
@@ -908,10 +946,10 @@ set(dampingMenuChoices(2), 'CallBack', @(~,~) selectDampingMenu(2));
 set(dampingMenuChoices(3), 'CallBack', @(~,~) selectDampingMenu(3));
 
 % Xlim
-XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set Xlim ridge', 'Separator', 'on');
+XlimRidgeMenu = uimenu(ridgeMenu, 'Text','Set time limits (Tlim) ridge', 'Separator', 'on');
     function setXlimRidge()
-        prompt = {'Enter Xmin ridge :', 'Enter Xmax ridge :'};
-        dlgtitle = 'Input Xlim ridge';
+        prompt = {'Enter Tmin ridge :', 'Enter Tmax ridge :'};
+        dlgtitle = 'Input time limits (Tlim) ridge';
         dims = [1 35];
         definput = {num2str(XLimRidge(1)), num2str(XLimRidge(2))};
         answer = inputdlg(prompt,dlgtitle,dims,definput);
@@ -939,6 +977,15 @@ CtRidgeMenu = uimenu(ridgeMenu, 'Text', ['Set ct ridge (', num2str(ctRidge), ')'
         end
     end
 set(CtRidgeMenu, 'CallBack', @(~,~) setCtRidge);
+
+% stop when incrreasing
+StopRidgeWhenIncreasingMenu = uimenu(ridgeMenu, 'Text', 'Stop ridge when increasing',...
+    'Separator', 'on', 'Checked', StopRidgeWhenIncreasing);
+    function toggleStopRidgeWhenIncreasing()
+        StopRidgeWhenIncreasing = ~StopRidgeWhenIncreasing;
+        set(StopRidgeWhenIncreasingMenu, 'Checked', StopRidgeWhenIncreasing);
+    end
+StopRidgeWhenIncreasingMenu.Callback = @(~,~) toggleStopRidgeWhenIncreasing();
 
 % threshold
 ThresholdRidgeMenu = uimenu(ridgeMenu, 'Text','Set ridge threshold', 'Separator', 'on');
@@ -1127,7 +1174,7 @@ FourierAveragingNbMenu = uimenu(fourierMenu, 'Text', sprintf('Set averaging (%u)
 
     function FourierAveragingNbMenuCallback(~,~)
         dlgtitle = 'Input averaging number';
-        prompt = {'Enter  averaging number:'};
+        prompt = {'Divide signal into N subsignals:'};
         dims = [1 35];
         definput = {num2str(FourierAveragingNb)};
         while true
@@ -1257,11 +1304,82 @@ audioMenu = uimenu(toolsMenu, 'Text', 'Audio');
 audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
 
 
+%% help menu
+
+helpMenu = uimenu(fig, 'Text', 'Help');
+
+helpDocMenu = uimenu(helpMenu, 'Text', 'Documentation');
+helpDocMenu.Callback = @(~, ~) documentation_waveletmenu(false);
+
+helpUpdateMenu = uimenu(helpMenu, 'Text', 'Update', 'Separator', 'on');
+helpUpdateMenu.Callback = @(~, ~) updateCWT();
+
+
+%% info
+
+% parameters panel
+strfmin.Tooltip = 'minimum frequency [Hz] (CWT & Fourier)';
+strfmax.Tooltip = 'maximum frequency [Hz] (CWT & Fourier)';
+strNbFreq.Tooltip = 'number of discrete frequencies (CWT)';
+strQ.Tooltip = ['quality factor', newline, 'see: Le & Argoul 2004, Erlicher & Argoul 2007'];
+strmaxR.Tooltip = 'maximum number of ridges';
+strPR.Tooltip = 'maximum number of parallel (equal time) ridges';
+strSL.Tooltip = ['ridge stopping condition', newline, 'df/dt < [max ridge slope]*f²'];
+
+% plots panel
+checkboxModule.Tooltip = '|CWT(t, f)|';
+checkboxPhase.Tooltip = 'arg CWT(t, f)';
+checkboxTimeAmplPlot.Tooltip = 'ridge plot : time X amplitude (directly on original axes)';
+checkboxTimeAmpl.Tooltip = 'ridge plot : time X amplitude';
+checkboxTimeFreq.Tooltip = 'ridge plot : time X frequency';
+checkboxTimeDamp.Tooltip = 'ridge plot : time X damping';
+checkboxAmplFreq.Tooltip = 'ridge plot : amplitude X frequency';
+checkboxAmplDamp.Tooltip = 'ridge plot : amplitude X damping';
+checkboxTimePhase.Tooltip = 'ridge plot : time X phase';
+
+% mode shapes panel
+strShapesInstantaneous.Tooltip = 'instantaneous mode shapes';
+strxAxisShapes.Tooltip = 'instantaneous mode shapes';
+stryAxisShapes.Tooltip = ['instantaneous mode shapes', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxRealShapes.Tooltip = ['instantaneous mode shapes: real parts', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxImagShapes.Tooltip = ['instantaneous mode shapes: imaginary parts', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxModuleShapes.Tooltip = ['instantaneous mode shapes: modules', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxPhaseShapes.Tooltip = ['instantaneous mode shapes: angles', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+strShapesMean.Tooltip = ['averaged mode shapes', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
+weightOptionShapesMean.Tooltip = 'average weighted by ridge amplitude';
+checkboxRealShapesMean.Tooltip = ['averaged mode shapes (real part) plot', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)',...
+    newline, 'customizable: ''RealShapePlot'' option'];
+checkboxComplexShapesMean.Tooltip = ['averaged mode shapes (real and imaginary parts) plot',...
+    newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)', newline, 'customizable: ''ComplexShapePlot'' option'];
+checkboxDispShapesMean.Tooltip = ['averaged mode shapes (real and imaginary parts) in Command Window',...
+    newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
+checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
+
+
+
 %%
 
     function getXY()
         X = getX();
         Y = getY();
+        
+        % test X Y size
+        if ~isequal(size(X), size(Y))
+            error('input matrices size error');
+        end
+        
+        % test X identical lines
+        for line = 2:size(X, 1)
+            if ~isequal(X(line, :), X(1, :))
+                error('time arrays must be the same for every plot');
+            end
+        end
+        
+        % test time step
+        if any( abs(diff(X(1, :)) / mean(diff(X(1, :))) - 1) > 1e-4)
+            error('non-constant time step');
+        end
+        
         
         for line = 1:size(X, 1)
             Y2(line, :) = Y(line, X(line, :)>=XLim(1) & X(line, :)<=XLim(2));
@@ -1271,10 +1389,6 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
         if removeMean
             Y2 = Y2 - mean(Y2, 2);
         end
-        
-        %%%
-        %test X identique
-        %%%
         
         X2 = X2(signalChannels, :);
         Y2 = Y2(signalChannels, :);
@@ -1437,6 +1551,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                     end
                     ridges{kPlot} = RidgeExtract(xRidgePlot, yRidgePlot, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                        'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
@@ -1464,6 +1579,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                 ridges{1} = RidgeExtract(xRidgePlot, nan, Q, fmin, fmax, NbFreq,...
                     'Wavelet', wavelet,...
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                    'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                     'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                     'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
@@ -1473,6 +1589,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                 for ksvd = 1:autocorrelationNsvd
                     ridges{ksvd} = RidgeExtract(tRy, nan, Q, fmin, fmax, NbFreq, 'Wavelet', SVry{ksvd},...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                    'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
@@ -1564,7 +1681,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
         
         %% calcul des deformees
         if any([Checkboxs3.Value]) || any([Checkboxs4.Value])
-            if multiSignalMode || (autocorrelationMode && ~autocorrelationSVDMode)
+            if multiSignalMode || (autocorrelationMode && autocorrelationSVDMode)
                 if multiSignalMode
                     if rdtMode
                         xMode = Xrdt;
@@ -1576,6 +1693,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                     [timeShapes, freqsShapes, shapesShapes, amplitudesShapes] = ...
                         getModesSingleRidge(xMode, yMode, Q, fmin, fmax, NbFreq,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                        'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale);
@@ -1583,6 +1701,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
                         getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
+                        'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale);
@@ -1737,7 +1856,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
         
         if isempty(tRy)
             tRy = Dx * (0:NmaxLagCorr);
-            Ry = crossCorrelation(y, NmaxLagCorr);
+            Ry = crossCorrelation(y, NmaxLagCorr, autocorrelationBias);
         end
         
         if forcePlot
@@ -1879,6 +1998,7 @@ audioMenu.MenuSelectedFcn = @(~, ~) audioMenuCallback();
                     end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
                     Xfour = mean(diff(Xfour)) * (0:length(Yfour)-1);
+                    Tfour = mean(diff(Xfour)) * length(Xfour);
                     
                     [freqs, four] = fourierTransform(Xfour, Yfour,...
                         'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...

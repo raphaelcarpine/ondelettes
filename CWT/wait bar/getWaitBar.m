@@ -144,10 +144,16 @@ Klast_time_rem = nan;
         end
     end
 
-    function updateWaitBar0(k)
+    function updateWaitBar0(k, new_msg)
+        if nargin == 0
+            k = K+1;
+        end
         K = k;
-        if isempty(waitBarObj) && 24*3600*now - t0 >= displayTime
+        if  24*3600*now - t0 >= displayTime && isempty(waitBarObj)
             createWB()
+        end
+        if nargin >= 2
+            msg = new_msg;
         end
         updateProgress();
     end

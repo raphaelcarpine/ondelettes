@@ -39,7 +39,7 @@ switch typeOfAverageInit
 end
 
 % ignoreXLim
-ignoreXLimInput = uicontrol('Parent', fig, 'Style', 'checkbox', 'String', 'Ignore XLim (take whole signal)',...
+ignoreXLimInput = uicontrol('Parent', fig, 'Style', 'checkbox', 'String', 'Ignore Tlim (take whole signal)',...
     'Value', ignoreXLimInit, 'Units', 'characters', 'Position', [2, 3.5, 40, 1.5]);
 
 % ok button

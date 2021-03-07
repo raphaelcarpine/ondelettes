@@ -1,0 +1,17 @@
+\bullet La transformée en ondelettes est calculée selon la formule suivante :
+    CWT[u](a, b) = (1/a) \int_{-\infty}^{+\infty} u(t) \psi((b-t)/a) dt
+
+où u est considéré nul en dehors de l'intervalle où il est échantilloné (utilisation de zero-padding de longueur appropriée).
+
+\bullet On remplace ensuite les variables (a, b) par les variables (t, f) :
+    t = b    et    f = f_\psi^0/a    avec    f_\psi^0 = argmax |F[\psi]|
+
+et on normalise \psi de façon à ce que :
+    max |F[\psi]| = 2
+
+On a alors :
+    CWT[t \rightarrow A sin(2\pif_0t)](t, f_0) = A e^{2i\pif_0t}
+
+\bullet L'ondelette mère \psi est paramétrée par un facteur de qualité Q, tel que :
+    Q = f_\psi^*/\Deltaf_\psi
+Voir Le & Argoul 2004, et Erlicher & Argoul 2007.

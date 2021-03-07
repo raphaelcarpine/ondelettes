@@ -12,6 +12,7 @@ ctRightDef = 3;
 NbMaxRidgesDef = 100;
 NbMaxParallelRidgesDef = 1;
 MinModuDef = 0;
+StopWhenIncreasingDef = false;
 LengthMinRidgeDef = 0;
 ReleaseTimeDef = X(1);
 WaveletDef = nan;
@@ -37,6 +38,7 @@ addParameter(p,'ctRight',ctRightDef);
 addParameter(p,'NbMaxRidges',NbMaxRidgesDef);
 addParameter(p,'NbMaxParallelRidges',NbMaxParallelRidgesDef);
 addParameter(p,'MinModu', MinModuDef);
+addParameter(p,'StopWhenIncreasing', StopWhenIncreasingDef);
 addParameter(p,'LengthMinRidge',LengthMinRidgeDef);
 addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
@@ -59,6 +61,7 @@ ctRight =  p.Results.ctRight;
 NbMaxRidges = p.Results.NbMaxRidges;
 NbMaxParallelRidges = p.Results.NbMaxParallelRidges;
 MinModu = p.Results.MinModu;
+StopWhenIncreasing = p.Results.StopWhenIncreasing;
 LengthMinRidge = p.Results.LengthMinRidge;
 ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
@@ -106,7 +109,6 @@ end
 % MinModu = MinModu * noise;
 
 mesu = raindrop(wavelet); % Recherche des maximum locaux en echelle
-mesu = abs(mesu);
 
 if SquaredCWT
     MinModu = MinModu^2;
@@ -120,11 +122,7 @@ for iT = 1:length(X)
     if length(localMax) > NbMaxParallelRidges
         localMax = sort(localMax, 'descend');
         localMin = localMax(NbMaxParallelRidges);
-        for ifreq = 1:NbFreq
-            if mesu(ifreq, iT) < localMin
-                mesu(ifreq, iT) = NaN;
-            end
-        end
+        mesu(mesu(:, iT) < localMin, iT) = nan;
     end
 end
 
@@ -154,6 +152,12 @@ if iscolumn(X)
 end
 %%
 [ny,nx] = size(mesu); % ny = nb de freq de CWT, nx = nb de points du signal
+
+ind_mesu = ~isnan(mesu);
+Ind_Mesu = cell(1, nx);
+for kx = 1:nx
+    Ind_Mesu{kx} = find(ind_mesu(:, kx));
+end
 
 %%
 ridge.time = {};
@@ -191,15 +195,17 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
         ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
         ef = min(ef, ny); % inutile de chercher en dehors des bornes de frequence
         
-        [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny), bound(ridge.time{C_r}(C_ind-1)+(1:et),1,nx))); % Max par colonne
-        [M2,I2] = max(M1); % Max des max par colonne
+        I_t = ridge.time{C_r}(C_ind-1) + 1; % indice d'instant suivant
         
-        [a,b] = ind2sub([ef*2+1,et],I1(I2)) ; % Conversion en indices
+        I_f = Ind_Mesu{I_t}; % Correction des indices de freq.
+        I_f = I_f(I_f >= ind_freq(C_ind-1) - ef);
+        I_f = I_f(I_f <= ind_freq(C_ind-1) + ef);
+        [~, Ind_I_f] = min(abs(I_f - ind_freq(C_ind-1)));
+        I_f = I_f(Ind_I_f);
         
-        I_f = bound(a + ind_freq(C_ind-1) - ef - 1,1,ny) ; %Correction des indices de freq.
-        I_t = b + ridge.time{C_r}(C_ind-1) ; % Correction des indices d'instant
-        
-        if (M2 <= MinModu)||(isnan(M2)) || (I_f==1) || (I_f==ny) % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
+        if isempty(I_f) || mesu(I_f, I_t) <= MinModu ||...
+                ( StopWhenIncreasing && mesu(I_f, I_t) > abs(ridge.val{C_r}(C_ind-1)) ) ||...
+                isnan(mesu(I_f, I_t)) || I_f==1 || I_f==ny % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
             break
         else
             ind_freq(C_ind) = I_f ; % Assignation freq.
@@ -227,15 +233,17 @@ for C_r=1:NbMaxRidges % Pour chaque ridge
         ef = ceil( et*slopeRidge * WvltFreq(ind_freq(C_ind-1))^2 / (Fs * WvltFreqIncrement));
         ef = min(ef, ny); % inutile de chercher en dehors des bornes de frequence
         
-        [M1,I1] = max(mesu(bound(ind_freq(C_ind-1)+(-ef:ef),1,ny),bound(ridge.time{C_r}(C_ind-1)-(1:et),1,nx))); % Max par colonne
-        [M2,I2] = max(M1); % Max des max par colonne
+        I_t = ridge.time{C_r}(C_ind-1) - 1; % indice d'instant suivant
         
-        [a,b] = ind2sub([ef*2+1,et],I1(I2)) ; % Conversion en indices
+        I_f = Ind_Mesu{I_t}; % Correction des indices de freq.
+        I_f = I_f(I_f >= ind_freq(C_ind-1) - ef);
+        I_f = I_f(I_f <= ind_freq(C_ind-1) + ef);
+        [~, Ind_I_f] = min(abs(I_f - ind_freq(C_ind-1)));
+        I_f = I_f(Ind_I_f);
         
-        I_f = bound(a + ind_freq(C_ind-1) - ef - 1,1,ny) ; %Correction des indices de freq.
-        I_t = -b + ridge.time{C_r}(C_ind-1) ; % Correction des indices d'instant
-        
-        if (M2 <= MinModu)||(isnan(M2))||(I_f==1)||(I_f==ny) % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
+        if isempty(I_f) || mesu(I_f, I_t) <= MinModu ||...
+                ( StopWhenIncreasing && mesu(I_f, I_t) > abs(ridge.val{C_r}(C_ind-1)) ) ||...
+                isnan(mesu(I_f, I_t)) || I_f==1 || I_f==ny % Condition de fin : module trop petit ou extremite de la fenêtre frequentielle choisie
             break
         else
             ind_freq(C_ind) = I_f ; % Assignation freq.
@@ -330,13 +338,16 @@ for C_r = 1:length(ridge.time)
         phaseDiscontinuity = 2*pi;
     end
     
-    for kt = 1:(length(ridge.pha2{C_r})-1) % continuité de la phase
+    % continuité de la phase
+    phaseDiscontinuityIncrements = zeros(size(ridge.pha2{C_r}));
+    for kt = 1:(length(ridge.pha2{C_r})-1)
         if abs(ridge.pha2{C_r}(kt+1)+phaseDiscontinuity-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
-            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) + phaseDiscontinuity;
+            phaseDiscontinuityIncrements(kt+1) = 1;
         elseif abs(ridge.pha2{C_r}(kt+1)-phaseDiscontinuity-ridge.pha2{C_r}(kt)) < abs(ridge.pha2{C_r}(kt+1)-ridge.pha2{C_r}(kt))
-            ridge.pha2{C_r}(kt+1:end) = ridge.pha2{C_r}(kt+1:end) - phaseDiscontinuity;
+            phaseDiscontinuityIncrements(kt+1) = -1;
         end
     end
+    ridge.pha2{C_r} = ridge.pha2{C_r} + cumsum(phaseDiscontinuityIncrements) * phaseDiscontinuity;
 end
 
 for C_r = 1:length(ridge.time)
@@ -376,8 +387,10 @@ for C_r = 1:length(ridge.time)
         freqmoy = mean(ridge.freq{C_r});
         deltaT = Q / (2*pi*freqmoy);
         deltaT = deltaT/5;
-        %deltaN = round(deltaT*Fs/4);
-        Nhalf = round(length(ridge.damping{C_r})/2);
+%         deltaN = round(deltaT*Fs/4);
+%         Nhalf = round(length(ridge.damping{C_r})/2);
+        Nhalf = ceil(5*deltaT*Fs);
+        Nhalf = min(Nhalf, length(ridge.damping{C_r}));
         filterCoeffs = nan(1, 2*Nhalf+1);
         for kfilter = 1:length(filterCoeffs)
             filterCoeffs(kfilter) = exp( -((kfilter-1-Nhalf)/Fs)^2 / (2*deltaT^2));
