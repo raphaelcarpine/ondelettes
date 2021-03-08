@@ -1,3 +1,3 @@
 Sélection des limites de temps du signal. Par défaut elles sont au début et à la fin du signal, mais on peut les changer pour n'en garder qu'une partie.
 
-Show Tlim : permet d'afficher ou de cacher ces limites de temps (ainsi que les limites de temps pour les ridges) sur le graph où est tracé le signal, ainsi que sur les éventuels graphs où sont tracés les ridges en fonction du temps.
+"Show Tlim" : permet d'afficher ou de cacher ces limites de temps (ainsi que les limites de temps pour les ridges) sur le graph où est tracé le signal, ainsi que sur les éventuels graphs où sont tracés les ridges en fonction du temps.

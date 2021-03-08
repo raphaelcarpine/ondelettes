@@ -1,0 +1,5 @@
+Permet d'extraire des données d'un graphe, en les convertissant en vecteurs.
+
+\bullet "x-axis var name" et "y-axis var name" correspondent aux noms des vecteurs de l'environement Matlab qui vont prendre les valeurs d'abcisse et d'ordonnée de la courbe extraite. Par exemple, en prenant xGraph et yGraph, les données du graphe seront accessibles dans l'invite de commande sous ces deux variables.
+
+\bullet La courbe à extraire est ensuite choisie à l'aide du bouton "select line" et des flèches.

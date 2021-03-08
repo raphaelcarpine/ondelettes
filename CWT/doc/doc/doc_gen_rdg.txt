@@ -14,6 +14,6 @@ où argmax peut aussi désigner un maximum local.
 
 \bullet La fréquence des ridges peut être simplement f_r(t), ou bien calculée à partir de la dérivée de la phase de la CWT. Pour plus de précisions voir Menus \rightarrow Ridges \rightarrow Frequency.
 
-\bullet Pour que les ridges soient plus régulier, f_r n'est pas calculé à partir de l'argmax brut (ce qui crée une discrétisation des valeurs prises par f_r, du fait de la discrétisation des fréquences pours lesquelles on calcule la CWT), mais à partir de l'argmax et des deux points immédiatement inférieur et supérieur. On fait ensuite une extrapolation quadratique pour trouver f_r.
+\bullet Pour que les ridges soient plus régulier, f_r n'est pas calculé à partir de l'argmax brut (ce qui crée une discrétisation des valeurs prises par f_r, du fait de la discrétisation des fréquences pours lesquelles on calcule la CWT), mais à partir de l'argmax et des deux points immédiatement inférieurs et supérieurs. On fait ensuite une extrapolation quadratique pour trouver f_r.
 
 \bullet Pour que l'amortissement des ridges (calculé à partir de la dérivée temporelle de leur amplitude divisée par leur amplitude) soit plus régulier, il est convolué avec une gaussienne, dont l'écart typé est pris égal à \Deltat/5, où \Deltat est l'étalement temporel de la CWT (ainsi, on ne lisse pas excessivement).

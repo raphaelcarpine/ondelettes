@@ -1,0 +1,5 @@
+Nombre de valeurs singulières à utiliser.
+
+\bullet En principe, l'information utile du signal se trouve dans la première valeur singulière, qui concentre la plus grande partie de son égernie.
+
+\bullet Ce paramètre est utilisé pour la CWT et pour la transformée de Fourier.

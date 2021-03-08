@@ -1,0 +1,2 @@
+Pour extraire les données des courbes affichées, utiliser l'outil Plot extract.
+Voir Menus \rightarrow Tools \rightarrow Plot extract.
