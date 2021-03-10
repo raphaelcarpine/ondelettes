@@ -418,8 +418,9 @@ dimension = nan;
             Fstring = strrep(Fstring, '/', './');
             Fstring = strrep(Fstring, '^', '.^');
             
-            F = @(P) 0;
+            F = @(P, x) 0;
             eval(['F = @(P, x) ' Fstring ';']);
+            F = @(P, x) real(F(P, x)); % évite les problèmes de passage en complexes
             
             fitFunction = @(y) y;
             eval(['fitFunction = @(y)' get(fitEdit, 'String') ';']);
