@@ -11,3 +11,10 @@ G_colle = 1e7; %http://www.tainstruments.com/pdf/literature/AAN001e_Hot_Melts.pd
 f1 = 1/(2*pi) * sqrt( G_colle*A_colle/h_colle / (m_acc + mu_acier*V_acier))
 
 f2 = 1/(2*pi) * sqrt( G_colle*I_colle/h_colle / ((m_acc + mu_acier*V_acier) * 0.0466^2))
+
+%%
+
+l = randi(2^53-1, 1, 100000000);
+tic;
+sort(l);
+toc

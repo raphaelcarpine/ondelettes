@@ -25,6 +25,7 @@ defaultFourierAveragingNb = 10;
 defaultFourierWindow = 'rectangular';
 defaultFourierWindowParams = [];
 defaultMultiSignalMode = false;
+defaultMultiSignalModeAbsValue = false;
 defaultRdtMode = false;
 defaultAutocorrelationMode = false;
 defaultAutocorrelationBias = 'biased'; %'biased', unbiased';
@@ -74,6 +75,7 @@ addParameter(p,'FourierAveragingNb', defaultFourierAveragingNb);
 addParameter(p,'FourierWindow', defaultFourierWindow);
 addParameter(p,'FourierWindowParams', defaultFourierWindowParams);
 addParameter(p,'MultiSignalMode', defaultMultiSignalMode);
+addParameter(p,'MultiSignalModeAbsValue', defaultMultiSignalModeAbsValue);
 addParameter(p,'RdtMode', defaultRdtMode);
 addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
 addParameter(p,'AutocorrelationBias', defaultAutocorrelationBias);
@@ -175,6 +177,7 @@ FourierWindow = p.Results.FourierWindow;
 FourierWindowParams = p.Results.FourierWindowParams;
 
 multiSignalMode = p.Results.MultiSignalMode;
+multiSignalModeAbsValue = p.Results.MultiSignalModeAbsValue;
 rdtMode = p.Results.RdtMode;
 autocorrelationMode = p.Results.AutocorrelationMode;
 autocorrelationBias = p.Results.AutocorrelationBias;
@@ -676,6 +679,7 @@ multiSignalModeMenu = uimenu(modeMenu, 'Text','Multi signal mode', 'Checked', mu
     function switchMultiSignalModeDisplay(status)
         multiSignalModeMenu.Checked = status;
         multiSignalMode = status;
+        set(multiSignalModeOptionsMenu, 'Enable', status);
         if status
             switchMultipleAxesDisplay(false);
             if autocorrelationSVDMode
@@ -685,6 +689,29 @@ multiSignalModeMenu = uimenu(modeMenu, 'Text','Multi signal mode', 'Checked', mu
     end
 
 multiSignalModeMenu.MenuSelectedFcn = @(~, ~) switchMultiSignalModeDisplay(~strcmp(multiSignalModeMenu.Checked, 'on'));
+
+
+% multiSignalMode options
+
+multiSignalModeOptionsMenu = uimenu(modeMenu, 'Text','Multi signal mode options');
+multiSignalModeOptionsChoices(1) = uimenu(multiSignalModeOptionsMenu, 'Text', 'sum CWT²');
+multiSignalModeOptionsChoices(2) = uimenu(multiSignalModeOptionsMenu, 'Text', 'sum |CWT|²');
+    function selectMultiSignalModeOptions(kchoice)
+        for kchoices = 1:length(multiSignalModeOptionsChoices)
+            set(multiSignalModeOptionsChoices(kchoices), 'Checked', 'off');
+        end
+        set(multiSignalModeOptionsChoices(kchoice), 'Checked', 'on');
+        
+        multiSignalModeAbsValue = kchoice == 2;
+    end
+set(multiSignalModeOptionsChoices(1), 'CallBack', @(~,~) selectMultiSignalModeOptions(1));
+set(multiSignalModeOptionsChoices(2), 'CallBack', @(~,~) selectMultiSignalModeOptions(2));
+
+if multiSignalModeAbsValue
+    selectMultiSignalModeOptions(2);
+else
+    selectMultiSignalModeOptions(1);
+end
 
 
 % rdt mode
@@ -1032,8 +1059,13 @@ AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
         if multiSignalMode
             wavelet = 0;
             for kPlot = 1:nbPlots
-                wavelet = wavelet + WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
-                    'MotherWavelet', MotherWavelet).^2;
+                if ~multiSignalModeAbsValue
+                    wavelet = wavelet + WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
+                        'MotherWavelet', MotherWavelet).^2;
+                else
+                    wavelet = wavelet + abs(WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
+                        'MotherWavelet', MotherWavelet)).^2;
+                end
             end
         else
             wavelet = [];
@@ -1491,8 +1523,14 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                         xCWTplot = Xrdt;
                         yCWTplot = Yrdt(kPlot,:);
                     end
-                    wavelet = wavelet +...
-                        WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                    
+                    if ~multiSignalModeAbsValue
+                        wavelet = wavelet +...
+                            WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                    else
+                        wavelet = wavelet +...
+                            abs(WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet)).^2;
+                    end
                 end
                 
                 if ~autocorrelationMode && ~rdtMode
@@ -1571,8 +1609,14 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                         xRidgePlot = Xrdt;
                         yRidgePlot = Yrdt(kPlot,:);
                     end
-                    wavelet = wavelet +...
-                        WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                    
+                    if ~multiSignalModeAbsValue
+                        wavelet = wavelet +...
+                            WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                    else
+                        wavelet = wavelet +...
+                            abs(WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet)).^2;
+                    end
                 end
                 
                 ridges = cell(1, 1);
@@ -1696,7 +1740,7 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                         'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
                         'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
-                        'FrequencyScale', FrequencyScale);
+                        'FrequencyScale', FrequencyScale, 'MultiSignalModeAbsValue', multiSignalModeAbsValue);
                 elseif autocorrelationMode
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
                         getModesCrossCorr(tRy, SVry, SVvectry, Q, fmin, fmax, NbFreq, autocorrelationNsvd,...
@@ -2043,7 +2087,11 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                         'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...
                         'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                     
-                    FourierTot = FourierTot + four.^2;
+                    if ~multiSignalModeAbsValue
+                        FourierTot = FourierTot + four.^2;
+                    else
+                        FourierTot = FourierTot + abs(four).^2;
+                    end
                 end
                 four = sqrt(FourierTot);
                 hold(fourierPlotAxes(kPlot), 'on');

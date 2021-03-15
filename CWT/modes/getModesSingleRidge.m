@@ -6,6 +6,22 @@ function [t, freq, shapes, amplitudes] = getModesSingleRidge(X, Y, Q, fmin, fmax
 %   t = {t1 = [...], ...}
 %   ...
 
+%%
+
+multiSignalModeAbsValueDefault = false;
+
+p = inputParser;
+p.KeepUnmatched = true;
+p.addOptional('MultiSignalModeAbsValue', multiSignalModeAbsValueDefault);
+
+parse(p, varargin{:});
+
+multiSignalModeAbsValue = p.Results.MultiSignalModeAbsValue;
+
+varargin2 = namedargs2cell(p.Unmatched);
+
+%%
+
 if size(X, 1) ~= 1
     X = transpose(X);
 end
@@ -28,10 +44,14 @@ end
 
 wvlt2 = zeros(size(wvlt{1}));
 for kddl = 1:Nddl
-    wvlt2 = wvlt2 + wvlt{kddl}.^2;
+    if ~multiSignalModeAbsValue
+        wvlt2 = wvlt2 + wvlt{kddl}.^2;
+    else
+        wvlt2 = wvlt2 + abs(wvlt{kddl}).^2;
+    end
 end
 
-Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, 'SquaredCWT', true, varargin{:});
+Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, 'SquaredCWT', true, varargin2{:});
 
 %%
 Nridges = length(Ridges.time);
