@@ -10,7 +10,7 @@ X = X(2:end, :);
 
 %% information colonnes
 
-colones = [3];
+colones = [3, 4, 5, 6, 7, 9, 10, 15];
 
 % temps_avant = dataArray{:, 1};
 % c_02_avant = dataArray{:, 2};

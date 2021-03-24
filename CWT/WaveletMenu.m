@@ -47,6 +47,7 @@ defaultctRidge = 0;
 defaultRemoveMean = false;
 defaultSignalUnit = 'm/s²';
 defaultSquaredSignalUnit = 'm^2/s^4';
+defaultCheckForUpdates = true;
 
 
 
@@ -97,6 +98,7 @@ addParameter(p, 'ctRidge', defaultctRidge);
 addParameter(p, 'RemoveMean', defaultRemoveMean);
 addParameter(p, 'SignalUnits', defaultSignalUnit);
 addParameter(p, 'SquaredSignalUnits', defaultSquaredSignalUnit);
+addParameter(p, 'CheckForUpdates', defaultCheckForUpdates);
 
 parse(p, varargin{:})
 
@@ -105,7 +107,7 @@ if fig == 0
     fig = figure('Name', 'Wavelet Menu', 'numbertitle', 'off');
     fig.Units = 'characters';
     fig.Position(3) = 110;
-    fig.Position(4) = 26;
+    fig.Position(4) = 27;
     fig.MenuBar = 'none';
     fig.Resize = false;
 %     fig.ToolBar = 'none';
@@ -202,6 +204,7 @@ ctRidge = p.Results.ctRidge;
 removeMean = p.Results.RemoveMean;
 signalUnit = p.Results.SignalUnits;
 squaredSignalUnit = p.Results.SquaredSignalUnits;
+CheckForUpdates = p.Results.CheckForUpdates;
 
 x0 = getX();
 if isnan(XLim)
@@ -475,7 +478,9 @@ checkboxModuleShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Styl
     'String', 'module', 'Value', false);
 checkboxPhaseShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'angle', 'Value', false);
-Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes, checkboxPhaseShapes];
+checkboxAmplShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'amplitude', 'Value', false);
+Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes, checkboxPhaseShapes, checkboxAmplShapes];
 
 
 
@@ -491,8 +496,11 @@ checkboxComplexShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized',
 checkboxDispShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'disp complex', 'Value', false);
 checkboxDispFreqsMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
-    'String', 'frequency', 'Value', false);
-Checkboxs4 = [checkboxRealShapesMean, checkboxComplexShapesMean, checkboxDispShapesMean, checkboxDispFreqsMean];
+    'String', 'damped freq.', 'Value', false);
+checkboxAmplRegMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'ampl. regression', 'Value', false);
+Checkboxs4 = [checkboxRealShapesMean, checkboxComplexShapesMean, checkboxDispShapesMean,...
+    checkboxDispFreqsMean, checkboxAmplRegMean];
 
 
 
@@ -1346,6 +1354,12 @@ helpDocMenu.Callback = @(~, ~) documentation_waveletmenu(false);
 helpUpdateMenu = uimenu(helpMenu, 'Text', 'Update', 'Separator', 'on');
 helpUpdateMenu.Callback = @(~, ~) updateCWT();
 
+if CheckForUpdates && ~checkUpdate()
+    helpMenu.ForegroundColor = 'red';
+    helpMenu.Text = [helpMenu.Text, '*'];
+    helpUpdateMenu.ForegroundColor = 'red';
+    helpUpdateMenu.Text = [helpUpdateMenu.Text, '*'];
+end
 
 %% info
 
@@ -1377,6 +1391,7 @@ checkboxRealShapes.Tooltip = ['instantaneous mode shapes: real parts', newline, 
 checkboxImagShapes.Tooltip = ['instantaneous mode shapes: imaginary parts', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 checkboxModuleShapes.Tooltip = ['instantaneous mode shapes: modules', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 checkboxPhaseShapes.Tooltip = ['instantaneous mode shapes: angles', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxAmplShapes.Tooltip = ['instantaneous mode shapes: amplitude', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 strShapesMean.Tooltip = ['averaged mode shapes', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
 weightOptionShapesMean.Tooltip = 'average weighted by ridge amplitude';
 checkboxRealShapesMean.Tooltip = ['averaged mode shapes (real part) plot', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)',...
@@ -1386,6 +1401,7 @@ checkboxComplexShapesMean.Tooltip = ['averaged mode shapes (real and imaginary p
 checkboxDispShapesMean.Tooltip = ['averaged mode shapes (real and imaginary parts) in Command Window',...
     newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
 checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
+checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
 
 
 
@@ -1851,6 +1867,14 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                             ylabel(ax, 'Phase');
                             set(ax, 'XScale', XquantScale);
                         end
+                        if checkboxAmplShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, abs(amplitudesShapes{kridge}));
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'Amplitude');
+                            set(ax, 'XScale', XquantScale);
+                        end
                         
                         % moyenne
                         if get(weightOptionShapesMean, 'Value')
@@ -1875,6 +1899,27 @@ checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
                         if checkboxDispFreqsMean.Value
                             disp(['mean frequency, ', figuresName]);
                             disp(meanFreq);
+                        end
+                        if checkboxAmplRegMean.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, timeShapes{kridge}, log(abs(amplitudesShapes{kridge})));
+                            xlabel(ax, 'Time [s]');
+                            ylabel(ax, 'Amplitude log');
+                            hold(ax, 'on');
+                            % linear regression
+                            regResults = [ones(size(timeShapes{kridge})); timeShapes{kridge}].' \...
+                                log(abs(amplitudesShapes{kridge})).';
+                            plot(ax, timeShapes{kridge}, regResults(1) + regResults(2)*timeShapes{kridge},...
+                                'r--');
+                            % modal computations
+                            decayRate = -regResults(2);
+                            naturalFreq = sqrt(meanFreq^2 + (decayRate/(2*pi))^2);
+                            dampingRatio = decayRate/(2*pi)/naturalFreq;
+                            fprintf('damped frequency: %.10f Hz\n', meanFreq);
+                            fprintf('decay rate: %.10f Hz\n\n', decayRate);
+                            fprintf('natural frequency: %.10f Hz\n', naturalFreq);
+                            fprintf('damping ratio: %.10f %%\n', 100*dampingRatio);
                         end
                     end
                 end

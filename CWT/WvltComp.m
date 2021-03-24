@@ -43,8 +43,8 @@ end
 
 %%
 if length(WvltFreq) > 500
-    str = input('length(WvltFreq) > 500, continue ? ', 's');
-    if ~ismember(str, {'', 'y', 'yes', 'oui', 'true'})
+    str = input('length(WvltFreq) > 500, continue? (y/n) ', 's');
+    if ~ismember(str, {'', 'y', 'yes', 'o', 'oui', 'true'})
         error('length(WvltFreq) > 500');
     end
 end
