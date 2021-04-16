@@ -1,21 +1,18 @@
-fileFolder = 'C:\Users\carpine\Documents\projets\donnees charles\';
-saveFolder = 'joint freyssinet/donnees/';
-filePath = [fileFolder, 'ZOOM0002_LR.WAV'];
+fileFolder = 'C:\Users\carpine\Documents\projets\donnees charles';
+saveFolder = fileFolder;
 
 %% enregistrement des donnees
 
-% lecture des donnes
-[X, Fs] = audioread(filePath);
-X = transpose(X);
+files = dir(fullfile(fileFolder, '*.wav'));
 
-Nhalf = floor(size(X, 2)/2);
-X11 = X(1, 1:Nhalf);
-X12 = X(1, Nhalf+1:end);
-X21 = X(2, 1:Nhalf);
-X22 = X(2, Nhalf+1:end);
-
-% enregistrement
-save([saveFolder, 'data11'], 'X11', 'Fs');
-save([saveFolder, 'data12'], 'X12', 'Fs');
-save([saveFolder, 'data21'], 'X21', 'Fs');
-save([saveFolder, 'data22'], 'X22', 'Fs');
+for k=1:length(files)
+    file = files(k);
+    
+    % lecture des donnes
+    [X, Fs] = audioread(fullfile(fileFolder, file.name));
+    X = transpose(X);
+    
+    % enregistrement
+    [~, nameFile] = fileparts(file.name);
+    save(fullfile(saveFolder, nameFile), 'X', 'Fs');
+end

@@ -1,8 +1,7 @@
 dataFolder = 'pont sens\donnees reelles\data'; % dossier où les fichier .mat sont enregistrés
-file = 'TGV3A';
+file = 'TGV1A';
 
 load([dataFolder, '\', file, '.mat']);
-eval(['X = ', file, ';']);
 X = transpose(X);
 t = X(1, :);
 X = X(2:end, :);

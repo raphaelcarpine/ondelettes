@@ -1,14 +1,12 @@
 clear all
 % close all
 
-results_folder = 'joint freyssinet/donnees/';
+results_folder = 'C:\Users\carpine\Documents\projets\donnees charles';
+files_names = {'1_ZOOM0002_LR.mat', '2_ZOOM0003_LR.mat', '3_ZOOM0004_LR.mat', '4_ZOOM0001_LR.mat', '5_ZOOM0002_LR.mat'};
 
-load([results_folder, 'data11.mat']);
-load([results_folder, 'data12.mat']);
-load([results_folder, 'data21.mat']);
-load([results_folder, 'data22.mat']);
+k = 1;
+load(fullfile(results_folder, files_names{k}));
 
-X = [X11, X12; X21, X22];
 
 %%  rééchantillonage
 

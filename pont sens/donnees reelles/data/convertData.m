@@ -13,6 +13,7 @@ for ind = 1:length(files)
 end
 
 % enregistrement des .txt
+k = 1;
 for ind = 1:length(filesNames)
     fileName = filesNames{ind};
     
@@ -23,9 +24,12 @@ for ind = 1:length(filesNames)
         continue
     end
     
+    disp(['TGV', num2str(k), 'A...']);
+    k = k+1;
+    
     try
-        eval([mName, '= dlmread(''', dataFolder, '\' fileName, ''');']); % conversion de 'name'.txt en tableau matlab 'name'
-        save([saveFolder, '\', mName], mName); % enregistrement
+        X = dlmread(fullfile(dataFolder, fileName)); % conversion de 'name'.txt en tableau matlab 'X'
+        save([saveFolder, '\', mName], 'X'); % enregistrement
     catch
         warning('problem with variable name');
         continue
