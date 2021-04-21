@@ -1917,9 +1917,9 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             naturalFreq = sqrt(meanFreq^2 + (decayRate/(2*pi))^2);
                             dampingRatio = decayRate/(2*pi)/naturalFreq;
                             fprintf('damped frequency: %.10f Hz\n', meanFreq);
-                            fprintf('decay rate: %.10f Hz\n\n', decayRate);
-                            fprintf('natural frequency: %.10f Hz\n', naturalFreq);
-                            fprintf('damping ratio: %.10f %%\n', 100*dampingRatio);
+                            fprintf('decay rate: %.10f Hz\n', decayRate);
+                            fprintf('-> natural frequency: %.10f Hz\n', naturalFreq);
+                            fprintf('-> damping ratio: %.10f %%\n\n', 100*dampingRatio);
                         end
                     end
                 end

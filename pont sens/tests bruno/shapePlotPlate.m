@@ -1,4 +1,4 @@
-function shapePlotPlate(plateDim, dofPos, shape, figTitle)
+function fig = shapePlotPlate(plateDim, dofPos, shape, figTitle, displayChannels)
 %COMPLEXSHAPEPLOTDEFAULT Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,6 +11,10 @@ end
 
 if nargin < 4
     figTitle = '';
+end
+
+if nargin < 5
+    displayChannels = true;
 end
 
 %%
@@ -39,7 +43,7 @@ for k = 1:n
     
     dofColor = 0.8 * [1 0 0];
     
-    plot3(ax, X, Y, Z, 'LineWidth', 2, 'DisplayName', ['dof', num2str(k)], 'Color', dofColor);
+    plot3(ax, X, Y, Z, 'LineWidth', 2, 'DisplayName', ['channel ', num2str(k)], 'Color', dofColor);
     
     %scatter3(ax, X(1), Y(1), Z(1), 2, 'X', 'LineWidth', 10, 'MarkerEdgeColor', dofColor);
     if shape(k) >= 0
@@ -49,8 +53,10 @@ for k = 1:n
     end
     scatter3(ax, X(2), Y(2), Z(2), 2, arrowPointer, 'LineWidth', 3, 'MarkerEdgeColor', dofColor);
     
-    %text(ax, X(2), Y(2), Z(2) + 0.1*sign(shape(k))*max(abs(shape)), ['', num2str(k)]);
-    text(ax, X(1), Y(1), Z(1), [' ', num2str(k)]);
+    if displayChannels
+        %text(ax, X(2), Y(2), Z(2) + 0.1*sign(shape(k))*max(abs(shape)), ['', num2str(k)]);
+        text(ax, X(1), Y(1), Z(1), [' ch', num2str(k)]);
+    end
 end
 
 
