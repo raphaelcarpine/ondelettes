@@ -1,7 +1,7 @@
 %% inputs : 2, 6, 8, 9, 13, 15
-N = 14;
-mode = 4; % 0: affichage, 1: t0, 2: ft, 3: passage train, 4 : apres train
-saveResults = true;
+N = 1;
+mode = 4; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
+saveResults = false;
 
 channels = [3 4 5 6 7 9 10 15];
 % temps_avant = dataArray{:, 1};
@@ -63,7 +63,7 @@ saveFolder = 'pont sens/article analyse donnees reelles/save';
 saveName = ['TGV', num2str(N), 'save'];
 if mode == 3
     saveName = [saveName, 'A'];
-elseif mode == 4
+elseif mode == 4 || mode == 5
     saveName = [saveName, 'B'];
 end
 savePath = fullfile(saveFolder, saveName);
@@ -120,6 +120,33 @@ end
 if mode == 1
     figure;
     plt = plot(t, X);
+end
+
+
+%% t0 affichage
+
+if mode == 1.5
+    fig = figure;
+    plt = plot(t, X);
+    xlabel('Time [s]');
+    ylabel('Acceleration [m/s²]');
+    
+    v_t = L_w * ft;
+    Delta_t = (L_p + L_loco)/v_t;
+    t1 = t0;
+    t2 = t0 + (L_p + L_t)/v_t;
+    
+    xline(t1, '--', 'T_1', 'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal');
+    xline(t1+Delta_t, '--', 'T_1+\DeltaT', 'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal');
+    xline(t2-Delta_t, '--', {'', 'T_2-\DeltaT'}, 'LabelHorizontalAlignment', 'left', 'LabelOrientation', 'horizontal');
+    xline(t2, '--', {'', 'T_2'}, 'LabelHorizontalAlignment', 'right', 'LabelOrientation', 'horizontal');
+    
+    strLegend = [repmat('ch', 8, 1), num2str((1:8).')];
+    legend(strLegend, 'FontSize', 8);
+    
+    fig.Position(3:4) = 8/10 * [560, 420];
+    set(gca, 'YLim', max(abs(get(gca, 'YLim'))) * [-1 1]);
+    set(gca, 'XLim', [46 55]);
 end
 
 
@@ -239,6 +266,7 @@ if mode == 3
     
     if saveResults
         save(savePath, 'shapes', 'shapesFt', 'ampl_graph', 'freq_graph');
+        disp('results saved');
     end
     
 end
@@ -259,6 +287,8 @@ if mode == 4
     shapes = nan(Nmodes, 8);
     ampl_graph = cell(1, Nmodes);
     freq_graph = cell(1, Nmodes);
+    time_graph2 = cell(1, Nmodes);
+    ampl_graph2 = cell(1, Nmodes);
     for k = 1:Nmodes
         disp(' ');
         disp(['~~~~ mode ', num2str(k), ' ~~~~']);
@@ -267,11 +297,17 @@ if mode == 4
         fmax = f0b(k) + 4;
         if k == 2
             fmin = f0b(k) - 0.3;
+        elseif k == 3
+            fmax = f0b(k) +3;
         end
         wvltFig = WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q0b(k),...
             'XLim', [t2, min(t(end), t2+10)],...
             'RealShapePlot', realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
             'StopRidgeWhenIncreasing', true);
+        
+        % time-ampl graph
+        disp('time-ampl graph');
+        [time_graph2{k}, ampl_graph2{k}] = PlotExtract();
         
         % ampl-freq graph
         disp('ampl-freq graph');
@@ -294,13 +330,11 @@ if mode == 4
     end
     
     if saveResults
-        save(savePath, 'shapes', 'ampl_graph', 'freq_graph');
+        save(savePath, 'shapes', 'ampl_graph', 'freq_graph', 'time_graph2', 'ampl_graph2');
+        disp('results saved');
     end
     
 end
-
-
-
 
 
 

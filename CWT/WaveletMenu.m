@@ -480,7 +480,10 @@ checkboxPhaseShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style
     'String', 'angle', 'Value', false);
 checkboxAmplShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'amplitude', 'Value', false);
-Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes, checkboxPhaseShapes, checkboxAmplShapes];
+checkboxFreqShapes = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'frequency', 'Value', false);
+Checkboxs3 = [checkboxRealShapes, checkboxImagShapes, checkboxModuleShapes,...
+    checkboxPhaseShapes, checkboxAmplShapes, checkboxFreqShapes];
 
 
 
@@ -1392,6 +1395,7 @@ checkboxImagShapes.Tooltip = ['instantaneous mode shapes: imaginary parts', newl
 checkboxModuleShapes.Tooltip = ['instantaneous mode shapes: modules', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 checkboxPhaseShapes.Tooltip = ['instantaneous mode shapes: angles', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 checkboxAmplShapes.Tooltip = ['instantaneous mode shapes: amplitude', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
+checkboxFreqShapes.Tooltip = ['instantaneous mode shapes: frequency', newline, 'shaping: phi*phi^T = 1 (phi in C^n)'];
 strShapesMean.Tooltip = ['averaged mode shapes', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
 weightOptionShapesMean.Tooltip = 'average weighted by ridge amplitude';
 checkboxRealShapesMean.Tooltip = ['averaged mode shapes (real part) plot', newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)',...
@@ -1873,6 +1877,14 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             plot(ax, Xquantity{kridge}, abs(amplitudesShapes{kridge}));
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Amplitude');
+                            set(ax, 'XScale', XquantScale);
+                        end
+                        if checkboxFreqShapes.Value
+                            figShape = figure('Name', figuresName);
+                            ax = axes(figShape);
+                            plot(ax, Xquantity{kridge}, freqsShapes{kridge});
+                            xlabel(ax, XquantLabel);
+                            ylabel(ax, 'Frequency [Hz]');
                             set(ax, 'XScale', XquantScale);
                         end
                         
