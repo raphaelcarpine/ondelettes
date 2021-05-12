@@ -44,6 +44,9 @@ for ind = 1:length(filesNames)
         T = seconds(T);
         channelNames = D.Properties.VariableNames(2:end);
         startDate = D.Time(1);
+        startDate.Year = startDate.Year + 2000;
+        startDate.TimeZone = 'UTC';
+        startDate.TimeZone = 'Europe/Paris';
         
         save([saveFolder, '\', mName], 'X', 'T', 'channelNames', 'startDate'); % enregistrement
     catch

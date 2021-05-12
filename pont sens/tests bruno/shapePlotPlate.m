@@ -20,7 +20,7 @@ end
 %%
 n = length(shape);
 
-shape = 0.4 * max(plateDim)/max(abs(shape)) * shape;
+shape = 0.2 * max(plateDim)/max(abs(shape)) * shape;
 
 fig = figure('Name', figTitle);
 set(fig, 'Position', get(fig, 'Position') .* [1 1 1.2 0.9]);
@@ -68,11 +68,18 @@ end
 % legend(ax, legendNames);
 
 
-
 view(ax, -30, 20);
 
-pbaspect(ax, [plateDim, 0.3*max(plateDim)]);
+daspect(ax, [1 1 1]);
+set(ax, 'PositionConstraint', 'innerposition');
+set(ax, 'XLim', [0, plateDim(1)]);
+set(ax, 'YLim', [0, plateDim(2)]);
+set(ax, 'ZLim', max(plateDim)*0.4*[-1 1]);
+set(ax, 'Clipping', 'off');
+% pbaspect(ax, [plateDim, 0.3*max(plateDim)]);
 set(ax,'visible','off');
+set(ax, 'InnerPosition', [0.02 0.02 0.96 0.96]);
+
 
 
 end

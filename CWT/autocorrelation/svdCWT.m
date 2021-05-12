@@ -8,7 +8,7 @@ function [SVrx, SVvectrx] = svdCWT(t, Rx, WvltFreqs, Q, Nsv)
 timeWaitBarSVD = 5;
 timeWaitBarCWT = 5;
 
-if nargin < 6
+if nargin < 5
     Nsv = 1;
 end
 

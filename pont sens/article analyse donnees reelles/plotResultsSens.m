@@ -12,9 +12,9 @@ sizeFigs = 8/10 * [560, 420];
 % geometrie pont et position capteurs
 L_p = 17.5; % longueur pont
 l_p = 4.84; % largeur pont
-pos_capt = [4.375, 0; 8.75, 0; 8.75, 4.84; 4.375, 4.84; 0, 4.84; -4.375, 4.84; 0, 0; -8.75, 0] + [8.75, 0];
+pos_capt = [4.375, 4.84; 8.75, 4.84; 8.75, 0; 4.375, 0; 0, 0; -4.375, 0; 0, 4.84; -8.75, 4.84] + [8.75, 0];
 realShapePlotPont = @(shape, figTitle) shapePlotPlate([L_p, l_p], pos_capt,...
-    shape * sign(real(shape(5))), figTitle, false); % deformees pont
+    shape, figTitle, false); % deformees pont
 
 %% data
 
@@ -197,6 +197,9 @@ for km = 1:NmodesA
         end
     end
     shape = shape / nshape;
+    if -min(real(shape)) > max(real(shape))
+        shape = -shape;
+    end
     figShapeA(km) = realShapePlotPont(real(shape), ['shapeA_mode', num2str(km)]);
     figShapeA(km).Position(3:4) = sizeFigs;
 end
@@ -215,6 +218,9 @@ for km = 1:NmodesB
         end
     end
     shape = shape / nshape;
+    if -min(real(shape)) > max(real(shape))
+        shape = -shape;
+    end
     figShapeB(km) = realShapePlotPont(real(shape), ['shapeB_mode', num2str(km)]);
     figShapeB(km).Position(3:4) = sizeFigs;
 end
