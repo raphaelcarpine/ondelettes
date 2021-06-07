@@ -24,7 +24,7 @@ Yaxis = p.Results.Yaxis;
 %% fig
 
 % lignes pans
-Hpans = [4, 7, 8.5, 3];
+Hpans = [7, 7, 8.5, 3];
 
 fig = figure('Name', figureName, 'numbertitle', 'off', 'Resize', 'off');
 fig.Units = 'characters';
@@ -59,55 +59,84 @@ buttonAverage.Position = [0.02, zpans(4), 0.96, hpans(4)];
 
 %% ligne à fitter
 
-line = [];
-
 lines = [];
-kline = 0;
+
+linesaxes = [];
+klineax = 0;
 
 highlighted = [];
-lineWidth = [];
+linesWidth = [];
 
 
 lineSelect = uicontrol('Parent', linePan, 'Units', 'normalized','Style','togglebutton', 'String', 'select line');
+axSelect = uicontrol('Parent', linePan, 'Units', 'normalized','Style','togglebutton', 'String', 'select axes');
 prevBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '<');
 nextBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '>');
 
-lineSelect.Position = [0.01, 0.02, 0.48, 0.96];
-prevBut.Position = [0.6, 0.1, 0.15, 0.8];
-nextBut.Position = [0.75, 0.1, 0.15, 0.8];
+lineSelect.Position = [0.01, 0.51, 0.48, 0.47];
+axSelect.Position = [0.01, 0.02, 0.48, 0.47];
+prevBut.Position = [0.6, 0.25, 0.15, 0.5];
+nextBut.Position = [0.75, 0.25, 0.15, 0.5];
 
 
-    function highlightLine()
+    function highlightLines()
         try
-            set(highlighted, 'LineWidth', lineWidth);
-            lineWidth = get(line, 'LineWidth');
-            highlighted = line;
-            set(highlighted, 'LineWidth', 3*lineWidth);
+            for kl = 1:length(highlighted)
+                set(highlighted(kl), 'LineWidth', linesWidth(kl));
+            end
+            linesWidth = [];
+            for kl = 1:length(lines)
+                linesWidth(kl) = get(lines(kl), 'LineWidth');
+            end
+            highlighted = lines;
+            for kl = 1:length(lines)
+                set(highlighted(kl), 'LineWidth', 3*linesWidth(kl));
+            end
         catch
         end
     end
 
-    function selectFunction(selecting)
+    function selectFunction(selecting, typeLineAx)
         if selecting
-            lines = findobj({'Type', 'line'},'-or', {'Type', 'scatter'});
-            kline = 1;
-            line = lines(1:min(1,end));
+            switch typeLineAx
+                case 'Line'
+                    axSelect.Value = false;
+                    linesaxes0 = findobj({'Type', 'Line'},'-or', {'Type', 'scatter'});
+                    linesaxes = cell(1, length(linesaxes0));
+                    for kax = 1:length(linesaxes0)
+                        linesaxes{kax} = linesaxes0(kax);
+                    end
+                case 'Axe'
+                    lineSelect.Value = false;
+                    linesaxes0 = findobj('Type', 'Axe');
+                    linesaxes = cell(1, length(linesaxes0));
+                    for kax = 1:length(linesaxes0)
+                        linesaxes{kax} = findobj(linesaxes0(kax), {'Type', 'Line'},'-or', {'Type', 'scatter'});
+                    end
+            end
+            klineax = 1;
+            if isempty(linesaxes)
+                lines = [];
+            else
+                lines = linesaxes{1};
+            end
         else
-            line = [];
             lines = [];
+            linesaxes = [];
         end
-        highlightLine();
+        highlightLines();
     end
 
     function nextprev(next)
-        if ~isempty(lines)
-            kline = mod(kline + next -1, length(lines)) + 1;
-            line = lines(kline);
-            highlightLine();
+        if ~isempty(linesaxes)
+            klineax = mod(klineax + next -1, length(linesaxes)) + 1;
+            lines = linesaxes{klineax};
+            highlightLines();
         end
     end
 
-lineSelect.Callback = @(~,~) selectFunction(lineSelect.Value);
+lineSelect.Callback = @(~,~) selectFunction(lineSelect.Value, 'Line');
+axSelect.Callback = @(~,~) selectFunction(axSelect.Value, 'Axe');
 prevBut.Callback = @(~,~) nextprev(-1);
 nextBut.Callback = @(~,~) nextprev(1);
 
@@ -189,17 +218,28 @@ ax = 0;
 
     function ok = updateXYAxes()
         %         line = findobj('Type', 'line');
-        if ~isempty(line)
+        if ~isempty(lines)
             %             line = line(1);
-            X = get(line, 'XData');
-            Y = get(line, 'YData');
+            X = get(lines, 'XData');
+            Y = get(lines, 'YData');
+            
+            if iscell(X) % multiple lines
+                X0 = [];
+                Y0 = [];
+                for kl = 1:length(lines)
+                    X0 = [X0, X{kl}];
+                    Y0 = [Y0, Y{kl}];
+                end
+                X = X0;
+                Y = Y0;
+            end
             
             X = X(~isnan(Y)); % on enlève les valeurs inappropriées
             Y = Y(~isnan(Y));
             X = X(~isnan(X));
             Y = Y(~isnan(X));
             
-            ax = get(line, 'Parent');
+            ax = get(lines(1:min(1, end)), 'Parent');
             ok = ~isempty(X);
         else
             ok = false;

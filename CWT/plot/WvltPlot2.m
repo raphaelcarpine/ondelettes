@@ -81,6 +81,7 @@ switch plotQuantity
     case {'arg', 'phase'}
         wavelet = angle(wavelet);
         plt = pcolor(T, Freqs, wavelet);
+        set(plt, 'EdgeColor', 'none');
         colormap(ax, hsv);
         
         ZedgeEffects = 1;

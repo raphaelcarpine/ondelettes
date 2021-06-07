@@ -864,7 +864,7 @@ AutocorrelationNsvdMenu.MenuSelectedFcn = @AutocorrelationNsvdMenuCallback;
 
 autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode CWT', 'Separato', 'on');
 if autocorrelationSVDMode
-    set('autocorrelationSVDMenu', 'Checked', 'on');
+    set(autocorrelationSVDMenu, 'Checked', 'on');
 end
     function autocorrSVDCallback(~,~)
         if autocorrelationSVDMode
@@ -924,7 +924,7 @@ switchRdtModeDisplay(rdtMode);
 
 %% ridge menu
 
-ridgeMenu = uimenu(fig,'Text','Ridges');
+ridgeMenu = uimenu(fig, 'Text', 'Ridges');
 
 %autres valeurs par défault
 freqRidgeName = 'freq';
@@ -1248,6 +1248,30 @@ updateFourierAveragingMenu(FourierAveraging);
 
 switchAutocorrelationModeDisplay(autocorrelationMode);
 
+%% slices menu
+
+slicesMenu = uimenu(fig, 'Text', 'CWT slices');
+
+% fixed freq
+fixFreqSliceMenu = uimenu(slicesMenu, 'Text', 'Fixed frequency');
+
+    function fixFreqCoeffCallcack()
+        ft0 = inputdlg('Enter frequency:', 'Input');
+        ft0 = eval(ft0{1});
+        show(1, ft0);
+    end
+fixFreqSliceMenu.MenuSelectedFcn = @(~, ~) fixFreqCoeffCallcack();
+
+% fixed time
+fixTimeSliceMenu = uimenu(slicesMenu, 'Text', 'Fixed time');
+
+    function fixTimeCoeffCallcack()
+        ft0 = inputdlg('Enter time:', 'Input');
+        ft0 = eval(ft0{1});
+        show(2, ft0);
+    end
+fixTimeSliceMenu.MenuSelectedFcn = @(~, ~) fixTimeCoeffCallcack();
+
 
 %% shock menu
 
@@ -1453,7 +1477,12 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         y = Y2;
     end
 
-    function show()
+    function show(slice, sliceParam)
+        % slice
+        if nargin == 0
+            slice = 0; % 0 normal, 1 constant freq, 2 constant time
+        end
+        
         % changement du curseur
         set(fig, 'pointer', 'watch');
         drawnow;
@@ -1462,6 +1491,11 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         fminNew = eval(get(editfmin, 'String'));
         fmaxNew = eval(get(editfmax, 'String'));
         NbFreqNew = eval(get(editNbFreq, 'String'));
+        if slice == 1
+            fminNew = sliceParam;
+            fmaxNew = sliceParam;
+            NbFreqNew = 1;
+        end
         QNew = eval(get(editQ, 'String'));
         if fminNew ~= fmin || fmaxNew ~= fmax || NbFreqNew ~= NbFreq || QNew ~= Q
             resetCrossCorr();
@@ -1491,7 +1525,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         end
         
         %% plot de la transformee
-        if checkboxGeneral.Value
+        if checkboxGeneral.Value && slice == 0
             if ~multiSignalMode
                 for kPlot = 1:nbPlots
                     WvltPlot(x(kPlot,:), y(kPlot,:), WvltFreqs, Q, 'ctEdgeEffects', ctEdgeEffects, 'FreqScale', FrequencyScale);
@@ -1499,7 +1533,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
             end
         end
         
-        if checkboxModule.Value || checkboxPhase.Value
+        if checkboxModule.Value || checkboxPhase.Value || slice ~= 0
             if (~multiSignalMode && ~autocorrelationMode) ||...
                 (~multiSignalMode && autocorrelationMode && ~autocorrelationSVDMode)
                 for kPlot = 1:nbPlots
@@ -1519,13 +1553,22 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     end
                     wavelet = WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
                     
-                    if checkboxModule.Value
+                    if checkboxModule.Value && slice == 0
                         WvltPlot2(xCWTplot, WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
                             WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
-                    if checkboxPhase.Value
+                    if checkboxPhase.Value && slice == 0
                         WvltPlot2(xCWTplot, WvltFreqs, wavelet, 'phase', Q, ctEdgeEffects, MotherWavelet,...
                             WvltScale, titleCWTPlot, wvltAxesTitle, FrequencyScale);
+                    end
+                    if slice == 1
+                        SlicePlot('freq', sliceParam, xCWTplot, WvltFreqs, wavelet, 'abs', Q, ctEdgeEffects,...
+                            MotherWavelet, WvltScale, titleCWTPlot, ['f = ', num2str(sliceParam)],...
+                            FrequencyScale, signalUnit);
+                    elseif slice == 2
+                        SlicePlot('time', sliceParam, xCWTplot, WvltFreqs, wavelet, 'abs', Q, ctEdgeEffects,...
+                            MotherWavelet, WvltScale, titleCWTPlot, ['t = ', num2str(sliceParam)],...
+                            FrequencyScale, signalUnit);
                     end
                 end
                 
@@ -1560,37 +1603,56 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                 elseif rdtMode
                     titleCWTPlot = ['sum_wvlt^2 (all RDT channels) ; Q=', num2str(Q),' ; scale: ', WvltScale];
                 end
-                if checkboxModule.Value
+                if checkboxModule.Value && slice == 0
                     WvltPlot2(xCWTplot, WvltFreqs, wavelet,...
                         'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                         titleCWTPlot, wvltAxesTitle, FrequencyScale);
                 end
-                if checkboxPhase.Value
+                if checkboxPhase.Value && slice == 0
                     WvltPlot2(xCWTplot, WvltFreqs, wavelet,...
                         'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                         titleCWTPlot, wvltAxesTitle, FrequencyScale);
+                end
+                if slice == 1
+                    SlicePlot('freq', sliceParam, xCWTplot, WvltFreqs, wavelet, 'abs', Q, ctEdgeEffects,...
+                        MotherWavelet, WvltScale, titleCWTPlot, ['f = ', num2str(sliceParam)],...
+                        FrequencyScale, squaredSignalUnit);
+                elseif slice == 2
+                    SlicePlot('time', sliceParam, xCWTplot, WvltFreqs, wavelet, 'abs', Q, ctEdgeEffects,...
+                        MotherWavelet, WvltScale, titleCWTPlot, ['t = ', num2str(sliceParam)],...
+                        FrequencyScale, squaredSignalUnit);
                 end
                 
             elseif autocorrelationMode && autocorrelationSVDMode
                 for ksvd = 1:autocorrelationNsvd
                     titleCWTPlot = ['xcorr->CWT->SVD (all selected channels) ; sing. value ', num2str(ksvd),...
                         ' ; Q=', num2str(Q),' ; scale: ', WvltScale];
-                    if checkboxModule.Value
+                    if checkboxModule.Value && slice == 0
                         WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'module', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                             titleCWTPlot, wvltAxesTitle, FrequencyScale);
                     end
-                    if checkboxPhase.Value
+                    if checkboxPhase.Value && slice == 0
                         WvltPlot2(tRy, WvltFreqs, SVry{ksvd},...
                             'phase', Q, ctEdgeEffects, MotherWavelet, WvltScale,...
                             titleCWTPlot, wvltAxesTitle, FrequencyScale);
+                    end
+                    if slice == 1
+                        SlicePlot('freq', sliceParam, tRy, WvltFreqs, SVry{ksvd}, 'abs', Q, ctEdgeEffects,...
+                            MotherWavelet, WvltScale, titleCWTPlot, ['f = ', num2str(sliceParam)],...
+                            FrequencyScale, squaredSignalUnit);
+                    elseif slice == 2
+                        SlicePlot('time', sliceParam, tRy, WvltFreqs, SVry{ksvd}, 'abs', Q, ctEdgeEffects,...
+                            MotherWavelet, WvltScale, titleCWTPlot, ['t = ', num2str(sliceParam)],...
+                            FrequencyScale, squaredSignalUnit);
                     end
                 end
             end
         end
         
         %% calcul des ridges
-        if any([Checkboxs2.Value]) || (exist('checkboxTimeAmplPlot', 'var') && checkboxTimeAmplPlot.Value)
+        if (any([Checkboxs2.Value]) || (exist('checkboxTimeAmplPlot', 'var') && checkboxTimeAmplPlot.Value))...
+                && slice == 0
             
             if (~multiSignalMode && ~autocorrelationMode) ||...
                     (~multiSignalMode && autocorrelationMode && ~autocorrelationSVDMode)
@@ -1744,7 +1806,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         end
         
         %% calcul des deformees
-        if any([Checkboxs3.Value]) || any([Checkboxs4.Value])
+        if (any([Checkboxs3.Value]) || any([Checkboxs4.Value])) && slice == 0
             if multiSignalMode || (autocorrelationMode && autocorrelationSVDMode)
                 if multiSignalMode
                     if rdtMode

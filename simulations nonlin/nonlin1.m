@@ -11,7 +11,7 @@ g = @(x) (k2-k1)*(x-x0).*(x>x0);
 g = @(x) (k2-k1)*(x-x0).*(x>x0) + (k2-k1)*(x+x0).*(x<-x0);
 g = @(x) 0;
 
-if false
+if true
     X = linspace(-10, 10, 1000);
     Kx = nan(size(X));
     Gx = nan(size(X));
