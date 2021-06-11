@@ -1,6 +1,6 @@
 clear all
 
-mode = 0; % 0 : test T et nan, 1 : test
+mode = 1; % 0 : test T et nan, 1 : test
 removeNan = true;
 
 if mode == 0
@@ -10,11 +10,15 @@ end
 %% data
 
 dataFolder = 'C:\Users\carpine\Documents\projets\ponts marne\reprise operations 2021\donnees'; % dossier où les fichier .csv sont
-dataFileName = 'esbly1005_0.mat';
+dataFileName = 'esbly_1005.mat';
 
 load(fullfile(dataFolder, dataFileName));
 
 disp(startDate);
+[TemperatureTime, TemperatureTemp] = getTemperature(startDate);
+figure;
+plot(TemperatureTime, TemperatureTemp);
+ylabel('Temperature [°C]');
 
 X = X.';
 T = T.';
@@ -159,7 +163,7 @@ if mode == 1
     fmax = 5;
     
     WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax,...
-        'MultiSignalMode', true, 'RemoveMean', true,...
+        'MultiSignalMode', true, 'RemoveMean', false,...
         'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);
 end
 

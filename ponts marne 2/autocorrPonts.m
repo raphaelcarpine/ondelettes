@@ -6,7 +6,7 @@ removeNan = true;
 %% data
 
 dataFolder = 'C:\Users\carpine\Documents\projets\ponts marne\reprise operations 2021\donnees'; % dossier où les fichier .csv sont
-dataFileName = 'trilbardou_0505_2.mat';
+dataFileName = 'ussy_0305.mat';
 
 load(fullfile(dataFolder, dataFileName));
 

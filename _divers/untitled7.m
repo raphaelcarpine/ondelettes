@@ -1,0 +1,1 @@
+disp(fullfile(fileparts(matlab.desktop.editor.getActiveFilename), 'test'));

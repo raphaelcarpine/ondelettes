@@ -1246,6 +1246,29 @@ FourierAveragingNbMenu.MenuSelectedFcn = @FourierAveragingNbMenuCallback;
 FourierAveraging = ~FourierAveraging;
 updateFourierAveragingMenu(FourierAveraging);
 
+
+% Fourier Mode Shapes
+
+FourierModeShapeMenu = uimenu(fourierMenu, 'Text', 'Mode Shape', 'Separator', 'on');
+
+    function FourierModeShapeMenuCallback(~,~)
+        dlgtitle = 'Input mode shape';
+        prompt = {'Mode frequency [Hz]:'};
+        dims = [1 35];
+        answer = inputdlg(prompt,dlgtitle,dims);
+        try
+            freqModeShape0 = str2double(answer{1});
+        catch
+            return
+        end
+        
+        fourierTransformDisplay(freqModeShape0);
+    end
+FourierModeShapeMenu.MenuSelectedFcn = @FourierModeShapeMenuCallback;
+
+
+
+
 switchAutocorrelationModeDisplay(autocorrelationMode);
 
 %% slices menu
@@ -2107,7 +2130,12 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
 
 %% fourier
 
-    function fourierTransformDisplay()
+    function fourierTransformDisplay(freqModeShape)
+        if nargin == 0
+            freqModeShape = nan;
+            modeShape = nan(1, nbPlots);
+        end
+        
         getXY();
         
         fminNew = eval(get(editfmin, 'String'));
@@ -2184,6 +2212,15 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         pltFourier = plot(fourierPlotAxes(kPlot), freqs, angle(four));
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
+                    
+                    % mode shape
+                    if ~isnan(freqModeShape)
+                        [kf_shape, r_shape] = closestPoint(freqs, freqModeShape);
+                        modeShape(kPlot) = (1-r_shape)*four(kf_shape) + r_shape*four(kf_shape+1);
+                        hold(fourierPlotAxes(kPlot), 'on');
+                        xline(fourierPlotAxes(kPlot), freqModeShape, '--', 'HandleVisibility', 'off');
+                        hold(fourierPlotAxes(kPlot), 'off');
+                    end
                 end
             else % muli signal mode
                 FourierTot = 0;
@@ -2211,6 +2248,15 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     else
                         FourierTot = FourierTot + abs(four).^2;
                     end
+                    
+                    % mode shape
+                    if ~isnan(freqModeShape)
+                        [kf_shape, r_shape] = closestPoint(freqs, freqModeShape);
+                        modeShape(kPlot) = (1-r_shape)*four(kf_shape) + r_shape*four(kf_shape+1);
+                        hold(fourierPlotAxes(kPlot), 'on');
+                        xline(fourierPlotAxes(kPlot), freqModeShape, '--', 'HandleVisibility', 'off');
+                        hold(fourierPlotAxes(kPlot), 'off');
+                    end
                 end
                 four = sqrt(FourierTot);
                 hold(fourierPlotAxes(kPlot), 'on');
@@ -2230,11 +2276,12 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     plot(fourierPlotAxes(kPlot), freqs, angle(four));
                 end
                 hold(fourierPlotAxes(kPlot), 'off');
+                
             end
             
         else % autocorr
             if autocorrelationFourierSVDMode
-                [freqs, SVfftrx] = svdFFT(tRy, Ry, autocorrelationNsvd,...
+                [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRy, Ry, autocorrelationNsvd,...
                     'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                 
                 fourierFig = figure;
@@ -2264,6 +2311,13 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     
                     set(fourierPlotAxes, 'Xlim', [fmin fmax]);
                     set(fourierPlotAxes, 'XScale', FrequencyScale);
+                    
+                    % mode shape
+                    if ~isnan(freqModeShape)
+                        [kf_shape, r_shape] = closestPoint(freqs, freqModeShape);
+                        modeShape(ksv, :) = transpose((1-r_shape)*SVfftvectrx{ksv}(:, kf_shape) + r_shape*SVfftvectrx{ksv}(:, kf_shape));
+                        xline(fourierPlotAxes, freqModeShape, '--', 'HandleVisibility', 'off');
+                    end
                 end
                 legend(fourierPlotAxes);
             else % deprecated
@@ -2338,6 +2392,25 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     ylabel(fourierPlotAxes(kPlot), ['Spectral density [', squaredSignalUnitFourier, '/Hz]']);
                 case 'phase'
                     ylabel(fourierPlotAxes(kPlot), 'Phase [rad]');
+            end
+        end
+        
+        % mode shape
+        if ~isnan(freqModeShape)
+            for ksv = 1:size(modeShape, 1)
+                if autocorrelationFourierSVDMode
+                    modeName = sprintf('mode %.2fHz, SV%u', [freqModeShape, ksv]);
+                else
+                    modeName = sprintf('mode %.2fHz', freqModeShape);
+                end
+                
+                modeShape(ksv, :) = modeShape(ksv, :) / sqrt(modeShape(ksv, :) * modeShape(ksv, :).');
+                modeShape(ksv, :) = modeShape(ksv, :) * (-1 + 2*(max(real(modeShape(ksv, :))) >= -min(real(modeShape(ksv, :)))));
+                
+                disp(modeName);
+                disp(modeShape(ksv, :).');
+                
+                RealShapePlot(real(modeShape(ksv, :)), modeName)
             end
         end
     end
