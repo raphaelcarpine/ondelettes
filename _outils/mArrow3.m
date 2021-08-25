@@ -1,4 +1,4 @@
-function h = mArrow3(p1,p2,varargin)
+function h = mArrow3(ax,p1,p2,varargin)
 %% custom
 
 fixedSizeTip = true;
@@ -34,7 +34,7 @@ propertyNames = {'edgeColor'};
 propertyValues = {'none'};    
 
 %% evaluate property specifications
-for argno = 1:2:nargin-2
+for argno = 1:2:nargin-3
     switch varargin{argno}
         case 'color'
             propertyNames = {propertyNames{:},'facecolor'};
@@ -156,7 +156,7 @@ end
 %% draw
 fv.faces = f;
 fv.vertices = v;
-h = patch(fv);
+h = patch(ax, fv);
 for propno = 1:numel(propertyNames)
     try
         set(h,propertyNames{propno},propertyValues{propno});

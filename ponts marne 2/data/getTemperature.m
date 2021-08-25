@@ -51,6 +51,11 @@ end
 time = time{kt0};
 temp = temp{kt0};
 
+if t0 > time(end)
+    time = [];
+    temp = [];
+end
+
 
 end
 

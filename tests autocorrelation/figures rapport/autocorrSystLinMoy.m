@@ -1,9 +1,12 @@
 %% data
 
 % time
-N = 10000;
+N = 100000;
 N0 = 2000;
 Dt = 0.05;
+
+% averaging
+Nav = 100;
 
 % system
 lambda = -0.1 + 2i*pi;
@@ -35,22 +38,34 @@ end
 
 %% autocorr
 
-Rx = nan(1, N);
-for k = 0:N-1
-    Rx(k+1) = Dt * sum( x(1:N-k) .* x(1+k:N) );
+N2 = floor(N/Nav);
+
+Rx = zeros(1, N);
+for kav = 1:Nav
+    deltaK = (kav-1)*N2;
+    for k = 0:N2-1
+        Rx(k+1) = Rx(k+1) + Dt * sum( x(deltaK+(1:N2-k)) .* x(deltaK+(1+k:N2)) );
+    end
 end
+Rx = Rx / Nav;
 Rx = [Rx(end:-1:2), Rx];
 
-Rh2 = nan(1, N);
-for k = 0:N-1
-    Rh2(k+1) = Dt * sum( h(1:N-k) .* h(1+k:N) );
+Rh2 = zeros(1, N2);
+for kav = 1:Nav
+    deltaK = (kav-1)*N2;
+    for k = 0:N2-1
+        Rh2(k+1) = Rh2(k+1) + Dt * sum( h(deltaK+(1:N2-k)) .* h(deltaK+(1+k:N2)) );
+    end
 end
+Rh2 = Rh2 / Nav;
 Rh2 = [Rh2(end:-1:2), Rh2];
 
 n = -N+1:N-1;
 
+Rx0 = Rx(floor(end/2));
+
 figure;
-plot(n, Rx);
+plot(n, Rx / Rx0);
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
 ylabel('$R_x(n)$', 'interpreter', 'latex', 'FontSize', 13);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
@@ -59,7 +74,7 @@ ylim(YLimRx);
 
 
 figure;
-plot(n, Dt^2*sigma^2 * (N-abs(n)).* Rh);
+plot(n, Dt^2*sigma^2 * (N2-abs(n)).* Rh  / Rx0);
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
 ylabel('$(N-|n|)\Delta t^2\sigma^2 R_h(n)$', 'interpreter', 'latex', 'FontSize', 13);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
@@ -67,11 +82,13 @@ ylim(YLimRx);
 
 
 figure;
-plot(n, Rx - Dt^2*sigma^2 * (N-abs(n)).* Rh);
+plot(n, (Rx - Dt^2*sigma^2 * (N2-abs(n)).* Rh)  / Rx0);
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
 ylabel('$R_x(n) - (N-|n|)\Delta t^2\sigma^2 R_h(n)$', 'interpreter', 'latex', 'FontSize', 13);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 ylim(YLimRx);
+xlim([-1500 1500]);
+ylim([-0.2 0.2]);
 
 
 %%

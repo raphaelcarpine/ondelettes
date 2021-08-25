@@ -41,6 +41,7 @@ defaultShowXLim = true;
 defaultWvltAxesTitle = '';
 defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
+defaultAnimatedShapePlot = @animatedShapePlot1;
 defaultMotherWavelet = 'cauchy';
 defaultXLimRidge = [-inf inf];
 defaultctRidge = 0;
@@ -92,6 +93,7 @@ addParameter(p,'ShowXLim', defaultShowXLim);
 addParameter(p, 'WvltAxesTitle', defaultWvltAxesTitle);
 addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
 addParameter(p, 'RealShapePlot', defaultRealShapePlot);
+addParameter(p, 'AnimatedShapePlot', defaultAnimatedShapePlot);
 addParameter(p, 'MotherWavelet', defaultMotherWavelet);
 addParameter(p, 'XLimRidge', defaultXLimRidge);
 addParameter(p, 'ctRidge', defaultctRidge);
@@ -140,12 +142,16 @@ if WaveletPlot == 0
     getY = @() p.Results.Y;
     plotAxes = gobjects(1, 0);
     plotAxesName = '';
+    X0 = getX();
+    set(fig, 'Name', [get(fig, 'Name'), '; Fs=', sprintf('%.2f', 1/mean(diff(X0(1, :)))), ' Hz']);
 else
     getX = @() cellmat2mat (get(WaveletPlot, 'XData'));
     getY = @() cellmat2mat (get(WaveletPlot, 'YData'));
     plotAxes = cellmat2mat (get(WaveletPlot, 'Parent'));
     plotAxesName = ['fig', num2str(get(get(plotAxes(1), 'Parent'), 'number'))];
     set(fig, 'Name', [get(fig, 'Name'), ' (', plotAxesName, ')']);
+    X0 = getX();
+    set(fig, 'Name', [get(fig, 'Name'), '; Fs=', sprintf('%.2f', 1/mean(diff(X0(1, :)))), ' Hz']);
     
     for waveplt = WaveletPlot
         parent = waveplt;
@@ -197,8 +203,9 @@ XLim = p.Results.XLim;
 XLimRidge = p.Results.XLimRidge;
 ShowXLim = p.Results.ShowXLim;
 wvltAxesTitle = p.Results.WvltAxesTitle;
-ComplexShapePlot = p.Results.ComplexShapePlot;
-RealShapePlot = p.Results.RealShapePlot;
+ComplexShapePlot = p.Results.ComplexShapePlot; ComplexShapePlot = reverseShapeOption(ComplexShapePlot);
+RealShapePlot = p.Results.RealShapePlot; RealShapePlot = reverseShapeOption(RealShapePlot);
+AnimatedShapePlot = p.Results.AnimatedShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
 ctRidge = p.Results.ctRidge;
 removeMean = p.Results.RemoveMean;
@@ -496,13 +503,15 @@ checkboxRealShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','St
     'String', 'plot real', 'Value', false);
 checkboxComplexShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'plot complex', 'Value', false);
+checkboxAnimatedShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
+    'String', 'plot animated complex', 'Value', false);
 checkboxDispShapesMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'disp complex', 'Value', false);
 checkboxDispFreqsMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'damped freq.', 'Value', false);
 checkboxAmplRegMean = uicontrol('Parent',shapesPan, 'Units', 'normalized','Style','checkbox',...
     'String', 'ampl. regression', 'Value', false);
-Checkboxs4 = [checkboxRealShapesMean, checkboxComplexShapesMean, checkboxDispShapesMean,...
+Checkboxs4 = [checkboxRealShapesMean, checkboxComplexShapesMean, checkboxAnimatedShapesMean, checkboxDispShapesMean,...
     checkboxDispFreqsMean, checkboxAmplRegMean];
 
 
@@ -1250,6 +1259,7 @@ updateFourierAveragingMenu(FourierAveraging);
 % Fourier Mode Shapes
 
 FourierModeShapeMenu = uimenu(fourierMenu, 'Text', 'Mode Shape', 'Separator', 'on');
+FourierModeShapeMenu.UserData = [1]; % indxModeShapeFourier
 
     function FourierModeShapeMenuCallback(~,~)
         dlgtitle = 'Input mode shape';
@@ -1262,7 +1272,12 @@ FourierModeShapeMenu = uimenu(fourierMenu, 'Text', 'Mode Shape', 'Separator', 'o
             return
         end
         
-        fourierTransformDisplay(freqModeShape0);
+        indxModeShapeFourier = listdlg('ListSize', [200 100], 'InitialValue', FourierModeShapeMenu.UserData,...
+            'ListString', {'plot real mode shape', 'plot complex mode shape',...
+            'plot animated complex mode shape', 'disp complex mode shape'});
+        FourierModeShapeMenu.UserData = indxModeShapeFourier;
+        
+        fourierTransformDisplay(freqModeShape0, indxModeShapeFourier);
     end
 FourierModeShapeMenu.MenuSelectedFcn = @FourierModeShapeMenuCallback;
 
@@ -1384,6 +1399,10 @@ plotExtractMenu = uimenu(toolsMenu,'Text','Plot Extract');
 plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 
+% half power damping
+halfPowerMenu = uimenu(toolsMenu, 'Text', 'Half-power damping');
+halfPowerMenu.MenuSelectedFcn = @(~, ~) HalfPowerMenu();
+
 % audio
 audioMenu = uimenu(toolsMenu, 'Text', 'Audio');
 
@@ -1449,6 +1468,8 @@ checkboxRealShapesMean.Tooltip = ['averaged mode shapes (real part) plot', newli
     newline, 'customizable: ''RealShapePlot'' option'];
 checkboxComplexShapesMean.Tooltip = ['averaged mode shapes (real and imaginary parts) plot',...
     newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)', newline, 'customizable: ''ComplexShapePlot'' option'];
+checkboxAnimatedShapesMean.Tooltip = ['averaged complex mode shapes animation',...
+    newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)', newline, 'customizable: ''AnimatedShapePlot'' option'];
 checkboxDispShapesMean.Tooltip = ['averaged mode shapes (real and imaginary parts) in Command Window',...
     newline, 'shaping before average: phi*phi^T = 1 (phi in C^n)'];
 checkboxDispFreqsMean.Tooltip = 'averaged frequencies in Command Window';
@@ -1983,11 +2004,16 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         meanShape = sum(shapesShapes{kridge} .* weights, 2);
                         meanFreq = sum(freqsShapes{kridge} .* weights);
                         
+                        figuresName = [figuresName, sprintf(' (I=%.1f%%)', 100*nonPropIndex(meanShape))];
+                        
                         if checkboxRealShapesMean.Value
                             RealShapePlot(real(meanShape), figuresName)
                         end
                         if checkboxComplexShapesMean.Value
                             ComplexShapePlot(meanShape, figuresName)
+                        end
+                        if checkboxAnimatedShapesMean.Value
+                            AnimatedShapePlot(meanShape, figuresName);
                         end
                         if checkboxDispShapesMean.Value
                             disp(['mean shape, ', figuresName]);
@@ -2130,7 +2156,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
 
 %% fourier
 
-    function fourierTransformDisplay(freqModeShape)
+    function fourierTransformDisplay(freqModeShape, indxModeShapeFourier)
         if nargin == 0
             freqModeShape = nan;
             modeShape = nan(1, nbPlots);
@@ -2398,19 +2424,28 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         % mode shape
         if ~isnan(freqModeShape)
             for ksv = 1:size(modeShape, 1)
-                if autocorrelationFourierSVDMode
-                    modeName = sprintf('mode %.2fHz, SV%u', [freqModeShape, ksv]);
-                else
-                    modeName = sprintf('mode %.2fHz', freqModeShape);
-                end
-                
                 modeShape(ksv, :) = modeShape(ksv, :) / sqrt(modeShape(ksv, :) * modeShape(ksv, :).');
                 modeShape(ksv, :) = modeShape(ksv, :) * (-1 + 2*(max(real(modeShape(ksv, :))) >= -min(real(modeShape(ksv, :)))));
                 
-                disp(modeName);
-                disp(modeShape(ksv, :).');
+                if autocorrelationFourierSVDMode
+                    modeName = sprintf('mode %.2fHz, SV%u (I=%.1f%%)', [freqModeShape, ksv, 100*nonPropIndex(modeShape(ksv, :))]);
+                else
+                    modeName = sprintf('mode %.2fHz (I=%.1f%%)', [freqModeShape, 100*nonPropIndex(modeShape(ksv, :))]);
+                end
                 
-                RealShapePlot(real(modeShape(ksv, :)), modeName)
+                if any(indxModeShapeFourier == 1)
+                    RealShapePlot(real(modeShape(ksv, :)), modeName);
+                end
+                if any(indxModeShapeFourier == 2)
+                    ComplexShapePlot(modeShape(ksv, :), modeName);
+                end
+                if any(indxModeShapeFourier == 3)
+                    AnimatedShapePlot(modeShape(ksv, :), modeName);
+                end
+                if any(indxModeShapeFourier == 4)
+                    disp(['mean shape, ', modeName]);
+                    disp(transpose(modeShape(ksv, :)));
+                end
             end
         end
     end

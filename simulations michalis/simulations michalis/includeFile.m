@@ -11,7 +11,7 @@ clear all; clc; close all;
 
 
 % READ GROUND MOTION OF DIFFERENT FORMATS
-icase=5;
+icase=4;
 
 recsPath = fullfile(fileparts(matlab.desktop.editor.getActiveFilename), 'recs');
 

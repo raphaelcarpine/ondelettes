@@ -25,6 +25,18 @@ addParameter(p,'MeanSquareOverXelements', MeanSquareOverXelementsDef);
 
 parse(p,X,WvltFreq,Y,Q,varargin{:});
 
+% checks
+if size(X,2) > size(X,1)
+    X = X';
+end
+
+if size(Y,2) > size(Y,1)
+    Y = Y';
+end
+if size(WvltFreq,1) > size(WvltFreq,2)
+    WvltFreq = WvltFreq';
+end
+
 %
 ZeroPadding = p.Results.ZeroPadding;
 CenterSignal = p.Results.CenterSignal;
@@ -47,6 +59,11 @@ if length(WvltFreq) > 500
     if ~ismember(str, {'', 'y', 'yes', 'o', 'oui', 'true'})
         error('length(WvltFreq) > 500');
     end
+end
+
+%%
+if any(WvltFreq <= 0)
+    error('f < 0');
 end
 
 %% array size
@@ -82,7 +99,7 @@ end
 
 %% signal long (waitbar)
 
-longSignal = 1e-9 * length(X)*log( length(X))*  length(WvltFreq) > 1;
+longSignal = length(X)*log( length(X))*  length(WvltFreq) > 1e9;
 
 longSignal = longSignal && isempty(MeanOverFreqFunc) && isempty(XindexOut);
 
@@ -123,7 +140,11 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
     
     DeltaT = max(DeltaTfunc(WvltFreq), Q./(2*pi*WvltFreq)); % = a * Delta t_psi, on prend le max avec le cas mu_psi=1/2 pour l'ondelette harmonique
     DeltaTMaxInd = round(ct*Fs*DeltaT); % Conversion en nb de pts de ct * a * Delta t_psi = zero padding mini
-    N0 = 2.^nextpow2(n+DeltaTMaxInd); % Nb pts pour fft = Puissance de 2 >= nb pts du signal + nb pts du zero-padding minimum
+    if ZeroPadding && ct ~= 0
+        N0 = 2.^nextpow2(n+DeltaTMaxInd); % Nb pts pour fft = Puissance de 2 >= nb pts du signal + nb pts du zero-padding minimum
+    else
+        N0 = n * ones(size(WvltFreq));
+    end
     NSet = unique(N0); % Liste des Nb pts pour fft uniques
     NbSet = length(NSet); % Nb de set de calcul (autant que de N0 uniques)
     FreqSet = cell(size(NSet));

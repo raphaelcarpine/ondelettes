@@ -6,8 +6,8 @@ DOFs = 1:9;
 load('pont chili/data/Event_2018-05-02_13-10-35_969');
 % load('pont chili/data/Periodic_2018-04-26_11-59-54_969');
 % load('pont chili/data/Periodic_2018-05-10_17-59-55_969');
-meanToZero = true;
-autocorrelation = false;
+removeMean = true;
+autocorrelation = true;
 
 dt = 1/Fs;
 t = dt * (0:size(X, 2)-1);
@@ -18,35 +18,35 @@ X = X*9.81;
 
 %%
 
-if meanToZero
-    for dof = 1:size(X, 1)
-        X(dof, :) = X(dof, :) - mean(X(dof, :));
-    end
-end
+% if removeMean
+%     for dof = 1:size(X, 1)
+%         X(dof, :) = X(dof, :) - mean(X(dof, :));
+%     end
+% end
 
-if autocorrelation
-    Rx = nan(size(X));
-    for dof = 1:size(X, 1)
-        RxDof = xcorr(X(dof, :), 'biased') / var(X(dof, :));
-        Rx(dof, :) = RxDof(ceil(length(RxDof)/2):end);
-    end
-end
+% if autocorrelation
+%     Rx = nan(size(X));
+%     for dof = 1:size(X, 1)
+%         RxDof = xcorr(X(dof, :), 'biased') / var(X(dof, :));
+%         Rx(dof, :) = RxDof(ceil(length(RxDof)/2):end);
+%     end
+% end
 
 %% plots
 
 fig = figure;
 ax = axes(fig);
 plts = plot(t, X);
-xlabel(ax, 't');
-ylabel(ax, 'a');
+xlabel(ax, 'Time [s]');
+ylabel(ax, 'Acceleration [m/s²]');
 
-if autocorrelation
-    fig = figure;
-    ax = axes(fig);
-    pltsAutocorr = plot(t, Rx);
-    xlabel(ax, 't');
-    ylabel(ax, 'Ra');
-end
+% if autocorrelation
+%     fig = figure;
+%     ax = axes(fig);
+%     pltsAutocorr = plot(t, Rx);
+%     xlabel(ax, 'Time [s]');
+%     ylabel(ax, 'Ra');
+% end
 
 
 %% wavelet
@@ -57,14 +57,14 @@ NbMaxParallelRidges = 1;
 fmin = 1;
 fmax = 10;
 
-WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
-    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges);
+WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'AutocorrelationMode', autocorrelation,...
+    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RemoveMean', removeMean);
 
 
-if autocorrelation
-    WaveletMenu('WaveletPlot', pltsAutocorr, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
-    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges);
-end
+% if autocorrelation
+%     WaveletMenu('WaveletPlot', pltsAutocorr, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'MultiSignalMode', true,...
+%     'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges);
+% end
 
 
 

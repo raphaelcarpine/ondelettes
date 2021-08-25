@@ -6,11 +6,19 @@ removeNan = true;
 %% data
 
 dataFolder = 'C:\Users\carpine\Documents\projets\ponts marne\reprise operations 2021\donnees'; % dossier où les fichier .csv sont
-dataFileName = 'ussy_0305.mat';
+dataFileName = 'esbly_1005.mat';
+dataFilePath = fullfile(dataFolder, dataFileName);
 
-load(fullfile(dataFolder, dataFileName));
+dataFilePath = choixData();
+
+load(dataFilePath);
 
 disp(startDate);
+% T°
+[TemperatureTime, TemperatureTemp] = getTemperature(startDate);
+figure;
+plot(TemperatureTime, TemperatureTemp);
+ylabel('Temperature [°C]');
 
 X = X.';
 T = T.';
@@ -136,9 +144,9 @@ fmax = 10;
 
 WaveletMenu('WaveletPlot', plts, 'Q', Q, 'fmin', fmin, 'fmax', fmax, 'RemoveMean', true,...
     'AutocorrelationMode', true, 'AutocorrelationSVDMode', true, 'AutocorrelationFourierSVDMode', true,...
-    'AutocorrelationMaxLag', 5/(2*pi*2.2*0.01), 'AutocorrelationNsvd', 6,...
-    'FourierScale', 'log',...
-    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge);
+    'AutocorrelationMaxLag', 5/(2*pi*2.2*0.01), 'AutocorrelationNsvd', 6, 'FourierScale', 'log',...
+    'MaxRidges', NbMaxRidges, 'MaxParallelRidges', NbMaxParallelRidges, 'RealShapePlot', shapePlotBridge,...
+    'AnimatedShapePlot', shapePlotBridgeAnim);
 
 
 

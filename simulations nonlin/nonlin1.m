@@ -4,6 +4,7 @@ k1 = (10*2*pi)^2;
 k2 = k1/2;
 x0 = 4;
 zeta = 0.005;
+zeta = 0.01;
 c = 2*zeta*sqrt(k1*m);
 
 
@@ -58,6 +59,7 @@ f(kt0) = 800 / dt;
 
 % noise
 f0 = 150;
+f0 = 150*sqrt(4);
 f = f0/sqrt(dt) * randn(size(t));
 
 % noise + diracs
@@ -65,6 +67,9 @@ f = f0/sqrt(dt) * randn(size(t));
 
 % Aref
 Aref = f0*sqrt(dt)/(2*m*sqrt(k1/m)*sqrt(zeta*sqrt(k1/m)*dt))
+
+% sigma F
+sigmaF = sqrt(f0^2*dt^2*pi/(m*k1/m*(1-zeta^2)*dt))
 
 
 %% ode

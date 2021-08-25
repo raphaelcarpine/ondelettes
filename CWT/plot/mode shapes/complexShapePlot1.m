@@ -1,4 +1,4 @@
-function complexShapePlot1(shape, figTitle)
+function fig = complexShapePlot1(shape, figTitle)
 %COMPLEXSHAPEPLOTDEFAULT Summary of this function goes here
 %   Detailed explanation goes here
 

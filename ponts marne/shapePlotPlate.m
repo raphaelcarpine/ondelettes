@@ -1,4 +1,4 @@
-function shapePlotPlate(plateDim, dofPos, shape, figTitle)
+function fig = shapePlotPlate(plateDim, dofPos, shape, figTitle)
 %COMPLEXSHAPEPLOTDEFAULT Summary of this function goes here
 %   Detailed explanation goes here
 

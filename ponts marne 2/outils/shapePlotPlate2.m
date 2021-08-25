@@ -1,4 +1,4 @@
-function shapePlotPlate2(plateDim, dofPos, dofDir, shape, figTitle)
+function fig = shapePlotPlate2(plateDim, dofPos, dofDir, shape, figTitle)
 %COMPLEXSHAPEPLOTDEFAULT Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -52,7 +52,7 @@ for k = 1:n
     
     dofColor = 0.8 * [1 0 0];
     
-    mArrow3([X(1), Y(1), Z(1)], [X(2), Y(2), Z(2)], 'color', dofColor, 'stemWidth', min(plateDim)/20);
+    mArrow3(ax, [X(1), Y(1), Z(1)], [X(2), Y(2), Z(2)], 'color', dofColor, 'stemWidth', min(plateDim)/20);
     
     if displayChannelNb
         %text(ax, X(2), Y(2), Z(2) + 0.1*sign(shape(k))*max(abs(shape)), ['', num2str(k)]);

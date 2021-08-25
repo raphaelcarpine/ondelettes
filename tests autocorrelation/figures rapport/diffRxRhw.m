@@ -1,9 +1,11 @@
 %% figures difference R_{\tilde x} R_{h*\tilde w}
 
+plotFigs = false;
+
 %% data
 
 % time
-N = 2000;
+N = 10000;
 N1 = 1000;
 N0 = 2000;
 Dt = 0.05;
@@ -32,24 +34,26 @@ x1 = x .* [zeros(1, N1), ones(1, N), zeros(1, N1)];
 
 n = -N1:N+N1-1;
 
-figure;
-plot(n, w(N0+1:end));
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$w$', 'interpreter', 'latex', 'FontSize', 13);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-YLimW = max(abs(get(gca, 'YLim') )) * [-1 1];
-ylim(YLimW);
-
-figure;
-plot(n, x, ':');
-hold on
-set(gca,'ColorOrderIndex', get(gca,'ColorOrderIndex')-1)
-plot(n, x1);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$\tilde x$', 'interpreter', 'latex', 'FontSize', 13);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-YLimX = max(abs(get(gca, 'YLim') )) * [-1 1];
-ylim(YLimX);
+if plotFigs
+    figure;
+    plot(n, w(N0+1:end));
+    xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
+    ylabel('$w$', 'interpreter', 'latex', 'FontSize', 13);
+    f = gcf; f.Position(3:4) = 7/10 * [560 420];
+    YLimW = max(abs(get(gca, 'YLim') )) * [-1 1];
+    ylim(YLimW);
+    
+    figure;
+    plot(n, x, ':');
+    hold on
+    set(gca,'ColorOrderIndex', get(gca,'ColorOrderIndex')-1)
+    plot(n, x1);
+    xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
+    ylabel('$\tilde x$', 'interpreter', 'latex', 'FontSize', 13);
+    f = gcf; f.Position(3:4) = 7/10 * [560 420];
+    YLimX = max(abs(get(gca, 'YLim') )) * [-1 1];
+    ylim(YLimX);
+end
 
 %% x2
 
@@ -60,29 +64,32 @@ for k = 1:N+2*N1
     x2(k) = Dt * sum( w2(1:N0+k) .* h(N0+k:-1:1) );
 end
 
-
-figure;
-plot(n, w2(N0+1:end));
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$\tilde w$', 'interpreter', 'latex', 'FontSize', 13);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-ylim(YLimW);
-
-figure;
-plot(n, x2);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$h*\tilde w$', 'interpreter', 'latex', 'FontSize', 13);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-ylim(YLimX);
+if plotFigs
+    figure;
+    plot(n, w2(N0+1:end));
+    xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
+    ylabel('$\tilde w$', 'interpreter', 'latex', 'FontSize', 13);
+    f = gcf; f.Position(3:4) = 7/10 * [560 420];
+    ylim(YLimW);
+    
+    figure;
+    plot(n, x2);
+    xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
+    ylabel('$h*\tilde w$', 'interpreter', 'latex', 'FontSize', 13);
+    f = gcf; f.Position(3:4) = 7/10 * [560 420];
+    ylim(YLimX);
+end
 
 %% x2 - x1
 
-figure;
-plot(n, x2-x1);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$h*\tilde w-\tilde x$', 'interpreter', 'latex', 'FontSize', 13);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-ylim(YLimX);
+if plotFigs
+    figure;
+    plot(n, x2-x1);
+    xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
+    ylabel('$h*\tilde w-\tilde x$', 'interpreter', 'latex', 'FontSize', 13);
+    f = gcf; f.Position(3:4) = 7/10 * [560 420];
+    ylim(YLimX);
+end
 
 
 %% diff autocorr
@@ -99,3 +106,30 @@ ylim(YLimX);
 % figure;
 % plot(xcorr(x2)-xcorr(x1));
 % ylim(YLimR);
+
+%% Rx - Rhw
+
+LagMax = 0;
+
+Rx = nan(1, LagMax+1);
+for k = 0:LagMax
+    Rx(k+1) = Dt * sum( x1(1:N+2*N1-k) .* x1(1+k:N+2*N1) );
+end
+Rx = [Rx(end:-1:2), Rx];
+
+Rhw = nan(1, LagMax+1);
+for k = 0:LagMax
+    Rhw(k+1) = Dt * sum( x2(1:N+2*N1-k) .* x2(1+k:N+2*N1) );
+end
+Rhw = [Rhw(end:-1:2), Rhw];
+
+
+% n = -LagMax:LagMax;
+% figure;
+% plot(n, Rx);
+% hold on
+% plot(n, Rx - Rhw);
+% plot(n, -abs(n)./(N-abs(n)).*Rx, '--');
+
+C(end+1) = Rx - Rhw;
+

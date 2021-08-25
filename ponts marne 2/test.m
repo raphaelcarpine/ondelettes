@@ -11,8 +11,11 @@ end
 
 dataFolder = 'C:\Users\carpine\Documents\projets\ponts marne\reprise operations 2021\donnees'; % dossier où les fichier .csv sont
 dataFileName = 'esbly_1005.mat';
+dataFilePath = fullfile(dataFolder, dataFileName);
 
-load(fullfile(dataFolder, dataFileName));
+dataFilePath = choixData();
+
+load(dataFilePath);
 
 disp(startDate);
 [TemperatureTime, TemperatureTemp] = getTemperature(startDate);
@@ -102,7 +105,7 @@ end
 %% enlever nan debut fin
 
 if removeNan
-    Nt0 = floor(size(X, 2)/2);
+    Nt0 = floor(size(X, 2)/4);
     for Nt1 = Nt0:-1:1
         if any(isnan(X(:, Nt1)))
             Nt1 = Nt1 + 1;
@@ -130,18 +133,24 @@ dimensionsShapes2;
 
 if mode == 0
     % T
-    fig = figure;
-    ax = axes(fig);
-    plts = plot(diff(T));
-    xlabel(ax, 'k');
-    ylabel(ax, 'dt');
+    figure;
+    yyaxis left
+    plot(diff(T));
+    xlabel('k');
+    ylabel('dt');
+    ylim([0, 0.01]);
+    yyaxis right
+    hold on
+    for kx = 1:size(X, 1)
+        scatter(1:size(X, 2), isnan(X(kx, :)));
+    end
+%     legend(channelNames);
     
     % NaN
-    fig = figure;
-    ax = axes(fig);
-    plts = plot(T, isnan(X));
-    xlabel(ax, 'Time [s]');
-    ylabel(ax, 'Channel error');
+    figure;
+    plot(T, isnan(X));
+    xlabel('Time [s]');
+    ylabel('Channel error');
     legend(channelNames);
 end
 

@@ -21,8 +21,8 @@ sfactor = 1; % record scaling factor
 iplot = 0; % draw hysteretic plot
 
 % CHANGE THIS TO MOVE FROM ELASTIC TO ELASTOPLASTIC
-fy = 0.01;
-fy = 0.12;
+% fy = 0.01;
+fy = 0.03;
 % fy = 100;
 
 [umax,vmax,amaxRel,amaxTot,fsmax,u,fs,a]=...
@@ -39,7 +39,7 @@ ylabel('force','FontSize',18)
 t = (1:(nsteps-1))*dt;
 
 
-% plot displacement over time
+% plot acceleration over time
 figure()
 hold on; grid on; box on;
 plt = plot(t,a,'k-');
@@ -51,9 +51,15 @@ ylabel('acceleration','FontSize',18)
 figure()
 hold on; grid on; box on;
 plot(t,fs,'k-');
-
 xlabel('time (sec)','FontSize',18)
 ylabel('force','FontSize',18)
+
+% plot exciattion
+figure;
+hold on; grid on; box on;
+plt2 = plot(dt*(0:length(acc.rec)-1), acc.rec, 'k-');
+xlabel('time (sec)','FontSize',18)
+ylabel('input','FontSize',18)
 
 % %%
 % % Scalogram of acceleration response signal
@@ -65,8 +71,8 @@ ylabel('force','FontSize',18)
 % Z = abs(WvltOut);
 % %contour(X,Y,Z')
 % h = pcolor(Y,X,Z');
-% set(h,'EdgeColor','none')
-% 
+% set(h, 'EdgeColor', 'none')
+
 % %%
 % % Scalogram of displacement response signal
 % Fs = linspace(0.1,5);
@@ -85,6 +91,7 @@ fmin = 0.1;
 fmax = 10;
 Q = 5;
 WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q);
+WaveletMenu('WaveletPlot', plt2, 'fmin', fmin, 'fmax', fmax, 'Q', Q);
 
 
 

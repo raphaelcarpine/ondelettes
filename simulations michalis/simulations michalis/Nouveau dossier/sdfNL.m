@@ -99,7 +99,7 @@ end
 ll=min(length(a),length(ff));
 amaxTot=max(abs(a(1:ll)-ff(1:ll)));  % max relative acceleration
 
-save ('plotNL1','u','fs')
+% save ('plotNL1','u','fs')
 
 if iplot==1
     clf; hold on;

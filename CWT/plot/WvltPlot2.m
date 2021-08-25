@@ -21,6 +21,15 @@ if nargin < 10
     FreqScale = 'lin';
 end
 
+% some checks
+if size(t ,2) > size(t,1)
+    t = t';
+end
+
+if size(freqs,1) > size(freqs,2)
+    freqs = freqs';
+end
+
 
 switch WvltScale
     case 'lin'
