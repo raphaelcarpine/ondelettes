@@ -1,5 +1,7 @@
 Permet d'implémenter la méthode de la demie puissance, pour trouver l'amortissement à partir de la transformée de Fourier (élevée ou non au carré).
 
-\bullet Les maximums et leurs arguments sont extraits des données brutes, puis recalculés en utilisant une interpolation quadratique (maximum quadratique interpollé à partir de trois points).
+\bullet Les maximums et leurs arguments sont extraits des données brutes
+
+\bullet Ils ne sont pas recalculés en utilisant une interpolation quadratique (maximum quadratique interpollé à partir de trois points). C'est possible en modifiant la variable "quadraticMax" dans HalfPowerMenu.m.
 
 \bullet La bande passante \Deltaf = f_2 - f_1 est calculée en utilisant des interpolation linéaires pour f_1 et f_2 (pour les deux, à partir des deux points encadrant la demie puissance).

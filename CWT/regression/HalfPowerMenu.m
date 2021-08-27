@@ -5,14 +5,14 @@ function [fmax, zeta] = HalfPowerMenu()
 fmax = nan;
 zeta = nan;
 
-quadraticMax = true;
+quadraticMax = false;
 
 quadraticFFT = false;
 
 %% fig
 
 % lignes pans
-Hpans = [4, 4, 10];
+Hpans = [4, 4, 11];
 
 fig = figure('Name', 'Half power menu', 'numbertitle', 'off', 'Resize', 'off');
 fig.Units = 'characters';
@@ -53,9 +53,9 @@ highlighted = [];
 lineWidth = [];
 
 
-lineSelect = uicontrol('Parent', linePan, 'Units', 'normalized','Style','togglebutton', 'String', 'select line');
-prevBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '<');
-nextBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '>');
+lineSelect = uicontrol('Parent', linePan, 'Units', 'normalized','Style','togglebutton', 'String', 'select line', 'FontSize', 9);
+prevBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '<', 'FontSize', 9);
+nextBut = uicontrol('Parent', linePan, 'Units', 'normalized','Style','pushbutton', 'String', '>', 'FontSize', 9);
 
 lineSelect.Position = [0.01, 0.02, 0.48, 0.96];
 prevBut.Position = [0.6, 0.1, 0.15, 0.8];
@@ -68,6 +68,8 @@ nextBut.Position = [0.75, 0.1, 0.15, 0.8];
             lineWidth = get(line, 'LineWidth');
             highlighted = line;
             set(highlighted, 'LineWidth', 3*lineWidth);
+            
+            selectFunctionMax(true);
         catch
         end
     end
@@ -82,9 +84,6 @@ nextBut.Position = [0.75, 0.1, 0.15, 0.8];
             lines = [];
         end
         highlightLine();
-        
-        maxSelect.Value = false;
-        selectFunctionMax(maxSelect.Value);
     end
 
     function nextprev(next)
@@ -124,11 +123,12 @@ maxMarker = gobjects(1);
 halfMarker = gobjects(1);
 
 
-maxSelect = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','togglebutton', 'String', 'select local maximum');
-prevButmax = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','pushbutton', 'String', '<');
-nextButmax = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','pushbutton', 'String', '>');
+maxSelect = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','text',...
+    'String', 'select local maximum', 'HorizontalAlignment', 'center', 'FontSize', 9);
+prevButmax = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','pushbutton', 'String', '<', 'FontSize', 9);
+nextButmax = uicontrol('Parent', maxPan, 'Units', 'normalized','Style','pushbutton', 'String', '>', 'FontSize', 9);
 
-maxSelect.Position = [0.01, 0.02, 0.48, 0.96];
+maxSelect.Position = [0.01, 0, 0.48, 0.65];
 prevButmax.Position = [0.6, 0.1, 0.15, 0.8];
 nextButmax.Position = [0.75, 0.1, 0.15, 0.8];
 
@@ -215,7 +215,6 @@ nextButmax.Position = [0.75, 0.1, 0.15, 0.8];
         halfMarker = yline(ax, H, 'Color', 0.5*[1 1 1]);
     end
 
-maxSelect.Callback = @(~,~) selectFunctionMax(maxSelect.Value);
 prevButmax.Callback = @(~,~) nextprevMax(-1);
 nextButmax.Callback = @(~,~) nextprevMax(1);
 
@@ -223,7 +222,7 @@ nextButmax.Callback = @(~,~) nextprevMax(1);
 %% quadratic fft
 
 bg = uibuttongroup('Parent', resultsPan, 'Units', 'characters',...
-    'Position', [1 6.5 22 2.3], 'SelectionChangedFcn', @bselection);
+    'Position', [1 7.2 22 2.3], 'SelectionChangedFcn', @bselection);
 
 butFFT = uicontrol(bg, 'Units', 'characters',...
     'Style', 'radiobutton', 'String', 'FFT');
@@ -243,6 +242,20 @@ butFFT2.Position = [12 0.5 10 1];
     end
 
 
+%% quadratic interpolation
+
+quadInterpBut = uicontrol(resultsPan, 'Style', 'checkbox', 'Units', 'characters', 'Value', quadraticMax,...
+    'HorizontalAlignment', 'left', 'String', 'quadratic interpolation (local maxima)', 'FontSize', 9);
+
+quadInterpBut.Position = [2, 5, 40, 1.5];
+
+    function quadInterpCallback(~, ~)
+        quadraticMax = quadInterpBut.Value;
+        highlightMax();
+    end
+
+quadInterpBut.Callback = @quadInterpCallback;
+
 %% display
 
 FmaxDisp = uicontrol(resultsPan, 'Style', 'text', 'Units', 'characters',...
@@ -250,8 +263,8 @@ FmaxDisp = uicontrol(resultsPan, 'Style', 'text', 'Units', 'characters',...
 ZetaDisp = uicontrol(resultsPan, 'Style', 'text', 'Units', 'characters',...
     'FontSize', 10, 'HorizontalAlignment', 'left');
 
-FmaxDisp.Position = [2, 4, 40, 1.5];
-ZetaDisp.Position = [2, 2, 40, 1.5];
+FmaxDisp.Position = [2, 3, 40, 1.5];
+ZetaDisp.Position = [2, 1, 40, 1.5];
 
     function displayFmaxZeta()
         FmaxDisp.String = sprintf('Frequency: %.3f Hz', fmax);

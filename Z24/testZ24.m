@@ -69,14 +69,14 @@ for measure = 1:17
             fprintf(2, '(NaNs) ');
         end
         
-        nZeroPad = 10; % zero padding, n points minimum test
-        X0 = true(size(X) - [0, nZeroPad-1]);
-        for kz = 1:nZeroPad
-            X0 = X0 & X(:, kz:end-nZeroPad+kz) == 0;
-        end
-        if any(X0, 'all')
-            fprintf(2, '(0s) ');
-        end
+%         nZeroPad = 25; % zero padding, n points minimum test
+%         X0 = true(size(X) - [0, nZeroPad-1]);
+%         for kz = 1:nZeroPad
+%             X0 = X0 & X(:, kz:end-nZeroPad+kz) == 0;
+%         end
+%         if any(X0, 'all')
+%             fprintf(2, '(0s) ');
+%         end
         
         
         fprintf('; ');
