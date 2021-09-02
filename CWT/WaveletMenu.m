@@ -1400,8 +1400,8 @@ plotExtractMenu.MenuSelectedFcn = @plotExtractCallback;
 
 
 % half power damping
-halfPowerMenu = uimenu(toolsMenu, 'Text', 'Half-power damping');
-halfPowerMenu.MenuSelectedFcn = @(~, ~) HalfPowerMenu();
+halfPowerMenu = uimenu(toolsMenu, 'Text', 'Peak picking');
+halfPowerMenu.MenuSelectedFcn = @(~, ~) PeakPickingMenu();
 
 % audio
 audioMenu = uimenu(toolsMenu, 'Text', 'Audio');

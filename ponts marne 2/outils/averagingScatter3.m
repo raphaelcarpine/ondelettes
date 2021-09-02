@@ -1,4 +1,4 @@
-function [X, Y, stdY, K, Xlims] = averagingScatter3(x, y, dx, xIncremenScale, t, dt)
+function [X, Y, stdY, K, Xlims] = averagingScatter3(x, y, dx, xIncremenScale, t, DeltaT)
 %AVERAGINGSCATTER Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -13,7 +13,7 @@ end
 
 %% time separation
 
-Nt = floor((t(end)-t(1))/dt); % nb of time intervals
+Nt = floor((t(end)-t(1))/DeltaT); % nb of time intervals
 
 kt = floor(length(t)/Nt);
 rt = mod(length(t), kt);
@@ -37,7 +37,7 @@ switch xIncremenScale
     case 'log'
         x = log(x);
     otherwise
-        error;
+        error('');
 end
 
 n = floor(x/dx);

@@ -1,6 +1,7 @@
 clear all
 
 removeNan = true;
+averageScale = 'lin';
 
 plotTemp = 0;
 plotFourier = 1;
@@ -8,8 +9,9 @@ plotRidge = 1;
 plotHist = 1;
 plotK = 1;
 plotFA = 1;
+plotDiscardedFA = true;
 
-projection = 5; % 1: mode1, 5: mode 5
+projection = 5; % 1: mode 1, 5: mode 5
 
 %% data
 
@@ -138,17 +140,28 @@ for kbridge = 1:length(bridges)
     [f, Fx] = fourierTransform(T, X, 'Averaging', true, 'AveragingNb', 100);
     if plotFourier
         figure('Name', dataFileName);
-        plot(f, Fx);
+        fftPlt = plot(f, Fx);
         xlabel('Frequency [Hz]');
         ylabel('Amplitude [m/s²]');
         xlim([0, 20]);
+        
+        % peak picking
+        [f0, zeta] = PeakPickingMax('Line', fftPlt, 'QuadraticMax', false,...
+            'QuadraticFFT', false, 'PlotPeak', true);
+    else
+        [f0, zeta] = PeakPickingMax('Freqs', f, 'FFT', Fx, 'QuadraticMax', false,...
+            'QuadraticFFT', false, 'PlotPeak', false);
     end
     
-    [~, kfMax] = max(Fx);
-    fprintf('Mode freq: %.2f Hz\n\n', f(kfMax));
+    fprintf('Fmax = %.2f Hz ; zeta = %.2f %%\n', [f0, 100*zeta]);
     
     
     % cwt
+    cA = 3;
+    Q = sqrt(pi/zeta)/cA;
+    fmin = f0-2;
+    fmax = f0+2;
+    
     freqs = linspace(fmin, fmax, 300);
     
     CWT = WvltComp(T, X, freqs, Q, 'MotherWavelet', MotherWavelet);
@@ -195,26 +208,44 @@ for kbridge = 1:length(bridges)
         xlabel('Amplitude [m/s²]');
     end
     
-    [X, Y, stdY, K, Xlims] = averagingScatter3(Aridge, Fridge, 0.1, 'log', Tridge, 100);
+    if strcmp(averageScale, 'lin')
+        [X, Y, stdY, K, Xlims] = averagingScatter3(Aridge, Fridge, 0.01, averageScale, Tridge, 100);
+    else
+        [X, Y, stdY, K, Xlims] = averagingScatter3(Aridge, Fridge, 0.1, averageScale, Tridge, 100);
+    end
     
     Kmin = 3;
+    Y0 = Y;
+    stdY0 = stdY;
     Y(K < Kmin) = nan;
     stdY(K < Kmin) = nan;
     
     if plotK
         figure('Name', dataFileName);
-        bar(log10(X), K);
-        set(gca,'Xtick',-5:1);
-        set(gca,'Xticklabel',10.^get(gca,'Xtick'));
+        if strcmp(averageScale, 'lin')
+            bar(X, K);
+        else
+            bar(log10(X), K);
+            set(gca,'Xtick',-5:1);
+            set(gca,'Xticklabel',10.^get(gca,'Xtick'));
+        end
         % set(gca, 'XScale', 'log');
         xlabel('Amplitude [m/s²]');
     end
     
     if plotFA
         figure('Name', dataFileName);
+        if plotDiscardedFA
+            err0 = 1.96*stdY0./sqrt(K);
+            l0 = errorbar(X, Y0, err0);
+            l0.Color = [1 1 1] - 0.5*([1 1 1]-l0.Color);
+            hold on
+            ax = gca;
+            ax.ColorOrderIndex = ax.ColorOrderIndex - 1;
+        end
         err = 1.96*stdY./sqrt(K);
         errorbar(X, Y, err);
-        set(gca, 'XScale', 'log');
+        set(gca, 'XScale', averageScale);
         xlabel('Amplitude [m/s²]');
         ylabel('Frequency [Hz]');
     end
@@ -238,7 +269,8 @@ if length(Xtotal) > 1
     end
     set(gca, 'XScale', 'log');
     legend(Namestotal);
+    
+    selectLine(gca);
 end
 
-selectLine(gca);
 

@@ -1,4 +1,4 @@
-function [fmax, zeta] = HalfPowerMenu()
+function [fmax, zeta] = PeakPickingMenu()
 %WaveletMenu Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,9 +12,9 @@ quadraticFFT = false;
 %% fig
 
 % lignes pans
-Hpans = [4, 4, 11];
+Hpans = [4, 4, 14];
 
-fig = figure('Name', 'Half power menu', 'numbertitle', 'off', 'Resize', 'off');
+fig = figure('Name', 'Peak picking menu', 'numbertitle', 'off', 'Resize', 'off');
 fig.Units = 'characters';
 fig.Position(3) = 50;
 fig.Position(4) = sum(Hpans);
@@ -146,7 +146,9 @@ nextButmax.Position = [0.75, 0.1, 0.15, 0.8];
 
     function selectFunctionMax(selecting)
         if selecting && updateXYAxes()
-            localMaxs = findLocalMaxs(Y);
+            kFmin = sum(X < Fmin) + 1;
+            kFmax = sum(X <= Fmax);
+            localMaxs = findLocalMaxs(Y, kFmin, kFmax);
             kmax = 1;
             localMax = localMaxs(1:min(1,end)); % element #1 if length ~= 0, [] otherwise
         else
@@ -164,9 +166,9 @@ nextButmax.Position = [0.75, 0.1, 0.15, 0.8];
         end
     end
 
-    function Lm = findLocalMaxs(L)
+    function Lm = findLocalMaxs(L, kmin, kmax)
         Lm = [];
-        for k = 2:length(L)-1
+        for k = max(kmin, 2):min(kmax, length(L)-1)
             if L(k-1) < L(k) && L(k) >= L(k+1)
                 Lm(end+1) = k;
             end
@@ -211,8 +213,9 @@ nextButmax.Position = [0.75, 0.1, 0.15, 0.8];
         displayFmaxZeta()
         
         % plot
-        maxMarker = scatter(ax, fmax, Ymax, '+', 'MarkerEdgeColor', 'red', 'LineWidth', 2);
-        halfMarker = yline(ax, H, 'Color', 0.5*[1 1 1]);
+        maxMarker = scatter(ax, fmax, Ymax, '+', 'MarkerEdgeColor', 'red',...
+            'LineWidth', 2, 'HandleVisibility', 'off');
+        halfMarker = yline(ax, H, 'Color', 0.5*[1 1 1], 'HandleVisibility', 'off');
     end
 
 prevButmax.Callback = @(~,~) nextprevMax(-1);
@@ -222,7 +225,7 @@ nextButmax.Callback = @(~,~) nextprevMax(1);
 %% quadratic fft
 
 bg = uibuttongroup('Parent', resultsPan, 'Units', 'characters',...
-    'Position', [1 7.2 22 2.3], 'SelectionChangedFcn', @bselection);
+    'Position', [1 10 22 2.3], 'SelectionChangedFcn', @bselection);
 
 butFFT = uicontrol(bg, 'Units', 'characters',...
     'Style', 'radiobutton', 'String', 'FFT');
@@ -240,6 +243,29 @@ butFFT2.Position = [12 0.5 10 1];
         end
         highlightMax();
     end
+
+%% bounds
+
+FminTxt = uicontrol(resultsPan, 'Units', 'characters', 'Style', 'text', 'String', 'Fmin:', 'FontSize', 9);
+FminInput = uicontrol(resultsPan, 'Units', 'characters',...
+    'Style', 'edit', 'String', -inf, 'FontSize', 9);
+FmaxTxt = uicontrol(resultsPan, 'Units', 'characters', 'Style', 'text', 'String', 'Fmax:', 'FontSize', 9);
+FmaxInput = uicontrol(resultsPan, 'Units', 'characters',...
+    'Style', 'edit', 'String', +inf, 'FontSize', 9);
+
+FminTxt.Position = [1 7.5 6 1.5];
+FminInput.Position = [8 7.6 10 1.7];
+FmaxTxt.Position = [26 7.5 6 1.5];
+FmaxInput.Position = [33 7.6 10 1.7];
+
+    function boundsCallback(~, ~)
+        highlightLine();
+    end
+
+FminInput.ButtonDownFcn = @boundsCallback;
+FmaxInput.ButtonDownFcn = @boundsCallback;
+FminInput.Callback = @boundsCallback;
+FmaxInput.Callback = @boundsCallback;
 
 
 %% quadratic interpolation
@@ -277,18 +303,23 @@ displayFmaxZeta();
 
 X = nan;
 Y = nan;
+Fmin = nan;
+Fmax = nan;
 
     function ok = updateXYAxes()
-        %         line = findobj('Type', 'line');
         if ~isempty(line)
-            %             line = line(1);
             X = get(line, 'XData');
             Y = get(line, 'YData');
             
-            X = X(~isnan(Y)); % on enlève les valeurs inappropriées
+            % remove nan
+            X = X(~isnan(Y));
             Y = Y(~isnan(Y));
             X = X(~isnan(X));
             Y = Y(~isnan(X));
+            
+            % bounds
+            Fmin = eval(FminInput.String);
+            Fmax = eval(FmaxInput.String);
             
             ax = get(line, 'Parent');
             hold(ax, 'on');

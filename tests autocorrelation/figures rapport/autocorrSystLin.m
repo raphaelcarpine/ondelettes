@@ -1,7 +1,7 @@
 %% data
 
 % time
-N = 10000;
+N = 100000;
 N0 = 2000;
 Dt = 0.05;
 
@@ -47,12 +47,18 @@ for k = 0:N-1
 end
 Rh2 = [Rh2(end:-1:2), Rh2];
 
+alpha = sqrt( 4/(-real(lambda(1))*N*Dt) + 2/abs(imag(lambda(1))*N*Dt))
+A0 = Dt^2*sigma^2*N*Rh((end-1)/2+1);
+
+
 n = -N+1:N-1;
 
 figure;
 plot(n, Rx);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$R_x(n)$', 'interpreter', 'latex', 'FontSize', 13);
+yline(alpha*A0, '--r');
+yline(-alpha*A0, '--r');
+xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
+ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
 ylim(YLimRx);
@@ -60,25 +66,48 @@ ylim(YLimRx);
 
 figure;
 plot(n, Dt^2*sigma^2 * (N-abs(n)).* Rh);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$(N-|n|)\Delta t^2\sigma^2 R_h(n)$', 'interpreter', 'latex', 'FontSize', 13);
+xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
+ylabel('$(N-|n|)\Delta t^2\sigma^2 R_h$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 ylim(YLimRx);
 
 
 figure;
 plot(n, Rx - Dt^2*sigma^2 * (N-abs(n)).* Rh);
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 13);
-ylabel('$R_x(n) - (N-|n|)\Delta t^2\sigma^2 R_h(n)$', 'interpreter', 'latex', 'FontSize', 13);
+yline(alpha*A0, '--r');
+yline(-alpha*A0, '--r');
+xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
+ylabel('$R_{\tilde x} - (N-|n|)\Delta t^2\sigma^2 R_h$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 ylim(YLimRx);
 
 
 %%
 
-alpha = sqrt( 4/(-real(lambda(1))*N*Dt) + 2/abs(imag(lambda(1))*N*Dt) )
+
+%% CWT
+
+figure;
+plt = plot(n((end-1)/2+1:end), Rx((end-1)/2+1:end));
+xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
+ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
+f = gcf; f.Position(3:4) = 7/10 * [560 420];
+YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
+ylim(YLimRx);
+
+WaveletMenu('WaveletPlot', plt, 'fmin', 0.03, 'fmax', 0.07);
 
 
+Rh2 = Dt^2*sigma^2 * (N-abs(n)).* Rh;
+figure;
+plt = plot(n((end-1)/2+1:end), Rh2((end-1)/2+1:end));
+xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
+ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
+f = gcf; f.Position(3:4) = 7/10 * [560 420];
+YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
+ylim(YLimRx);
+
+WaveletMenu('WaveletPlot', plt, 'fmin', 0.03, 'fmax', 0.07);
 
 
 
