@@ -2,8 +2,9 @@ clear all
 
 measure = 1; % 1-17
 config = 5; % 1-9
+vibration = 'forced';
 
-[X, t, labels] = getDataZ24(measure, config);
+[X, t, labels] = getDataZ24(measure, config, vibration);
 
 %% 
 
@@ -26,7 +27,7 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q);
 
 I = false(size(labels));
 for ki = 1:length(I)
-    if labels{ki}(1) ~= 'R' && labels{ki}(end) == 'V'
+    if labels{ki}(1) ~= 'R' && labels{ki}(1) ~= 'D' && labels{ki}(end) == 'V'
         I(ki) = true;
     end
 end

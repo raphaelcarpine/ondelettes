@@ -1,7 +1,7 @@
 clear all
-close all
+% close all
 
-filtering = true;
+filtering = false;
 testCWT = false;
 averageScale = 'lin';
 plotDiscardedFA = true;
@@ -12,6 +12,7 @@ plotHist = 0;
 plotK = 0;
 plotFA = 1;
 
+vibration = 'forced';
 measures = 1:17; % 1-17, or 1:17
 
 %% loop
@@ -32,17 +33,22 @@ for measure  = measures
     %% mode 1
     
     config = 5; % only config for mode 1
-    [X, t, labels] = getDataZ24(measure, config);
+    [X, t, labels] = getDataZ24(measure, config, vibration);
     
     I = false(size(labels));
     for ki = 1:length(I)
-        if labels{ki}(1) ~= 'R' && labels{ki}(end) == 'V'
+        if labels{ki}(1) ~= 'R' && labels{ki}(1) ~= 'D' && labels{ki}(end) == 'V'
             I(ki) = true;
         end
     end
     
     x = sum(X(I, :), 1);
     x = x - mean(x);
+    
+    % check
+    if sum(I) ~= 15
+        warning(sprintf('Nb ch. = %u =/= 15', sum(I)));
+    end
     
     %% filtering (high pass)
     
@@ -78,8 +84,8 @@ for measure  = measures
     % CWT
     ct = 3;
     cA = 3;
-    fmin = fmax - 2;
-    fmax = fmax + 2;
+    fmin = fmax - 1;
+    fmax = fmax + 1;
     Q = sqrt(pi/zeta)/cA;
     MotherWavelet = 'morlet';
     

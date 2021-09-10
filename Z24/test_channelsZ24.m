@@ -2,19 +2,24 @@ clear all
 
 measure = 1;
 config = 1;
+vibration = 'forced';
 
-[X, t, labels] = getDataZ24(measure, config);
+[X, t, labels] = getDataZ24(measure, config, vibration);
 
 %% test sensor position
 
-defaultNbCh = 33;
+if strcmp('ambient', vibration)
+    defaultNbCh = 33;
+elseif strcmp('forced', vibration)
+    defaultNbCh = 35;
+end
 
 disp('channels test:');
 for config = 1:9
-    [~, ~, labels0] = getDataZ24(1, config);
+    [~, ~, labels0] = getDataZ24(1, config, vibration);
     flag = true;
     for measure = 2:17
-        [~, ~, labels] = getDataZ24(measure, config);
+        [~, ~, labels] = getDataZ24(measure, config, vibration);
         if ~isequal(labels, labels0)
             flag = false;
             break
@@ -30,10 +35,10 @@ for config = 1:9
         groups = {1};
         groupsNbCh = {length(labels0)};
         for measure = 2:17
-            [~, ~, labels] = getDataZ24(measure, config);
+            [~, ~, labels] = getDataZ24(measure, config, vibration);
             flag = false;
             for kg = 1:length(groups)
-                [~, ~, labels0] = getDataZ24(groups{kg}(1), config);
+                [~, ~, labels0] = getDataZ24(groups{kg}(1), config, vibration);
                 if isequal(labels, labels0)
                     groups{kg}(end+1) = measure;
                     flag = true;
@@ -62,7 +67,7 @@ fprintf('\nnb points test:\n');
 for measure = 1:17
     fprintf('measure #%02u: ', measure);
     for config = 1:9
-        X = getDataZ24(measure, config);
+        X = getDataZ24(measure, config, vibration);
         fprintf((size(X, 2) ~= defaultNbPt) + 1, '%u ', size(X, 2));
         
         if any(isnan(X), 'all')
@@ -100,7 +105,7 @@ while true
             config = input('config: ');
             if measure == 0 && config ~= 0
                 for measure = 1:17
-                    [X, ~, labels] = getDataZ24(measure, config);
+                    [X, ~, labels] = getDataZ24(measure, config, vibration);
                     fig = figure('Name', sprintf('measure %02u, config %u', [measure, config]));
                     plot(X.');
                     legend(labels, 'NumColumns', 2);
@@ -109,7 +114,7 @@ while true
                 break
             elseif config == 0
                 for config = 1:9
-                    [X, ~, labels] = getDataZ24(measure, config);
+                    [X, ~, labels] = getDataZ24(measure, config, vibration);
                     fig = figure('Name', sprintf('measure %02u, config %u', [measure, config]));
                     plot(X.');
                     legend(labels, 'NumColumns', 2);
@@ -117,7 +122,7 @@ while true
                 end
                 break
             else
-                [X, ~, labels] = getDataZ24(measure, config);
+                [X, ~, labels] = getDataZ24(measure, config, vibration);
                 fig = figure('Name', sprintf('measure %02u, config %u', [measure, config]));
                 plot(X.');
                 legend(labels, 'NumColumns', 2);

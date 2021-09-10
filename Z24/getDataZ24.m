@@ -1,4 +1,4 @@
-function [X, t, labels] = getDataZ24(measure, config)
+function [X, t, labels] = getDataZ24(measure, config, vibration)
 %GETDATA Summary of this function goes here
 %   mes: measure
 %   conf: configuration
@@ -8,6 +8,9 @@ if measure < 1 || measure > 17
 end
 if config < 1 || config > 9
     error('1 <= conf <= 9');
+end
+if ~any(strcmp({'ambient', 'forced'}, vibration))
+    error("vibration = 'ambient' or 'forced'");
 end
 
 %% data
@@ -28,7 +31,11 @@ end
 
 subsubFolder = sprintf('%02u', measure);
 
-subsubsubFolder = 'avt'; % ambiant vibration test
+if strcmp('ambient', vibration)
+    subsubsubFolder = 'avt'; % ambiant vibration test
+elseif strcmp('forced', vibration)
+    subsubsubFolder = 'fvt'; % forced vibration test
+end
 
 fileName = sprintf('%02usetup%02u.mat', [measure, config]);
 

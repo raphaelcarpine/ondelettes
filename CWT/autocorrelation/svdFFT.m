@@ -5,10 +5,25 @@ function [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRx, Rx, Nsv, varargin)
 %   SVfftrx{k}(kf) : k^th singular values of CWT(Rx) for each time and freq
 %   SVvectrx{k}(:, kf) : k^th singular vectors of CWT(Rx) for each time and freq
 
+symetricXcorr = true;
+
+%% sym
+
+if symetricXcorr
+    Rx0 = Rx(:, :, 2:end);
+    Rx0 = flip(Rx0, 3);
+    for kt = 1:size(Rx0, 3)
+        Rx0(:, :, kt) = Rx0(:, :, kt)'; % transposée conjuguée
+    end
+    
+    Rx = cat(3, Rx0, Rx);
+    tRx = (0:size(Rx, 3)-1) * mean(diff(tRx));
+end
+
 Ndof = size(Rx, 1);
 Nt = size(Rx, 3);
 
-%% CWT
+%% FFT
 
 Nf = floor(Nt/2);
 
