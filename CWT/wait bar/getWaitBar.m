@@ -29,6 +29,7 @@ parse(p, varargin{:});
 
 displayTime = p.Results.displayTime;
 windowTitle = p.Results.windowTitle;
+windowTitle2 = windowTitle;
 msg = p.Results.msg;
 printProgress = p.Results.printProgress;
 progressStringFcn = p.Results.progressStringFcn;
@@ -77,10 +78,10 @@ Klast_time_rem = nan;
             end
         end
         if printTimeRemaining && ~isnan(time_rem)
-            if ~isempty(s)
-                s = [s, ', ', timeRemainingString(time_rem), ' remaining'];
+            if ~isempty(windowTitle)
+                windowTitle2 = [windowTitle, ' (', timeRemainingString(time_rem), '...)'];
             else
-                s = [timeRemainingString(time_rem), ' remaining'];
+                windowTitle2 = [timeRemainingString(time_rem), '...'];
             end
         end
     end
@@ -110,6 +111,7 @@ Klast_time_rem = nan;
         % display
         if ~isempty(waitBarObj)
             waitbar(K/N, waitBarObj, msgString());
+            set(waitBarObj, 'Name', windowTitle2);
         end
     end
 

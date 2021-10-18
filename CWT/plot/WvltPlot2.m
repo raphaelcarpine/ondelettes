@@ -2,7 +2,7 @@ function plt = WvltPlot2(t, freqs, wavelet, plotQuantity, Q, ctEdgeEffects, Moth
 
 
 plotScale = true;
-autoScale = true;
+autoScale = false;
 
 if ~ismember(plotQuantity, {'abs', 'module', 'arg', 'phase'})
     error('');

@@ -9,14 +9,17 @@ function [t, freq, shapes, amplitudes] = getModesSingleRidge(X, Y, Q, fmin, fmax
 %%
 
 multiSignalModeAbsValueDefault = false;
+multiSignalModeAbsValueModeAmplDefault = false;
 
 p = inputParser;
 p.KeepUnmatched = true;
-p.addOptional('MultiSignalModeAbsValue', multiSignalModeAbsValueDefault);
+p.addOptional('MultiSignalModeAbsValue', multiSignalModeAbsValueDefault); % ridge detection sum|CWT|² instead of |sum CWT²|
+p.addOptional('MultiSignalModeAbsValueModeAmpl', multiSignalModeAbsValueModeAmplDefault); % mode amplitude as sqrt(sum|CWT(fr)|²)
 
 parse(p, varargin{:});
 
 multiSignalModeAbsValue = p.Results.MultiSignalModeAbsValue;
+multiSignalModeAbsValueModeAmpl = p.Results.MultiSignalModeAbsValueModeAmpl;
 
 varargin2 = namedargs2cell(p.Unmatched);
 
@@ -127,6 +130,10 @@ for kr = 1:Nridges
         
         shapes{kr}(:, kt) = shape;
         amplitudes{kr}(kt) = ampl;
+    end
+    
+    if multiSignalModeAbsValueModeAmpl
+        amplitudes{kr} = sqrt(Ridges.val{kr});
     end
     
 end

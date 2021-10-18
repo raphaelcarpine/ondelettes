@@ -2,6 +2,9 @@ function [X, Y, stdY, K, Xlims] = averagingScatter3(x, y, dx, xIncremenScale, t,
 %AVERAGINGSCATTER Summary of this function goes here
 %   Detailed explanation goes here
 
+if nargin < 5
+    t = nan;
+end
 
 if ~iscolumn(x) && ~isrow(x)
     error('x matrix');
@@ -13,20 +16,25 @@ end
 
 %% time separation
 
-Nt = floor((t(end)-t(1))/DeltaT); % nb of time intervals
-
-kt = floor(length(t)/Nt);
-rt = mod(length(t), kt);
-randomKt = 1:Nt;
-for i = 1:(Nt-rt)
-    randomKt(randi(length(randomKt))) = [];
-end
-Kt = kt * ones(1, Nt);
-Kt(randomKt) = kt+1;
-
-Tindex = nan(size(x));
-for it = 1:length(Kt)
-    Tindex(sum(Kt(1:it-1))+1:sum(Kt(1:it))) = it;
+if ~isnan(t)
+    Nt = floor((t(end)-t(1))/DeltaT); % nb of time intervals
+    
+    kt = floor(length(t)/Nt);
+    rt = mod(length(t), kt);
+    randomKt = 1:Nt;
+    for i = 1:(Nt-rt)
+        randomKt(randi(length(randomKt))) = [];
+    end
+    Kt = kt * ones(1, Nt); % nb of points in time interval
+    Kt(randomKt) = kt+1;
+    
+    Tindex = nan(size(x)); % time interval index
+    for it = 1:length(Kt)
+        Tindex(sum(Kt(1:it-1))+1:sum(Kt(1:it))) = it;
+    end
+else
+    Kt = ones(size(x));
+    Tindex = 1:length(x);
 end
 
 

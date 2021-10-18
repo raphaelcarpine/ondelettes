@@ -1,5 +1,5 @@
-%% inputs : 2, 6, 8, 9, 13, 15
-N = 1;
+%% double trains : 2, 6, 8, 9, 13, 15
+N = 4;
 mode = 4; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
 saveResults = false;
 
@@ -93,6 +93,7 @@ X = transpose(X);
 t = X(1, :);
 X = X(channels, :);
 X = X - mean(X, 2);
+X = X*9.81; % conversion m/s²
 
 % correction du temps
 dt = diff(t);

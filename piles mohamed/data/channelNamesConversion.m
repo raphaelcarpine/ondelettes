@@ -2,8 +2,6 @@ function [X, channelNames] = channelNamesConversion(X, channelNames)
 %CHANNELNAMESCONVERSION Summary of this function goes here
 %   Detailed explanation goes here
 
-X = X.';
-
 for kch = 1:length(channelNames)
     chName = channelNames{kch};
     
@@ -32,6 +30,7 @@ for kch = 1:length(channelNames)
                 chAx = 'x';
             case 3
                 chAx = 'z';
+                X(kch, :) = -X(kch, :);
             otherwise
                 error('');
         end
@@ -43,6 +42,7 @@ for kch = 1:length(channelNames)
                 chAx = 'y';
             case 3
                 chAx = 'x';
+                X(kch, :) = -X(kch, :);
             otherwise
                 error('');
         end
@@ -55,9 +55,6 @@ end
 [channelNames, I] = sort(channelNames);
 X = X(I, :);
 
-X(1, :) = -X(1, :); % acc1x opposé
-
-X = X.';
 
 end
 

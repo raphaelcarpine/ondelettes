@@ -1,4 +1,4 @@
-function [ax, plts] = RidgeQtyPlot2(ridge, QtyX, QtyY ,varargin)
+function [ax, plts] = RidgeQtyPlot2(ridge, QtyX, QtyY, varargin)
 %% Quantity : time, val, freq, diff, amor, freq2, pha
 p = inputParser;
 
@@ -15,6 +15,7 @@ defaultYLim = nan;
 defaultThreshold = 0;
 defaultGrid = 'on'; % 'auto' pour ne pas changer
 defaultRenameAxes = true;
+defaultDampingInPercents = false;
 
 validQty = {'time', 'val', 'freq', 'diff', 'damping', 'damping2', 'damping3', 'bandwidth', 'freq2', 'pha', 'pha2'};
 checkQty = @(str) ismember(str, validQty);
@@ -37,6 +38,7 @@ addParameter(p,'YLim', defaultYLim);
 addParameter(p,'Threshold', defaultThreshold);
 addParameter(p,'Grid', defaultGrid);
 addParameter(p,'RenameAxes', defaultRenameAxes);
+addParameter(p, 'DampingInPercents', defaultRenameAxes);
 
 parse(p, ridge, QtyX, QtyY, varargin{:})
 
@@ -72,6 +74,7 @@ if isequal(ax, 0)
 end
 
 RenameAxes = p.Results.RenameAxes;
+DampingInPercents = p.Results.DampingInPercents;
 
 %% 
 
@@ -81,6 +84,15 @@ plts = [];
 for k_ridge = 1:length(ridge.freq)
     x = eval([EvaluationFunctionX, '(ridge.', QtyX, '{', num2str(k_ridge), '});']);
     y = eval([EvaluationFunctionY, '(ridge.', QtyY, '{', num2str(k_ridge), '});']);
+    
+    if DampingInPercents % percentage
+        if any(strcmp(QtyX, {'damping', 'damping2', 'damping3'}))
+            x = 100*x;
+        end
+        if any(strcmp(QtyY, {'damping', 'damping2', 'damping3'}))
+            y = 100*y;
+        end
+    end
     
     plts(end+1) = plot(x, y, 'Parent', ax);
     if showEdge

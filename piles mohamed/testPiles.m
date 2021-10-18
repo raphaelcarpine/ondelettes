@@ -1,12 +1,34 @@
-%% test threshold
+dataFolder  = 'C:\Users\carpine\Documents\projets\experiences affouillement mohamed\data';
 
-load('piles mohamed\data\6_10cm_x_4096.mat');
+%% visualisation
+
+pile = 4;
+prof = 15;
+direction = 'x';
+g = 8;
+load(fullfile(dataFolder, 'raw mat files', sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g])));
 [X, channelNames] = channelNamesConversion(X, channelNames);
-X = X.';
-T = T.';
+
+[X, T] = removeRedundantData(X, T);
+X = X - mean(X, 2);
 
 figure;
-plot(T(1:size(X, 2)), X);
+plt = plot(T, X);
+legend(channelNames);
+selectLine();
+
+% ylim(0.2*[-1 1]);
+
+%% test threshold
+
+pile = 1;
+prof = 10;
+direction = 'x';
+g = 8;
+load(fullfile(dataFolder, sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g])));
+
+figure;
+plot(T, X);
 legend(channelNames);
 selectLine();
 
@@ -18,13 +40,14 @@ end
 
 %% test autocorr
 
-load('piles mohamed\data\7_10cm_x_4096.mat');
-[X, channelNames] = channelNamesConversion(X, channelNames);
-X = X.';
-T = T.';
+pile = 1;
+prof = 25;
+direction = 'x';
+g = 8;
+load(fullfile(dataFolder, sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g])));
 
 figure;
-plt = plot(T(1:size(X, 2)), X);
+plt = plot(T, X);
 legend(channelNames);
 selectLine();
 
@@ -35,7 +58,8 @@ fmin = 0;
 fmax = 2000;
 Q = 10;
 XLim = T([Kt0(1), Kt0(2)-2]);
-[fctDefModale, fctDefModaleAnimation] = defModales(6, channelNames, '', 5);
+[fctDefModale, fctDefModaleAnimation] = defModales(pile, channelNames,...
+    sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g]), prof);
 
 WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'RemoveMean', true,...
     'XLim', XLim, 'RealShapePlot', fctDefModale, 'AutocorrelationMode', true,...
@@ -44,13 +68,14 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'RemoveMean'
 
 %% test reponses libres
 
-load('piles mohamed\data\2_5cm_x_4096.mat');
-[X, channelNames] = channelNamesConversion(X, channelNames);
-X = X.';
-T = T.';
+pile = 4; %3, 4, 4, 4
+prof = 15; %15, 5, 10, 25
+direction = 'x'; %y, x, y, x
+g = 8;
+load(fullfile(dataFolder, sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g])));
 
 figure;
-plt = plot(T(1:size(X, 2)), X);
+plt = plot(T, X);
 legend(channelNames);
 selectLine();
 
@@ -61,7 +86,8 @@ fmin = 1;
 fmax = 40;
 Q = 7.14;
 XLim = T([Kt0(1), Kt0(2)-2]);
-[fctDefModale, fctDefModaleAnimation] = defModales(2, channelNames, '', 5);
+[fctDefModale, fctDefModaleAnimation] = defModales(pile, channelNames,...
+    sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g]), prof);
 
 WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'RemoveMean', true,...
     'XLim', XLim, 'RealShapePlot', fctDefModale, 'FourierScale', 'log',...
@@ -70,16 +96,25 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'RemoveMean'
 
 %% test dephasage
 
-load('piles mohamed\data\7_10cm_x_4096.mat');
-[X, channelNames] = channelNamesConversion(X, channelNames);
-X = X.';
-T = T.';
+pile = 6;
+prof = 5;
+direction = 'x';
+g = 8;
+load(fullfile(dataFolder, 'raw mat files', sprintf('pile%u_%icm_%c_%ug', [pile, prof, int8(direction), g])));
 
 X = X - mean(X, 2);
 
 figure;
-plt = plot(T(1:size(X, 2)), X);
+plt = plot(T, X);
 legend(channelNames);
 selectLine();
 
-[synchro, resync, resyncVect] = testSynchro(T, X, channelNames)
+[synchro, maxDesync, resync, resyncVect] = testSynchro(T, X, channelNames)
+if ~synchro
+    [T, X] = resynchChannels(T, X, resyncVect);
+end
+
+figure;
+plt = plot(T, X);
+legend(channelNames);
+selectLine();

@@ -31,6 +31,7 @@ defaultAutocorrelationMode = false;
 defaultAutocorrelationBias = 'biased'; %'biased', unbiased';
 defaultAutocorrelationSVDMode = false;
 defaultAutocorrelationFourierSVDMode = false;
+defaultSymetricXcorrFFT = false;
 defaultMaxLagCorr = nan;
 defaultAutocorrelationNsvd = 1;
 defaultWvltScale = 'log';
@@ -83,6 +84,7 @@ addParameter(p,'AutocorrelationMode', defaultAutocorrelationMode);
 addParameter(p,'AutocorrelationBias', defaultAutocorrelationBias);
 addParameter(p,'AutocorrelationSVDMode', defaultAutocorrelationSVDMode);
 addParameter(p,'AutocorrelationFourierSVDMode', defaultAutocorrelationFourierSVDMode);
+addParameter(p,'SymetricXcorrFFT', defaultSymetricXcorrFFT);
 addParameter(p,'AutocorrelationMaxLag', defaultMaxLagCorr);
 addParameter(p,'AutocorrelationNsvd', defaultAutocorrelationNsvd);
 addParameter(p,'WvltScale', defaultWvltScale);
@@ -164,6 +166,14 @@ end
 nbPlotsTot = size(getY(), 1);
 nbPlots = nbPlotsTot;
 signalChannels = 1:nbPlots;
+signalChannelsNames = cell(1, nbPlots);
+for k = 1:nbPlots
+    if any(WaveletPlot == 0) || isempty(WaveletPlot(k).DisplayName)
+        signalChannelsNames{k} = sprintf('channel %u', k);
+    else
+        signalChannelsNames{k} = WaveletPlot(k).DisplayName;
+    end
+end
 
 
 fmin = p.Results.fmin;
@@ -191,6 +201,7 @@ autocorrelationMode = p.Results.AutocorrelationMode;
 autocorrelationBias = p.Results.AutocorrelationBias;
 autocorrelationSVDMode = p.Results.AutocorrelationSVDMode;
 autocorrelationFourierSVDMode = p.Results.AutocorrelationFourierSVDMode;
+symetricXcorrFFT = p.Results.SymetricXcorrFFT;
 tRy = nan; Ry = nan; SVry = nan; SVvectry = nan;
 resetCrossCorr();
 
@@ -249,6 +260,19 @@ XLimDisplayObj = XLimDisplay(XLim, XLimRidge, ShowXLim, ShowXLim, plotAxes, true
 
 Xrdt = [];
 Yrdt = [];
+
+%% deformees modales
+
+    function shape2 = completeShapeChannels(shape)
+        shape2 = nan(size(getY(), 1), 1);
+        for kch = 1:length(shape)
+            shape2(signalChannels(kch)) = shape(kch);
+        end
+    end
+
+ComplexShapePlot = @(shape, varargin) ComplexShapePlot(completeShapeChannels(shape), varargin{:});
+RealShapePlot = @(shape, varargin) RealShapePlot(completeShapeChannels(shape), varargin{:});
+AnimatedShapePlot = @(shape, varargin) AnimatedShapePlot(completeShapeChannels(shape), varargin{:});
 
 
 %% bouton ondelettes et panneaux param et sorties
@@ -589,7 +613,7 @@ set(FrequencyScaleMenuChoices(2), 'CallBack', @(~,~) selectFrequencyScaleMenu(2)
 % signal channels
 signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on');
     function setSignalChannels()
-        signalChannels = getSignalChannels(signalChannels, nbPlotsTot);
+        signalChannels = getSignalChannels(signalChannels, nbPlotsTot, signalChannelsNames);
         nbPlots = length(signalChannels);
         
         for k_plot = 1:length(WaveletPlot)
@@ -871,7 +895,7 @@ AutocorrelationNsvdMenu.MenuSelectedFcn = @AutocorrelationNsvdMenuCallback;
 
  % svd modes
 
-autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode CWT', 'Separato', 'on');
+autocorrelationSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'SVD mode CWT', 'Separator', 'on');
 if autocorrelationSVDMode
     set(autocorrelationSVDMenu, 'Checked', 'on');
 end
@@ -923,6 +947,19 @@ autocorrelationModeMenu.MenuSelectedFcn = @(~, ~) switchAutocorrelationModeDispl
         
     end
 set(autocorrelationFourierMenu, 'CallBack', @(~,~) switchAutocorrelationFourierMenu());
+
+
+% symetricXcorrFFT
+
+symetricXcorrFFTSVDMenu = uimenu(autocorrelationParamsMenu, 'Text', 'half xcorr for FFT',...
+    'Checked', ~symetricXcorrFFT, 'Separator', 'on');
+
+    function switchSymetricXcorrFFTSVDMenu(~, ~)
+        symetricXcorrFFT = ~symetricXcorrFFT;
+        set(symetricXcorrFFTSVDMenu, 'Checked', ~symetricXcorrFFT);
+    end
+symetricXcorrFFTSVDMenu.MenuSelectedFcn = @switchSymetricXcorrFFTSVDMenu;
+
 
 %set
 
@@ -1546,6 +1583,11 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         end
         fmin = fminNew; fmax = fmaxNew; NbFreq = NbFreqNew; Q = QNew;
         
+        if fmin <= 0
+            errordlg('fmin <= 0', 'Error');
+            return
+        end
+        
         switch FrequencyScale
             case 'lin'
                 WvltFreqs = linspace(fmin, fmax, NbFreq);
@@ -1824,7 +1866,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     axRidges = RidgeQtyPlot2(ridge, 'time', dampingRidgeName,...
                         'ScaleX', get(xscaleTimeDamp, 'String'), 'ScaleY', get(yscaleTimeDamp, 'String'),...
                         'Axes', axesFiguresCheckboxs2(3, kPlot), 'RenameAxes', true, 'NameX', 'Time [s]',...
-                        'NameY', 'Damping', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                        'NameY', 'Damping [%]', 'DampingInPercents', true, 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                     XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
                 end
                 if checkboxAmplFreq.Value % plot de l'amplitude en fonction de la frequence
@@ -1836,8 +1878,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                 if checkboxAmplDamp.Value % plot de l'amortissement
                     RidgeQtyPlot2(ridge, 'val', dampingRidgeName, 'EvaluationFunctionX', 'abs',...
                         'ScaleX', get(xscaleAmplDamp, 'String'), 'ScaleY', get(yscaleAmplDamp, 'String'),...
-                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true,...
-                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping', 'Threshold', RidgeMinModu);
+                        'Axes', axesFiguresCheckboxs2(5, kPlot), 'RenameAxes', true, 'DampingInPercents', true,...
+                        'NameX', ['Amplitude [', signalUnit, ']'], 'NameY', 'Damping [%]', 'Threshold', RidgeMinModu);
                 end
                 if checkboxTimePhase.Value % plot de la phase
                     axRidges = RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
@@ -1952,6 +1994,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Real part');
                             set(ax, 'XScale', XquantScale);
+                            legend(ax, signalChannelsNames(signalChannels));
+                            selectLine(ax);
                         end
                         if checkboxImagShapes.Value
                             figShape = figure('Name', figuresName);
@@ -1960,6 +2004,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Imaginary part');
                             set(ax, 'XScale', XquantScale);
+                            legend(ax, signalChannelsNames(signalChannels));
+                            selectLine(ax);
                         end
                         if checkboxModuleShapes.Value
                             figShape = figure('Name', figuresName);
@@ -1968,6 +2014,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Module');
                             set(ax, 'XScale', XquantScale);
+                            legend(ax, signalChannelsNames(signalChannels));
+                            selectLine(ax);
                         end
                         if checkboxPhaseShapes.Value
                             figShape = figure('Name', figuresName);
@@ -1976,6 +2024,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Phase');
                             set(ax, 'XScale', XquantScale);
+                            legend(ax, signalChannelsNames(signalChannels));
+                            selectLine(ax);
                         end
                         if checkboxAmplShapes.Value
                             figShape = figure('Name', figuresName);
@@ -1984,6 +2034,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                             xlabel(ax, XquantLabel);
                             ylabel(ax, 'Amplitude');
                             set(ax, 'XScale', XquantScale);
+                            legend(ax, signalChannelsNames(signalChannels));
+                            selectLine(ax);
                         end
                         if checkboxFreqShapes.Value
                             figShape = figure('Name', figuresName);
@@ -2239,6 +2291,11 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     end
                     hold(fourierPlotAxes(kPlot), 'off');
                     
+                    if ~autocorrelationMode && kPlot == nbAxes
+                        legend(fourierPlotAxes(kPlot), signalChannelsNames(signalChannels));
+                        selectLine(fourierPlotAxes(kPlot));
+                    end
+                    
                     % mode shape
                     if ~isnan(freqModeShape)
                         [kf_shape, r_shape] = closestPoint(freqs, freqModeShape);
@@ -2307,7 +2364,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
             
         else % autocorr
             if autocorrelationFourierSVDMode
-                [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRy, Ry, autocorrelationNsvd,...
+                [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRy, Ry, autocorrelationNsvd, symetricXcorrFFT,...
                     'Window', FourierWindow, 'WindowParams', FourierWindowParams);
                 
                 fourierFig = figure;

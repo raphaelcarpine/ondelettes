@@ -1,11 +1,9 @@
-function [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRx, Rx, Nsv, varargin)
+function [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRx, Rx, Nsv, symetricXcorr, varargin)
 %SVDCWT Summary of this function goes here
 %   Rx : crossed correlation
 %   Nsv : number of singular values
 %   SVfftrx{k}(kf) : k^th singular values of CWT(Rx) for each time and freq
 %   SVvectrx{k}(:, kf) : k^th singular vectors of CWT(Rx) for each time and freq
-
-symetricXcorr = true;
 
 %% sym
 

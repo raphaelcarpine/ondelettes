@@ -1,4 +1,4 @@
-function signalChannels = getSignalChannels(signalChannels, nbPlots)
+function signalChannels = getSignalChannels(signalChannels, nbPlots, signalChannelsNames)
 %GETSIGNALCHANNELS Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -23,7 +23,7 @@ uicontrol(fig, 'Style', 'text', 'String', 'Set signal channels', 'Units', 'chara
 channelInput = [];
 for k = 1:nbPlots
     channelInput(k) = uicontrol(fig, 'Style', 'checkbox', 'Value', ismember(k, signalChannels), 'String',...
-    sprintf('channel %u', k), 'Units', 'characters', 'Position', [3, 3 + 1.5*(nbPlots-k), 30, 1.5],...
+    signalChannelsNames{k}, 'Units', 'characters', 'Position', [3, 3 + 1.5*(nbPlots-k), 30, 1.5],...
     'HorizontalAlignment', 'left');
 end
 

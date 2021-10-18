@@ -2,7 +2,7 @@
 m = 1;
 k1 = (10*2*pi)^2;
 k2 = k1/2;
-x0 = 4;
+x0 = 6;
 zeta = 0.005;
 zeta = 0.01;
 c = 2*zeta*sqrt(k1*m);
@@ -13,7 +13,7 @@ g = @(x) (k2-k1)*(x-x0).*(x>x0) + (k2-k1)*(x+x0).*(x<-x0);
 % g = @(x) 0;
 
 if true
-    X = linspace(-10, 10, 1000);
+    X = linspace(-3*x0, 3*x0, 1000);
     Kx = nan(size(X));
     Gx = nan(size(X));
     for ix = 1:length(X)
@@ -30,19 +30,23 @@ if true
     hold on
     plot([-x0, -x0], [get(gca, 'YLim') * [1;0], -k1*x0], '--', 'Color', [0 0 0]);
     plot([x0, x0], [get(gca, 'YLim') * [1;0], k1*x0], '--', 'Color', [0 0 0]);
-    xlabel('Displacment [m]');
-    ylabel('Force [N]');
+    xlabel('Displacement');
+    ylabel('Force');
     text(0, 0, {'k  ', ''}, 'FontSize', 14, 'HorizontalAlignment', 'right');
-    xkp = 6.5;
+    xkp = 2*x0;
     text(xkp, k1*xkp+g(xkp), {'k'' ', ''}, 'FontSize', 14, 'HorizontalAlignment', 'right');
     text(-xkp, -k1*xkp+g(-xkp), {'k'' ', ''}, 'FontSize', 14, 'HorizontalAlignment', 'right');
+    xticks([-x0, 0, x0]);
+    xticklabels({'-x_0', '0', 'x_0'});
+    yticks([]);
+    xlim(3*x0*[-1 1]);
 %     grid on
 end
 
 
 % time
 T = 10000;
-T = 3000;
+T = 40;
 T0 = 5/(c/(2*m));
 fe = 1000;
 
@@ -55,12 +59,12 @@ kt0 = sum(t < 0) + 1;
 
 % dirac
 f = zeros(size(t));
-f(kt0) = 800 / dt;
+f(kt0) = 1000 / dt;
 
-% noise
-f0 = 150;
-f0 = 150*sqrt(4);
-f = f0/sqrt(dt) * randn(size(t));
+% % noise
+% f0 = 150;
+% f0 = 150*sqrt(4);
+% f = f0/sqrt(dt) * randn(size(t));
 
 % noise + diracs
 

@@ -11,7 +11,7 @@ plotK = 1;
 plotFA = 1;
 plotDiscardedFA = true;
 
-projection = 5; % 1: mode 1, 5: mode 5
+projection = 1; % 1: mode 1, 5: mode 5
 
 %% data
 
@@ -83,7 +83,7 @@ for kbridge = 1:length(bridges)
     if projection == 1
         ChanCenter1 = find(strcmp(channelNames, '40198:ch3'));
         ChanCenter2 = find(strcmp(channelNames, '29279:ch3'));
-        X = X(ChanCenter1, :) + X(ChanCenter2, :);
+        X = (X(ChanCenter1, :) + X(ChanCenter2, :))/2;
     elseif projection == 5
         ChanSW = find(strcmp(channelNames, '40197:ch3'));
         ChanNW = find(strcmp(channelNames, '40199:ch3'));

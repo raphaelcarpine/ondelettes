@@ -11,7 +11,7 @@ if isreal(shape)
 end
 
 if abs(shape.'*shape - 1) > 1e-6
-    warning('shape^T shape =\= 1');
+%     warning('shape^T shape =\= 1');
     shape = shape / sqrt(shape.'*shape);
 end
 
