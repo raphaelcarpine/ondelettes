@@ -21,7 +21,8 @@ end
             error('complex mode shape');
         end
         
-        deformee = deformee * sign(max(real(deformee)));
+        [~, Imdef] = max(abs(deformee));
+        deformee = deformee * sign(real(deformee(Imdef)));
         deformee = deformee / max(abs(deformee));
         
         %%
@@ -29,7 +30,6 @@ end
         fig = figure('Name', nameFig2);
         fig.Position(3:4) = [560 200];
         fig.UserData = {L, pos_capteurs, deformee}; % save
-        fig.Position(3:4) = [250 350];
         ax = axes(fig);
         ax.Position = [0 0 1 1];
         hold(ax, 'on');

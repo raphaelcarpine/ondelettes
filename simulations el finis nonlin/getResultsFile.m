@@ -1,6 +1,6 @@
 function filePath = getResultsFile(fileNb)
 
-dataFolder = 'simulations el finis nonlin\resultats';
+dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
 
 % last simulation
 if nargin == 0

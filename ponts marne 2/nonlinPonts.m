@@ -47,6 +47,7 @@ for kbridge = 1:length(bridges)
     dataFilePath = choixData(Kbridge);
     
     load(dataFilePath);
+    X = -X; % capteurs vers le bas
     
     [~, dataFileName] = fileparts(dataFilePath);
     
@@ -175,6 +176,20 @@ for kbridge = 1:length(bridges)
         CWTridge([Fridge-1; Fridge; Fridge+1] + [1;1;1] * (0:size(CWTridge, 2)-1)*size(CWTridge, 1)));
     Aridge = abs(Aridge);
     
+    %% position, en intégrant 2 fois
+    
+    windowType = 'gaussian'; % fenpetre de lissage
+    Tmean = 50; % largeur fenêtre de lissage
+    Xmean = X - getSmoothSignal(T, X, windowType, Tmean);
+    IX = mean(diff(T)) * cumsum(Xmean); % integration
+    IXmean = IX - getSmoothSignal(T, IX, windowType, Tmean);
+    IIX = mean(diff(T)) * cumsum(IXmean); % integration
+    
+    IIXridge = IIX(find(T == Tridge(1)):find(T == Tridge(end)));
+    
+    % effets de bord lissage
+    Ismooth = Tridge >= T(1)+Tmean/2 & Tridge <= T(end)-Tmean/2;
+    
     
     %%
     
@@ -185,6 +200,17 @@ for kbridge = 1:length(bridges)
         ylabel('Frequency [Hz]');
         
         ScatterAveragingMenu;
+        return
+    end
+    
+    if 1
+        figure('Name', dataFileName);
+        plot(IIXridge(Ismooth), Fridge(Ismooth));
+        xlabel('Position [m]');
+        ylabel('Frequency [Hz]');
+        
+        ScatterAveragingMenu;
+        RegressionMenu('Equation', 'a*x+b', 'Param', 'a b', 'Param0', [0 0]);
         return
     end
     

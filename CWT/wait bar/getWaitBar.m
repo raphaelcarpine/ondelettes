@@ -11,6 +11,7 @@ printProgressDef = true;
 progressStringFcnDef = @(k) sprintf('%d%%', round(100*k/N));
 printTimeRemainingDef = true;
 minimumBeepTimeDef = inf;
+updateFreqDef = 5;
 
 update_waitbar_time = 0.1;
 update_remainingTime_time = 2;
@@ -23,6 +24,7 @@ addParameter(p,'printProgress', printProgressDef);
 addParameter(p,'progressStringFcn', progressStringFcnDef);
 addParameter(p,'printTimeRemaining', printTimeRemainingDef);
 addParameter(p,'minimumBeepTime', minimumBeepTimeDef);
+addParameter(p,'updateFreq', updateFreqDef);
 
 %
 parse(p, varargin{:});
@@ -35,16 +37,19 @@ printProgress = p.Results.printProgress;
 progressStringFcn = p.Results.progressStringFcn;
 printTimeRemaining = p.Results.printTimeRemaining;
 minimumBeepTime = p.Results.minimumBeepTime;
+updateFreq = p.Results.updateFreq;
 
 %%
 
 waitBarObj = [];
+waitBarObjCreated = false;
 K = nan;
 t0 = nan;
 tlast = nan;
 time_rem = nan;
 tlast_time_rem = nan;
 Klast_time_rem = nan;
+I_update_freq = floor(24*3600*now*updateFreq);
 
 
     function timeS = timeRemainingString(t)
@@ -110,8 +115,11 @@ Klast_time_rem = nan;
         
         % display
         if ~isempty(waitBarObj)
-            waitbar(K/N, waitBarObj, msgString());
-            set(waitBarObj, 'Name', windowTitle2);
+            try
+                waitbar(K/N, waitBarObj, msgString());
+                set(waitBarObj, 'Name', windowTitle2);
+            catch
+            end
         end
     end
 
@@ -124,6 +132,7 @@ Klast_time_rem = nan;
             x = K/N;
         end
         waitBarObj = waitbar(x, msgString(), 'Name', windowTitle);
+        waitBarObjCreated = true;
     end
 
     function initWaitBar0(k)
@@ -147,11 +156,16 @@ Klast_time_rem = nan;
     end
 
     function updateWaitBar0(k, new_msg)
+        if floor(24*3600*now*updateFreq) <= I_update_freq
+            return
+        else
+            I_update_freq = floor(24*3600*now*updateFreq);
+        end
         if nargin == 0
             k = K+1;
         end
         K = k;
-        if  24*3600*now - t0 >= displayTime && isempty(waitBarObj)
+        if  ~waitBarObjCreated && 24*3600*now - t0 >= displayTime
             createWB()
         end
         if nargin >= 2

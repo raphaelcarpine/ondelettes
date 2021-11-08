@@ -1,9 +1,12 @@
 function el_finis_nonlin_display(varargin)
 
+dispStresses = 0;
+dispFreqs = 0;
+plotShapes = 0;
 plotAnimation = 1;
-plotPosition = 0;
+plotPosition = 1;
 plotSpeed = 0;
-plotAcc = 1;
+plotAcc = 0;
 
 %%
 
@@ -11,7 +14,36 @@ filePath = getResultsFile(varargin{:});
 
 load(filePath);
 
+%% calcul, mise en forme matrices
+
+% interpolation etc
+
+getYtot = @(Y) [zeros(1, size(Y, 2)); Y; zeros(1, size(Y, 2))];
+
+% moments où la nonlinearite est atteinte
+if nonLin && local_nonlin
+    nonlin_reached = d2_nonlin * Y > threshold_nonlin;
+elseif nonLin && ~local_nonlin
+    nonlin_reached = func_nonlin_global(D2 * Y) ~= -M_static;
+else
+    nonlin_reached = [];
+end
+
+% DDL 1, 2, end-1, end
+Ytot = getYtot(Y);
+Vtot = getYtot(V);
+Atot = getYtot(A);
+
+% capteurs
+pos_capteurs = L/2;
+Ycapt = getYcapt2(Ytot, pos_capteurs, dx);
+Vcapt = getYcapt2(Vtot, pos_capteurs, dx);
+Acapt = getYcapt2(Atot, pos_capteurs, dx);
+
 %% display
+
+% freqs et def modales
+plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, fleche_pont, sigma0, sigma_min, sigma_max, delta_sigma_1t);
 
 % animation
 if plotAnimation
@@ -20,38 +52,46 @@ if plotAnimation
         c_vehicles_left, c_vehicles_right, pos_capteurs, x_nonlin, nonlin_reached, time_coeff);
 end
 
-% wavelet capteurs
-Ycapt = getYcapt2(Ytot, pos_capteurs, dx);
-Vcapt = getYcapt2(Vtot, pos_capteurs, dx);
-Acapt = getYcapt2(Atot, pos_capteurs, dx);
-%Ycapt = Ycapt + 1e-6 * randn(size(Ycapt));
-
-
-fmin = 0;
-fmax = 1000;
-Q = 5;
+% plots
+fmin = 1;
+fmax = 3;
+Q = 2.5;
 MaxRidges = 1;
+MultiSignal = true;
 [fctDefModale, fctDefModaleAnimation] = defModalePontLin(L, pos_capteurs);
 
 if plotPosition
     figure;
     plt = plot(T, Ycapt);
+    xlabel('Time [s]');
+    ylabel('Displacement [m]');
     
-    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
-        'MaxRidges', MaxRidges, 'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation);
+    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', MultiSignal,...
+        'MaxParallelRidges', 1, 'MaxSlopeRidge', inf,...
+        'MaxRidges', MaxRidges, 'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation,...
+        'SignalUnit', 'm', 'SquaredSignalUnit', 'm²');
 end
 
 if plotSpeed
     figure;
     plt = plot(T, Vcapt);
-    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
-        'MaxRidges', MaxRidges, 'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation);
+    xlabel('Time [s]');
+    ylabel('Speed [m/s]');
+    
+    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', MultiSignal,...
+        'MaxParallelRidges', 1, 'MaxSlopeRidge', inf,...
+        'MaxRidges', MaxRidges, 'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation,...
+        'SignalUnit', 'm/s', 'SquaredSignalUnit', 'm²/s²');
 end
 
 if plotAcc
     figure;
     plt = plot(T, Acapt);
-    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', false,...
+    xlabel('Time [s]');
+    ylabel('Acceleration [m/s²]');
+    
+    WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MultiSignalMode', MultiSignal,...
+        'MaxParallelRidges', 1, 'MaxSlopeRidge', inf,...
         'MaxRidges', MaxRidges, 'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation);
 end
 

@@ -1398,9 +1398,11 @@ filteringMenu.MenuSelectedFcn = @(~, ~) LinearFilterMain(WaveletPlot);
 regMenu = uimenu(toolsMenu,'Text','Regression');
 
 regConstant = uimenu(regMenu, 'Text','Constant');
+regLinear = uimenu(regMenu, 'Text','Linear');
 regExp = uimenu(regMenu, 'Text','Exp');
 
 regConstant.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'c', 'Param', 'c', 'Param0', 0);
+regLinear.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*x+b', 'Param', 'a b', 'Param0', [0 0]);
 regExp.MenuSelectedFcn = @(~, ~) RegressionMenu('Equation', 'a*exp(-lambda*x)', 'Param', 'a  lambda',...
     'Param0', [1 1], 'Fit', 'log(y)');
 
