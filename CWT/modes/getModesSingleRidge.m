@@ -15,11 +15,15 @@ p = inputParser;
 p.KeepUnmatched = true;
 p.addOptional('MultiSignalModeAbsValue', multiSignalModeAbsValueDefault); % ridge detection sum|CWT|² instead of |sum CWT²|
 p.addOptional('MultiSignalModeAbsValueModeAmpl', multiSignalModeAbsValueModeAmplDefault); % mode amplitude as sqrt(sum|CWT(fr)|²)
+p.addOptional('MotherWavelet', '');
+p.addOptional('DerivationOrder', nan);
 
 parse(p, varargin{:});
 
 multiSignalModeAbsValue = p.Results.MultiSignalModeAbsValue;
 multiSignalModeAbsValueModeAmpl = p.Results.MultiSignalModeAbsValueModeAmpl;
+MotherWavelet = p.Results.MotherWavelet;
+DerivationOrder = p.Results.DerivationOrder;
 
 varargin2 = namedargs2cell(p.Unmatched);
 
@@ -42,7 +46,8 @@ Nddl = size(Y, 1);
 %%
 wvlt = cell(1, Nddl);
 for kddl = 1:Nddl
-    wvlt{kddl} = WvltComp(X, Y(kddl, :), linspace(fmin, fmax, NbFreq), Q);
+    wvlt{kddl} = WvltComp(X, Y(kddl, :), linspace(fmin, fmax, NbFreq), Q,...
+        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder);
 end
 
 wvlt2 = zeros(size(wvlt{1}));
@@ -54,7 +59,8 @@ for kddl = 1:Nddl
     end
 end
 
-Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2, 'SquaredCWT', true, varargin2{:});
+Ridges = RidgeExtract(X, nan, Q, fmin, fmax, NbFreq, 'Wavelet', wvlt2,...
+    'MotherWavelet', MotherWavelet, 'SquaredCWT', true, varargin2{:});
 
 %%
 Nridges = length(Ridges.time);

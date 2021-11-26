@@ -44,6 +44,7 @@ defaultComplexShapePlot = @complexShapePlot1;
 defaultRealShapePlot = @realShapePlot1;
 defaultAnimatedShapePlot = @animatedShapePlot1;
 defaultMotherWavelet = 'cauchy';
+defaultDerivationOrder = 0;
 defaultXLimRidge = [-inf inf];
 defaultctRidge = 0;
 defaultRemoveMean = false;
@@ -97,6 +98,7 @@ addParameter(p, 'ComplexShapePlot', defaultComplexShapePlot);
 addParameter(p, 'RealShapePlot', defaultRealShapePlot);
 addParameter(p, 'AnimatedShapePlot', defaultAnimatedShapePlot);
 addParameter(p, 'MotherWavelet', defaultMotherWavelet);
+addParameter(p, 'DerivationOrder', defaultDerivationOrder);
 addParameter(p, 'XLimRidge', defaultXLimRidge);
 addParameter(p, 'ctRidge', defaultctRidge);
 addParameter(p, 'RemoveMean', defaultRemoveMean);
@@ -218,6 +220,7 @@ ComplexShapePlot = p.Results.ComplexShapePlot; ComplexShapePlot = reverseShapeOp
 RealShapePlot = p.Results.RealShapePlot; RealShapePlot = reverseShapeOption(RealShapePlot);
 AnimatedShapePlot = p.Results.AnimatedShapePlot;
 MotherWavelet = p.Results.MotherWavelet;
+DerivationOrder = p.Results.DerivationOrder;
 ctRidge = p.Results.ctRidge;
 removeMean = p.Results.RemoveMean;
 signalUnit = p.Results.SignalUnits;
@@ -609,6 +612,28 @@ set(FrequencyScaleMenuChoices(find(strcmp(FrequencyScaleValues, FrequencyScale))
     end
 set(FrequencyScaleMenuChoices(1), 'CallBack', @(~,~) selectFrequencyScaleMenu(1));
 set(FrequencyScaleMenuChoices(2), 'CallBack', @(~,~) selectFrequencyScaleMenu(2));
+
+% derivation
+DerivationOrdernames = {'double integration', 'integration', 'none', 'derivation', 'double derivation'};
+
+DerivationOrderMenu = uimenu(paramMenu, 'Text', 'Signal derivation');
+for Kderivorder = 1:length(DerivationOrdernames)
+    DerivationOrderMenuChoices(Kderivorder) = uimenu(DerivationOrderMenu, 'Text', DerivationOrdernames{Kderivorder});
+end
+set(DerivationOrderMenuChoices(DerivationOrder+3), 'Checked' ,'on');
+
+    function selectDerivationOrderMenu(kchoice)
+        for kchoices = 1:length(DerivationOrderMenuChoices)
+            set(DerivationOrderMenuChoices(kchoices), 'Checked', 'off');
+        end
+        set(DerivationOrderMenuChoices(kchoice), 'Checked', 'on');
+        
+        DerivationOrder = kchoice-3;
+    end
+
+for Kderivorder = 1:length(DerivationOrdernames)
+    set(DerivationOrderMenuChoices(Kderivorder), 'CallBack', @(~,~) selectDerivationOrderMenu(Kderivorder));
+end
 
 % signal channels
 signalChannelsMenu = uimenu(paramMenu, 'Text','Set channels', 'Separator', 'on');
@@ -1118,17 +1143,17 @@ AverageNoiseMenu = uimenu(ridgeMenu, 'Text','Get average |CWT|');
             for kPlot = 1:nbPlots
                 if ~multiSignalModeAbsValue
                     wavelet = wavelet + WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
-                        'MotherWavelet', MotherWavelet).^2;
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder).^2;
                 else
                     wavelet = wavelet + abs(WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
-                        'MotherWavelet', MotherWavelet)).^2;
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder)).^2;
                 end
             end
         else
             wavelet = [];
             for kPlot = 1:nbPlots
                 wavelet = [wavelet; WvltComp(x(kPlot,:), y(kPlot,:), fAverage, QAverage,...
-                    'MotherWavelet', MotherWavelet)];
+                    'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder)];
             end
         end
         
@@ -1639,7 +1664,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         yCWTplot = Yrdt(kPlot,:);
                         titleCWTPlot = ['RDT channel ', num2str(signalChannels(kPlot)), num2str(signalChannels(kPlot)), ' ; Q=', num2str(Q),' ; scale:', WvltScale];
                     end
-                    wavelet = WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet);
+                    wavelet = WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder);
                     
                     if checkboxModule.Value && slice == 0
                         WvltPlot2(xCWTplot, WvltFreqs, wavelet, 'module', Q, ctEdgeEffects, MotherWavelet,...
@@ -1677,10 +1702,10 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     
                     if ~multiSignalModeAbsValue
                         wavelet = wavelet +...
-                            WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                            WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder).^2;
                     else
                         wavelet = wavelet +...
-                            abs(WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet)).^2;
+                            abs(WvltComp(xCWTplot, yCWTplot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder)).^2;
                     end
                 end
                 
@@ -1761,7 +1786,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
+                        'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
                 end
                 
@@ -1782,10 +1808,12 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     
                     if ~multiSignalModeAbsValue
                         wavelet = wavelet +...
-                            WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet).^2;
+                            WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet,...
+                            'DerivationOrder', DerivationOrder).^2;
                     else
                         wavelet = wavelet +...
-                            abs(WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet)).^2;
+                            abs(WvltComp(xRidgePlot, yRidgePlot, WvltFreqs, Q, 'MotherWavelet', MotherWavelet,...
+                            'DerivationOrder', DerivationOrder)).^2;
                     end
                 end
                 
@@ -1795,7 +1823,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                     'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                     'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                    'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                    'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
+                    'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                     'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
             
             elseif autocorrelationMode && autocorrelationSVDMode
@@ -1805,7 +1834,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                     'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
+                        'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
                 end
             end
@@ -1909,7 +1939,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
+                        'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'MultiSignalModeAbsValue', multiSignalModeAbsValue);
                 elseif autocorrelationMode
                     [timeShapesSVD, freqsShapesSVD, shapesShapesSVD, amplitudesShapesSVD] = ...
@@ -1917,8 +1948,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         'NbMaxParallelRidges', PR, 'NbMaxRidges', maxR, 'MinModu', RidgeMinModu,...
                         'StopWhenIncreasing', StopRidgeWhenIncreasing,...
                         'ctLeft', ctEdgeEffects, 'ctRight', ctEdgeEffects, 'MaxSlopeRidge', slopeRidge,...
-                        'MotherWavelet', MotherWavelet, 'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
-                        'FrequencyScale', FrequencyScale);
+                        'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
+                        'XLimRidge', XLimRidge, 'ctRidge', ctRidge, 'FrequencyScale', FrequencyScale);
                 end
                 
                 if autocorrelationMode

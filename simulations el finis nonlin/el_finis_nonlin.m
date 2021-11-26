@@ -3,9 +3,9 @@ function el_finis_nonlin()
 results_name = 'test';
 saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
 
-solve_ODE = 0;
+solve_ODE = 1;
 plot_results = 1; % sauvegarde dans tous les cas
-disp_freq_nonlin = 1;
+disp_freq_nonlin = 0;
 
 nonLin = 1;
 local_nonlin = 0; % non linearite sur ddl px_nonlin, ou sur tous les ddl
@@ -32,8 +32,8 @@ h_pont = 2.4; % hauteur pont
 e_pont = 0.3; % epaisseur beton
 J = (l_pont*h_pont^3 - (l_pont-2*e_pont)*(h_pont-2*e_pont)^3) / 12; % moment quadratique du pont
 mu = (l_pont*h_pont - (l_pont-2*e_pont)*(h_pont-2*e_pont)) * rho; % masse linéique du pont
-amort_deg = 4; % degré derivation spatial amortissement, (deg 0: Viscous Air Damping, deg 2 : ?, deg 4 : Kelvin-Voigt damping)
-amort = 1.83e8; % coefficient d'amortissement, 7.6e3, -3.6e6, 1.71e9
+amort_deg = 2; % degré derivation spatial amortissement, (deg 0: Viscous Air Damping, deg 2 : ?, deg 4 : Kelvin-Voigt damping)
+amort = -7.2e5; % coefficient d'amortissement, 7.6e3, -7.2e5, 1.83e8
 
 
 %% integration spatiale
@@ -46,21 +46,21 @@ dx = L / (N-1);
 g = 9.81;
 
 % courbure statique
-C_static = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).';
-fleche_pont = g*mu*L^4/(384*E*J); % fleche (https://appx.cchic.ca/svilleneuve/materiaux/chap10.pdf)
+C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % A CORRIGER
 
 % parametres
 x_nonlin = L/pi; % endroit du defaut
 px_nonlin = round(x_nonlin/dx);
 x_nonlin = px_nonlin*dx;
-threshold_nonlin = max(C_static) + 3e-6; % courbure, 5e-7
+threshold_nonlin = max(C_static0) - 10*3e-6; % courbure, 5e-7
 slope_nonlin_E = 0.75; % E2 = slope_nonlin*E
 
 % precontrainte etc.
+fleche_pont = g*mu*L^4/(384*E*J); % fleche (https://appx.cchic.ca/svilleneuve/materiaux/chap10.pdf)
 sigma0 = threshold_nonlin*E*h_pont/2; % precontrainte
 slope_nonlin_moment1 = 2*slope_nonlin_E/(1+slope_nonlin_E); % nonlinéarité sur le moment en fonction de celle sur le module E
-sigma_min = sigma0 - E*max(C_static)*h_pont/2; % contrainte de compression minimale (intrados mi_travée)
-sigma_max = sigma0 + E*max(C_static)*h_pont/2; % contrainte de compression maximale (extrados mi_travée)
+sigma_min = sigma0 - E*max(C_static0)*h_pont/2; % contrainte de compression minimale (intrados mi_travée)
+sigma_max = sigma0 + E*max(C_static0)*h_pont/2; % contrainte de compression maximale (extrados mi_travée)
 delta_sigma_1t = - E * g*1e3*L/4 / (E*J) * h_pont/2; % compression perdue vehicule 1 tonne mi-travée (https://en.wikipedia.org/wiki/Euler%E2%80%93Bernoulli_beam_theory)
 
 
@@ -86,15 +86,12 @@ delta_sigma_1t = - E * g*1e3*L/4 / (E*J) * h_pont/2; % compression perdue vehicu
         M(isnan(M)) = 0; % C=0 => M=0
     end
 
-func_nonlin_global = @nonlin1;
+func_nonlin_global0 = @nonlin1;
 
 % figure;
 % c0 = linspace(-3*threshold_nonlin, 3*threshold_nonlin, 1000).';
 % plot(c0, func_nonlin_global(c0));
 % return
-
-M_static = func_nonlin_global(C_static);
-func_nonlin_global = @(C) func_nonlin_global(C+C_static) - M_static;
 
 
 %% données capteurs ponts
@@ -244,6 +241,26 @@ influenceMc = zeros(1, N);
 influenceMc2 = zeros(1, N);
 D2_nonlin_courbure_vect0 = D2 * courbure_vect0;
 
+%% courbure statique, avec non-linéarté
+
+    function c_static = get_C_static(C_static_init, n_iter)
+        y_static = D2 \ C_static_init;
+%         figure;
+%         plot(y_static);
+%         hold on
+%         plt1 = plot(y_static); drawnow;
+        for k = 1:n_iter % methode de newton, à peu près
+            force_err = Kr*y_static + D2*func_nonlin_global0(D2*y_static) + Mr*g*ones(N-2, 1);
+            y_static = y_static - Kr\force_err;
+%             input(num2str(max(abs(force_err))));
+%             set(plt1, 'YData', y_static); drawnow;
+        end
+        c_static = D2*y_static;
+    end
+C_static = get_C_static(C_static0, 100);
+M_static = func_nonlin_global0(C_static);
+func_nonlin_global = @(C) func_nonlin_global0(C+C_static) - M_static;
+
 %% disp freq propre, freq excitation, precontrainte
 
 % affichage
@@ -384,6 +401,9 @@ else
                 E = coeff_E_temp(Kt*T0_resampl) * E0;
                 Kr = coeff_E_temp(Kt*T0_resampl) * Kr0;
                 Mr_Kr = coeff_E_temp(Kt*T0_resampl) * Mr_Kr0;
+                C_static = get_C_static(C_static0, 100);
+                M_static = func_nonlin_global0(C_static);
+                func_nonlin_global = @(C) func_nonlin_global0(C+C_static) - M_static;
             end
             
             if Kt >= 2
@@ -494,7 +514,7 @@ if plot_results
 end
 
 
-%% fonction integratio numerique
+%% fonction integration numerique
 
 
     function dYddY = D(t, YdY)

@@ -3,10 +3,11 @@ y = linspace(-3, 3, 100);
 
 [X, Y] = meshgrid(x, y);
 
-% F = X.^2 + Y.^2; Ftitle = 'F(x,y) = x² + y²';
+F = X.^2 + Y.^2; Ftitle = 'F(x,y) = x² + y²';
 % F = X.^2 + (Y-1).^2; Ftitle = 'F(x,y) = x² + (y-1)²';
 % F = X; Ftitle = 'F(x,y) = x';
-F = Y.^2 + 2*Y; Ftitle = 'F(x,y) = y² + 2y';
+% F = Y.^2 + 2*Y; Ftitle = 'F(x,y) = y² + 2y';
+% F = Y./(1+X.^2); Ftitle = 'F(x,y) = y/(1+x^2)';
 
 % champ
 
@@ -31,14 +32,14 @@ equiSurf = [];
 delete(equi);
 delete(equiSurf);
 
-lambda = 10;
+lambda = 5;
 
 if isnan(lambda)
     return
 end
 
 
-equiSurf = surf(X, Y, lambda*ones(size(F)), 'EdgeColor', 'none', 'FaceColor', [0 0 0], 'FaceAlpha', 0.3);
+% equiSurf = surf(X, Y, lambda*ones(size(F)), 'EdgeColor', 'none', 'FaceColor', [0 0 0], 'FaceAlpha', 0.3);
 
 
 % lignes intersection

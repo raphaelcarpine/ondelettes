@@ -12,7 +12,7 @@ g = @(x) (k2-k1)*(x-x0).*(x>x0);
 g = @(x) (k2-k1)*(x-x0).*(x>x0) + (k2-k1)*(x+x0).*(x<-x0);
 % g = @(x) 0;
 
-if true
+if 0
     X = linspace(-3*x0, 3*x0, 1000);
     Kx = nan(size(X));
     Gx = nan(size(X));
@@ -46,7 +46,7 @@ end
 
 % time
 T = 10000;
-T = 40;
+T = 30;
 T0 = 5/(c/(2*m));
 fe = 1000;
 
@@ -92,10 +92,10 @@ t = t(kt0:end);
 x = x(kt0:end);
 
 % resampling
-fe2 = 100;
-Nfe = floor(fe/fe2);
-t = t(1:Nfe:end);
-x = x(1:Nfe:end);
+% fe2 = 100;
+% Nfe = floor(fe/fe2);
+% t = t(1:Nfe:end);
+% x = x(1:Nfe:end);
 
 % plot
 figure;

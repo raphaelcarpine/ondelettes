@@ -1,5 +1,5 @@
 dataFolder = 'C:\Users\carpine\Documents\cours\semaine TMD ponts 2021\TP1\data';
-dataFile = 'SensorConnectDataTest5.csv';
+% dataFile = 'SensorConnectDataTest16.csv';
 
 %% position capteurs
 % maquette
@@ -8,10 +8,14 @@ h = 88; % hauteur de la poutre
 l = 302.5; % demie longueur de la poutre
 
 captNumber = [
-    29277  40196  40197  40200  40201  40202  ];
+    40196  40198  40199  40200  40201  40202  ];
 captPos = [
-    -l     0      -l/2   0      l/2    l      ; % x
-    h      H      h      h      h      h      ]; % z
+    0      -l     -l/2   0      l/2    l      ; % x
+    H      h      h      h      h      h      ]; % z
+
+captNumber = [
+    40200 40201  ];
+captNumber = 40201;
 
 
 %% data
@@ -37,6 +41,6 @@ T = T.';
 
 [X, channelNames, captNumber2, captDir] = convertChNames(X, channelNames);
 
-if ~isequal(captNumber, captNumber2)
-    error('~isequal(captNumber, captNumber2)');
-end
+% if ~isequal(captNumber, captNumber2)
+%     error('~isequal(captNumber, captNumber2)');
+% end

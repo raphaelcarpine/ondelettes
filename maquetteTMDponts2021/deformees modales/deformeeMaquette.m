@@ -3,7 +3,7 @@ function [fctDefModale, fctDefModaleAnimation] = deformeeMaquette(positionCapteu
 %   positionCapteurs = [pos1x, pos2x,... ; pos1z, pos2z,... ]
 %   orientationCapteurs = {'xy', 'xyz',... }
 
-saveAsGif = true;
+saveAsGif = false;
 
 if length(orientationCapteurs) ~= length(positionCapteurs)
     error('length(orientationCapteurs) ~= length(positionCapteurs)');

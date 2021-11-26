@@ -5,6 +5,7 @@ p = inputParser ;
 ZeroPaddingDef = true;
 CenterSignalDef = false;
 MotherWaveletDef = 'cauchy'; %'littlewood-paley';
+DerivationOrderDef = 0;
 ctDef = 3;
 MeanOverFreqFuncDef = []; % mode mean(func(wvlt), 1)
 XindexOutDef = []; % mode WvltOut = Wvlt(:, XindexOut);
@@ -18,6 +19,7 @@ addRequired(p,'Q')
 addParameter(p,'ZeroPadding',ZeroPaddingDef);
 addParameter(p,'CenterSignal',CenterSignalDef);
 addParameter(p,'MotherWavelet',MotherWaveletDef);
+addParameter(p,'DerivationOrder',DerivationOrderDef);
 addParameter(p,'ct',ctDef);
 addParameter(p,'MeanOverFreqFunc', MeanOverFreqFuncDef);
 addParameter(p,'XindexOut', XindexOutDef);
@@ -42,6 +44,7 @@ ZeroPadding = p.Results.ZeroPadding;
 CenterSignal = p.Results.CenterSignal;
 MotherWavelet = p.Results.MotherWavelet;
 ct = p.Results.ct;
+DerivationOrder = p.Results.DerivationOrder;
 MeanOverFreqFunc = p.Results.MeanOverFreqFunc;
 XindexOut = p.Results.XindexOut;
 MeanSquareOverXelements = p.Results.MeanSquareOverXelements;
@@ -164,7 +167,7 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
         
         ftFreq = (0:N/2-1)*Fs/N; %Freq d'eval de la fft, f positif
         ftFreqNeg = (-N/2+1:-1)*Fs/N; %Freq d'eval de la fft, f negatif
-        scales = 1./WvltFreq1 ; % echelles associees aux freq. de calcul (a = f_psi^0/a = 1/a)
+        scales = 1./WvltFreq1 ; % echelles associees aux freq. de calcul (f = f_psi^0/a = 1/a)
         scaledftFreq = transpose(ftFreq) * scales; % matrice ordre 2 de   a * f  avec a échelle et f freq d'eval de fft
         scaledftFreqNeg = transpose(ftFreqNeg) * scales;
         
@@ -172,7 +175,15 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
             zeros(1, length(WvltFreq1));... % freq en N/2 inutilisable car N pair
             FTpsi(scaledftFreqNeg)]; % Calcul Ondelettes Morlet en a * f
         
-        WvltNorm = 1/2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
+        % derivation ondelette, le 1 au milieu n'a aucune influence
+        iOmega = 2i*pi*[scaledftFreq; ones(1, length(WvltFreq1)); scaledftFreqNeg];
+        if DerivationOrder < 0
+            iOmega(iOmega == 0) = inf;
+        end
+        ftWvlt{CSet} = ftWvlt{CSet} .* iOmega.^DerivationOrder;
+        
+        WvltNorm = 2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
+        WvltNorm = WvltNorm * scales.^(-DerivationOrder); % renormalisation pour derivee
     end
     %% integrande
     % produit de la fft des ondelettes scalees avec la fft du signal
@@ -196,7 +207,7 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
     for CSet = 1:NbSet
         wavelet1(:,FreqSet{CSet}) = wavelet0{CSet}; % On agrege le calcul de chaque set
     end
-    WvltOut = transpose(wavelet1)/WvltNorm; % On termine avec le coef de normalisation
+    WvltOut = transpose(wavelet1.*WvltNorm); % On termine avec le coef de normalisation
     
     %% moyennage sur t
     MeanSquareOverXnextLines = [];

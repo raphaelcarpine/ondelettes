@@ -18,6 +18,7 @@ ReleaseTimeDef = X(1);
 WaveletDef = nan;
 SmoothDampingDef = true;
 MotherWaveletDef = 'cauchy';
+DerivationOrderDef = 0;
 FrequencyScaleDef = 'lin';
 XLimRidgeDef = [];
 ctRidgeDef = [];
@@ -44,6 +45,7 @@ addParameter(p,'ReleaseTime',ReleaseTimeDef);
 addParameter(p,'Wavelet', WaveletDef);
 addParameter(p,'SmoothDamping', SmoothDampingDef); % spline smoothing de l'amplitude pour lisser zeta(t)
 addParameter(p,'MotherWavelet', MotherWaveletDef);
+addParameter(p,'DerivationOrder', DerivationOrderDef);
 addParameter(p,'FrequencyScale', FrequencyScaleDef);
 addParameter(p,'XLimRidge', XLimRidgeDef);
 addParameter(p,'ctRidge', ctRidgeDef);
@@ -67,6 +69,7 @@ ReleaseTime = p.Results.ReleaseTime;
 wavelet = p.Results.Wavelet;
 SmoothDamping = p.Results.SmoothDamping;
 MotherWavelet = p.Results.MotherWavelet;
+DerivationOrder = p.Results.DerivationOrder;
 FrequencyScale = p.Results.FrequencyScale;
 XLimRidge = p.Results.XLimRidge;
 ctRidge = p.Results.ctRidge;
@@ -96,7 +99,7 @@ switch FrequencyScale
 end
 
 if isnan(wavelet)
-    wavelet = WvltComp(X, Y, WvltFreq, Q, 'MotherWavelet', MotherWavelet); % Calcul CWT
+    wavelet = WvltComp(X, Y, WvltFreq, Q, 'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder); % Calcul CWT
 end
 
 % if SquaredCWT
