@@ -27,7 +27,7 @@ end
 %%
 n = length(shape);
 
-shape = 0.2 * max(plateDim)/max(abs(shape)) * shape;
+shape = 0.08 * max(plateDim)/max(abs(real(shape))) * shape;
 
 fig = figure('Name', figTitle);
 set(fig, 'Position', get(fig, 'Position') .* [1 1 1.2 0.9]);
@@ -157,6 +157,10 @@ set(get(ax,'Children'),'HitTest','off')
 
 fig.WindowButtonDownFcn = @clickFcn;
 fig.Interruptible = 'off';
+
+%% bouton inversion
+
+
 
 
 end

@@ -1,14 +1,17 @@
-function [fmax, zeta] = PeakPickingMenu()
+function [fmax, zeta] = PeakPickingMenu(quadraticMax, quadraticFFT)
 %WaveletMenu Summary of this function goes here
 %   Detailed explanation goes here
 
 fmax = nan;
 zeta = nan;
 
-quadraticMax = false;
-
-quadraticFFT = false;
-
+if nargin < 1
+    quadraticMax = false;
+end
+if nargin < 2
+    quadraticFFT = false;
+end
+    
 %% fig
 
 % lignes pans

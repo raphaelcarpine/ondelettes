@@ -181,10 +181,10 @@ for k_wvlt_freq = 1:length(WvltFreqTot)
             iOmega(iOmega == 0) = inf;
         end
         ftWvlt{CSet} = ftWvlt{CSet} .* iOmega.^DerivationOrder;
-        
-        WvltNorm = 2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
-        WvltNorm = WvltNorm * scales.^(-DerivationOrder); % renormalisation pour derivee
     end
+    WvltNorm = 2;    % Coef de normalisation pour avoir max(ftWvlt) = 2
+    WvltNorm = WvltNorm * WvltFreq.^DerivationOrder; % renormalisation pour derivee
+    
     %% integrande
     % produit de la fft des ondelettes scalees avec la fft du signal
     integrande = cell(size(NSet));

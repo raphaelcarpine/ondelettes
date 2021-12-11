@@ -1,0 +1,1 @@
+- changis 2 : SV1 et SV2 modes confondus, déformées passent de l'une à l'autre et inversement

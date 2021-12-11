@@ -92,7 +92,7 @@ SV = nan(Nx, size(FFTcorr, 3)); % SV(sv_index, freq_index)
 mod_shapes = nan(size(FFTcorr)); % mod_shapes(sensor_index, sv_index, freq_index)
 
 for kf = 1:size(FFTcorr, 3)
-    [mod_shapes(:, :, kf), S, ~] = svd(FFTcorr(:, :, kf));
+    [mod_shapes(:, :, kf), S, ~] = svd(FFTcorr(:, :, kf).');
     SV(:, kf) = diag(S);
 end
 

@@ -2,7 +2,7 @@ function h = mArrow3(ax,p1,p2,varargin)
 %% custom
 
 fixedSizeTip = true;
-addTipLength = true;
+addTipLength = 0.5;
 
 %%
 %mArrow3 - plot a 3D arrow as patch object (cylinder+cone)
@@ -106,13 +106,9 @@ if norm(p2-p1)>tipLength || fixedSizeTip
         v(idx,:) = p1 + stemWidth*(sintheta(idx)*y + costheta(idx)*z);
     end
     % vertices of the second stem circle
-    if ~addTipLength
-        p3 = p2-tipLength*x; % tip start
-        p4 = p2; % tip end
-    else
-        p3 = p2;
-        p4 = p2+tipLength*x;
-    end
+    p3 = p2 + tipLength*(-1+addTipLength)*x; % tip start
+    p4 = p2 + tipLength*(0+addTipLength)*x; % tip end
+    
     for idx = 1:ppsc+1
         v(ppsc+1+idx,:) = p3 + stemWidth*(sintheta(idx)*y + costheta(idx)*z);
     end

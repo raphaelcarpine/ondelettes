@@ -53,8 +53,15 @@ A0 = Dt^2*sigma^2*N*Rh((end-1)/2+1);
 
 n = -N+1:N-1;
 
+I = n >= -5000 & n <= 5000;
+n = n(I);
+Rx = Rx(I);
+Rh = Rh(I);
+
+Nmax = 3000;
+
 figure;
-plot(n, Rx);
+plt1 = plot(n, Rx);
 yline(alpha*A0, '--r');
 yline(-alpha*A0, '--r');
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
@@ -62,24 +69,27 @@ ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
 ylim(YLimRx);
+xlim([-Nmax, Nmax]);
 
 
 figure;
-plot(n, Dt^2*sigma^2 * (N-abs(n)).* Rh);
+plt2 = plot(n, Dt^2*sigma^2 * (N-abs(n)).* Rh);
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
 ylabel('$(N-|n|)\Delta t^2\sigma^2 R_h$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 ylim(YLimRx);
+xlim([-Nmax, Nmax]);
 
 
 figure;
-plot(n, Rx - Dt^2*sigma^2 * (N-abs(n)).* Rh);
+plt3 = plot(n, Rx - Dt^2*sigma^2 * (N-abs(n)).* Rh);
 yline(alpha*A0, '--r');
 yline(-alpha*A0, '--r');
 xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
 ylabel('$R_{\tilde x} - (N-|n|)\Delta t^2\sigma^2 R_h$', 'interpreter', 'latex', 'FontSize', 15);
 f = gcf; f.Position(3:4) = 7/10 * [560 420];
 ylim(YLimRx);
+xlim([-Nmax, Nmax]);
 
 
 %%
@@ -87,27 +97,9 @@ ylim(YLimRx);
 
 %% CWT
 
-figure;
-plt = plot(n((end-1)/2+1:end), Rx((end-1)/2+1:end));
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
-ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
-ylim(YLimRx);
-
-WaveletMenu('WaveletPlot', plt, 'fmin', 0.03, 'fmax', 0.07);
-
-
-Rh2 = Dt^2*sigma^2 * (N-abs(n)).* Rh;
-figure;
-plt = plot(n((end-1)/2+1:end), Rh2((end-1)/2+1:end));
-xlabel('$n$', 'interpreter', 'latex', 'FontSize', 15);
-ylabel('$R_{\tilde x}$', 'interpreter', 'latex', 'FontSize', 15);
-f = gcf; f.Position(3:4) = 7/10 * [560 420];
-YLimRx = max(abs(get(gca, 'YLim') )) * [-1 1];
-ylim(YLimRx);
-
-WaveletMenu('WaveletPlot', plt, 'fmin', 0.03, 'fmax', 0.07);
+WaveletMenu('WaveletPlot', plt1, 'fmin', 0.03, 'fmax', 0.07);
+WaveletMenu('WaveletPlot', plt2, 'fmin', 0.03, 'fmax', 0.07);
+WaveletMenu('WaveletPlot', plt3, 'fmin', 0.03, 'fmax', 0.07);
 
 
 

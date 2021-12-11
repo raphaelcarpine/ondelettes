@@ -1,4 +1,4 @@
-function [SVrx, SVvectrx] = svdCWT(t, Rx, WvltFreqs, Q, Nsv)
+function [SVrx, SVvectrx] = svdCWT(t, Rx, WvltFreqs, Q, Nsv, varargin)
 %SVDCWT Summary of this function goes here
 %   Rx : crossed correlation
 %   Nsv : number of singular values
@@ -27,7 +27,8 @@ for iddl = 1:Ndof
     for jddl = 1:Ndof
         updateWaitBar();
         
-        CWTrx(iddl, jddl, :, :) = WvltComp(t, reshape(Rx(iddl, jddl, :), [1, Nt]), WvltFreqs, Q);
+        CWTrx(iddl, jddl, :, :) = WvltComp(t, reshape(Rx(iddl, jddl, :), [1, Nt]),...
+            WvltFreqs, Q, varargin{:});
     end
 end
 closeWaitBar();

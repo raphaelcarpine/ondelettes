@@ -60,9 +60,9 @@ checkParent = @(f) isa(f, 'matlab.ui.Figure') || isa(f, 'matlab.ui.container.Pan
 addParameter(p,'WaveletPlot', defaultWaveletPlot); %si les données viennent d'une courbe directement (ou plusieurs)
 addOptional(p, 'X', defaultX);
 addOptional(p, 'Y', defaultY);
-addParameter(p, 'fmin', defaultFmin);
-addParameter(p, 'fmax', defaultFmax);
-addParameter(p, 'NbFreq', defaultNbFreq);
+addParameter(p,'fmin', defaultFmin);
+addParameter(p,'fmax', defaultFmax);
+addParameter(p,'NbFreq', defaultNbFreq);
 addParameter(p,'Parent', defaultParent, checkParent);
 addParameter(p,'Q', defaultQ);
 addParameter(p,'MaxRidges', defaultMaxRidges);
@@ -1633,7 +1633,8 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
             NmaxLagCorr = floor(maxLagCorr/Dx);
             plotCrossCorr(Dx, y, NmaxLagCorr);
             if autocorrelationSVDMode && isempty(SVry)
-                [SVry, SVvectry] = svdCWT(tRy, Ry, WvltFreqs, Q, autocorrelationNsvd);
+                [SVry, SVvectry] = svdCWT(tRy, Ry, WvltFreqs, Q, autocorrelationNsvd,...
+                    'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder);
             end
         end
         
@@ -2395,7 +2396,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                 
             end
             
-        else % autocorr
+        else % autocorr && SVD
             if autocorrelationFourierSVDMode
                 [freqs, SVfftrx, SVfftvectrx] = svdFFT(tRy, Ry, autocorrelationNsvd, symetricXcorrFFT,...
                     'Window', FourierWindow, 'WindowParams', FourierWindowParams);
@@ -2429,7 +2430,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     set(fourierPlotAxes, 'XScale', FrequencyScale);
                     
                     % mode shape
-                    if ~isnan(freqModeShape)
+                    if ~isnan(freqModeShape) && ksv == 1
                         [kf_shape, r_shape] = closestPoint(freqs, freqModeShape);
                         modeShape(ksv, :) = transpose((1-r_shape)*SVfftvectrx{ksv}(:, kf_shape) + r_shape*SVfftvectrx{ksv}(:, kf_shape));
                         xline(fourierPlotAxes, freqModeShape, '--', 'HandleVisibility', 'off');
