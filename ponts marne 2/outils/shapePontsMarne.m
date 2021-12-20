@@ -3,8 +3,8 @@ function fig = shapePontsMarne(plateDim, sensorsPos, sensorsDir, shape, figTitle
 %   Detailed explanation goes here
 
 displayChannelNb = false;
-horizontalInterp = 'lin'; % 'none' 'lin', 'quad';
-shapeCoeff = 10;
+horizontalInterp = 'quad'; % 'none' 'lin', 'quad';
+shapeCoeff = 0.1;
 
 
 if nargin < 4
@@ -38,8 +38,8 @@ if size(shape, 1) == 1
 end
 
 
-shape = shapeCoeff*shape;
-shape = 0.15 * max(plateDim)/(max(shape) - min(shape)) * shape;
+% shape = shapeCoeff*shape;
+shape = shapeCoeff * max(plateDim)/(max(shape) - min(shape)) * shape;
 
 
 %% mise en forme surface
@@ -59,6 +59,7 @@ indSensRight = indSensRight(I);
 
 posSensX = [sensorsPos(indSensLeft, 1), sensorsPos(indSensRight, 1)];
 posSensY = [sensorsPos(indSensLeft, 2), sensorsPos(indSensRight, 2)];
+
 
 %% interpolation deplacement horizontal
 
@@ -85,6 +86,17 @@ posSensZ = [shape(indSensLeft), shape(indSensRight)];
 
 posSensY = posSensY + horInterpFunc(posSensX);
 
+%% interpolation
+
+n_interp = 100;
+posSensXinterp = [linspace(posSensX(1, 1), posSensX(end, 1), n_interp).', linspace(posSensX(1, 2), posSensX(end, 2), n_interp).'];
+posSensYinterp = nan(size(posSensXinterp));
+posSensZinterp = nan(size(posSensXinterp));
+for c = 1:2
+    posSensYinterp(:, c) = interp1(posSensX(:, c), posSensY(:, c), posSensXinterp(:, c), 'pchip');
+    posSensZinterp(:, c) = interp1(posSensX(:, c), posSensZ(:, c), posSensXinterp(:, c), 'pchip');
+end
+
 
 %% plot
 n = length(shape);
@@ -100,12 +112,20 @@ Xplate = [0, 0; plateDim(1), plateDim(1)];
 Yplate = [0, plateDim(2); 0, plateDim(2)];
 Zplate = zeros(2);
 
-surf(ax, Xplate, Yplate, Zplate, 'EdgeColor', 'black', 'FaceColor', 0.5*[1 1 1], 'FaceAlpha', 0.5);
+surf(ax, Xplate, Yplate, Zplate, 'EdgeColor', 'black', 'FaceColor', 0.3*[1 1 1], 'FaceAlpha', 0.3);
 
 
 % dof
-surf(ax, posSensX, posSensY, posSensZ, 'EdgeColor', 'black', 'FaceColor', 0.5*[1 1 1],...
-    'FaceAlpha', 0., 'FaceLighting', 'gouraud', 'LineWidth', 2);
+% surf(ax, posSensX, posSensY, posSensZ, 'EdgeColor', 'black', 'FaceColor', 0.5*[1 1 1],...
+%     'FaceAlpha', 0., 'FaceLighting', 'gouraud', 'LineWidth', 2);
+surf(ax, posSensXinterp, posSensYinterp, posSensZinterp, 'EdgeColor', 'none', 'FaceColor', 0.5*[1 1 1],...
+    'FaceAlpha', 1, 'FaceLighting', 'gouraud', 'LineWidth', 2);
+for c = 1:2
+    plot3(ax, posSensXinterp(:, c), posSensYinterp(:, c), posSensZinterp(:, c), 'k', 'LineWidth', 2);
+end
+for l = 1:size(posSensX, 1)
+    plot3(ax, posSensX(l, :), posSensY(l, :), posSensZ(l, :), 'k', 'LineWidth', 2);
+end
 
 
 % dof
@@ -119,7 +139,7 @@ for k = 1:n
     
     dofColor = 0.8 * [1 0 0];
     
-    mArrow3(ax, [X(1), Y(1), Z(1)], [X(2), Y(2), Z(2)], 'color', dofColor, 'stemWidth', min(plateDim)/20);
+%     mArrow3(ax, [X(1), Y(1), Z(1)], [X(2), Y(2), Z(2)], 'color', dofColor, 'stemWidth', min(plateDim)/20);
     
     if displayChannelNb
         %text(ax, X(2), Y(2), Z(2) + 0.1*sign(shape(k))*max(abs(shape)), ['', num2str(k)]);

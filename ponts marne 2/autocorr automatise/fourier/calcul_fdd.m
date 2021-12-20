@@ -7,10 +7,10 @@ Nsv = 6;
 
 bridge = 0;
 
-Taveraging = 50;
+Taveraging = 10;
 
 % filtrage passe haut
-filtrage = 0;
+filtrage = 1;
 fc_filtre = 3.5; % freq coupure
 
 %% data

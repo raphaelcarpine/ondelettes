@@ -1,6 +1,6 @@
 %% double trains : 2, 6, 8, 9, 13, 15
-N = 4;
-mode = 4; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
+N = 1;
+mode = 2; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
 saveResults = false;
 
 channels = [3 4 5 6 7 9 10 15];

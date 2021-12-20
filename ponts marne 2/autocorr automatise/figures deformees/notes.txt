@@ -1,1 +1,9 @@
-- changis 2 : SV1 et SV2 modes confondus, déformées passent de l'une à l'autre et inversement
+Croisement modes SV1 et SV2 (déformées passant de l'une à l'autre) :
+- ussy : ~ok
+- trilbardou 1 : croisement
+- trilbardou 2 : croisement
+- changis 1 : ~ok
+- changis 2 : croisement
+- esbly 0 : croisement
+- esbly 1 : 
+- esbly 3 : 

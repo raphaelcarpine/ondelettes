@@ -13,6 +13,7 @@ saveResults = saveResults & ~manualMode;
 pauseModes = 1; % pause entre les modes
 plotRidgeExtract = 1;
 plotShapes = 1;
+plotShapesTime = 0;
 plotTemp = 0;
 
 % filtrage passe haut
@@ -82,11 +83,11 @@ dimensionsShapes2;
 Freqs0bis = [0, Freqs0, inf];
 
 % save
-Freqs = nan(size(Freqs0));
-Damps = nan(size(Damps0));
-Shapes = nan(size(X, 1), length(Freqs0));
-PbCalculRidge = false(size(Freqs0));
-MultipleSV = zeros(size(Freqs0));
+Freqs = [];
+Damps = [];
+Shapes = nan(size(X, 1), 0);
+PbCalculRidge = [];
+MultipleSV = [];
 
 % % waitbar
 % [initWaitBar, updateWaitBar, closeWaitBar] =...
@@ -103,6 +104,10 @@ Nsvprec = 0; % Nsv precedent
 for kf = Kf
     freq0 = Freqs0(kf);
     damp0 = Damps0(kf);
+    
+    if damp0 == 1 % mode non calculé, pour réglage Q
+        continue
+    end
     
     % display
     fprintf('\n~~~~~~ mode %d/%d ~~~~~~\n', [kf length(Freqs0)]);
@@ -185,7 +190,7 @@ for kf = Kf
                 elseif Nsvprec == 2
                     Nsv = 1;
                 end
-                MultipleSV(kf) = Nsv;
+                MultipleSV(end+1) = Nsv;
                 
                 fprintf('-> SV%d\n', Nsv);
             end
@@ -206,11 +211,13 @@ for kf = Kf
         % cas pas de ridge
         if isempty(t_r{Nsv})
             warning('problème extraction ridge');
-            PbCalculRidge(kf) = true;
+            PbCalculRidge(end+1) = true;
             freq0 = nan;
             damp0 = nan;
             shape_moy = nan(size(X, 1), 1);
             break
+        else
+            PbCalculRidge(end+1) = true;
         end
         
         % conversion
@@ -222,7 +229,7 @@ for kf = Kf
         % cas d'aret du ridge avant la limite
         if abs(t_r(end) - Tmaxridge) > 3*dt
             warning('arrêt ridge avant borne');
-            PbCalculRidge(kf) = true;
+            PbCalculRidge(end) = true;
         end
         
         % calcul moyennes
@@ -253,9 +260,9 @@ for kf = Kf
     Nsvprec = Nsv;
     
     % save
-    Freqs(kf) = freq0;
-    Damps(kf) = damp0;
-    Shapes(:, kf) = shape_moy;
+    Freqs(end+1) = freq0;
+    Damps(end+1) = damp0;
+    Shapes(:, end+1) = shape_moy;
     
     if plotRidgeExtract
         % freq
@@ -287,12 +294,26 @@ for kf = Kf
 %         fig.Position(2) = fig.Position(2) - fig.Position(4) - 10;
     end
     
+    if plotShapesTime
+        fig = figure;
+        fig.Position(1) = fig.Position(1) - fig.Position(3)/2;
+        plot(t_r, real(shapes_r));
+        xlabel('t');
+        ylabel('Re');
+        
+        fig = figure;
+        fig.Position(1) = fig.Position(1) + fig.Position(3)/2;
+        plot(t_r, imag(shapes_r));
+        xlabel('t');
+        ylabel('Im');
+    end
+    
 %     updateWaitBar();
     
     if pauseModes
         inputStr = input('continue? ', 's');
         if strcmp(inputStr, 'inv') || strcmp(inputStr, 'inverse')
-            Shapes(:, kf) = -Shapes(:, kf);
+            Shapes(:, end) = -Shapes(:, end);
         end
         close all
     end

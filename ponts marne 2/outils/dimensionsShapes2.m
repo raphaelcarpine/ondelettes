@@ -39,6 +39,7 @@ sensorsDir = [
     ];
 
 shapePlotBridge = @(shape, figTitle) shapePlotPlate2([L, l], sensorsPos, sensorsDir, shape, figTitle);
+shapePlotBridge = @(shape, figTitle) shapePontsMarne([L, l], sensorsPos, sensorsDir, shape, figTitle);
 shapePlotBridgeAnim = @(shape, figTitle) shapePlotPlateAnimated2([L, l], sensorsPos, sensorsDir, shape, figTitle);
 
 

@@ -10,7 +10,7 @@ disp_freq_nonlin = 0;
 nonLin = 1;
 local_nonlin = 0; % non linearite sur ddl px_nonlin, ou sur tous les ddl
 inertia_vehicles = 0;
-shock_mode = 1;
+shock_mode = 0;
 temp_variation = 0;
 
 t_tot = 100;
