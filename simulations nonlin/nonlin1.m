@@ -46,7 +46,7 @@ end
 
 % time
 T = 10000;
-T = 30;
+% T = 30;
 T0 = 5/(c/(2*m));
 fe = 1000;
 
@@ -61,10 +61,10 @@ kt0 = sum(t < 0) + 1;
 f = zeros(size(t));
 f(kt0) = 1000 / dt;
 
-% % noise
-% f0 = 150;
-% f0 = 150*sqrt(4);
-% f = f0/sqrt(dt) * randn(size(t));
+% noise
+f0 = 150;
+f0 = 150*sqrt(4);
+f = f0/sqrt(dt) * randn(size(t));
 
 % noise + diracs
 
@@ -97,15 +97,35 @@ x = x(kt0:end);
 % t = t(1:Nfe:end);
 % x = x(1:Nfe:end);
 
+%%
+
 % plot
 figure;
 plt = plot(t, x);
 xlabel('Time [s]');
 ylabel('Displacement [m]');
 
+% plot hilbert
+figure('Name', 'Hilbert');
+hilb = hilbert(x);
+Dhilb = angle(hilb(2:end)./hilb(1:end-1));
+Dhilb = [Dhilb(1), (Dhilb(1:end-1)+Dhilb(2:end))/2, Dhilb(end)];
+plot(abs(hilb), Dhilb/(2*pi*dt));
+xlabel('Displacement [m]');
+ylabel('Frequency [Hz]');
+
+% plot hilbert 2
+figure('Name', 'Hilbert 2');
+P = round(2*pi/(sqrt(k1/m)*dt));
+hilb = hilbert(x);
+Dhilb = angle(hilb(1+P:end)./hilb(1:end-P));
+plot(abs(hilb(1+round(P/2):round(P/2)+length(Dhilb))), Dhilb/(2*pi*P*dt));
+xlabel('Displacement [m]');
+ylabel('Frequency [Hz]');
 
 
-%% wavelet
+
+% wavelet
 
 fmin = 5;
 fmax = 15;

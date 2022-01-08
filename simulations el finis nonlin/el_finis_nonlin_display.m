@@ -3,10 +3,10 @@ function el_finis_nonlin_display(varargin)
 dispStresses = 0;
 dispFreqs = 0;
 plotShapes = 0;
-plotAnimation = 1;
-plotPosition = 1;
+plotAnimation = 0;
+plotPosition = 0;
 plotSpeed = 0;
-plotAcc = 0;
+plotAcc = 1;
 
 %%
 

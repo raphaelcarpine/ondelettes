@@ -20,22 +20,19 @@ N = nf - ni + 1;
 
 X = ((ni:nf)+1/2) * dx;
 Xlims = (ni:nf+1) * dx;
-Y0 = cell(1, N);
+Y = zeros(1, N);
+K = zeros(1, N);
+stdY = zeros(1, N);
 
 for kx = 1:length(x)
     n = floor(x(kx)/dx) - ni + 1;
-    Y0{n} = [Y0{n}, y(kx)];
+    K(n) = K(n) + 1;
+    Y(n) = Y(n) + y(kx);
+    stdY(n) = stdY(n) + y(kx)^2;
 end
 
-Y = nan(1, N);
-K = nan(1, N);
-stdY = nan(1, N);
-
-for n = 1:N
-    Y(n) = mean(Y0{n});
-    K(n) = length(Y0{n});
-    stdY(n) = std(Y0{n});
-end
+Y = Y./K;
+stdY = sqrt(stdY./K - Y.^2);
 
 end
 

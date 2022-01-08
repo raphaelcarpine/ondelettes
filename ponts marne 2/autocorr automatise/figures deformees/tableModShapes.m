@@ -1,4 +1,4 @@
-saveFigs = 1; % réenregistrement des figures
+saveFigs = 0; % réenregistrement des figures
 
 
 %% chargement data
@@ -188,7 +188,7 @@ end
 %% graphs freqs & amorts
 
 grpPonts = {[1], [2 3], [4 5 6], [7 8], [9]};
-
+MarkersOrdre = {'+', 'x', '*'};
 
 filesNames2 = cellfun(@(s) replace(replace(s, 'modes_', ''), '_', ' '), filesNames, 'UniformOutput', false);
 filesNames2Temp = filesNames2;
@@ -201,27 +201,31 @@ modesDampsDevMat = modesDampsMat./mean(modesDampsMat, 2, 'omitnan') - 1;
 
 figure;
 for kpont = 1:length(grpPonts)
-    for kfile = grpPonts{kpont}
+    for kf = 1:length(grpPonts{kpont})
+        kfile = grpPonts{kpont}(kf);
         set(gca, 'ColorOrderIndex', kpont)
-        plot(100*modesFreqsDevMat(:, kfile), '-+', 'MarkerSize', 8);
+        plot(100*modesFreqsDevMat(:, kfile), 'Marker', MarkersOrdre{kf}, 'MarkerSize', 8);
         hold on
     end
 end
 xlabel('mode');
 ylabel('Df [%]');
+xlim([2.5 10.5]);
 legend(filesNames2Temp);
 selectLine();
 
 figure;
 for kpont = 1:length(grpPonts)
-    for kfile = grpPonts{kpont}
+    for kf = 1:length(grpPonts{kpont})
+        kfile = grpPonts{kpont}(kf);
         set(gca, 'ColorOrderIndex', kpont)
-        plot(100*modesDampsDevMat(:, kfile), '-+', 'MarkerSize', 8);
+        plot(100*modesDampsDevMat(:, kfile), 'Marker', MarkersOrdre{kf}, 'MarkerSize', 8);
         hold on
     end
 end
 xlabel('mode');
 ylabel('Dz [%]');
+xlim([2.5 10.5]);
 legend(filesNames2Temp);
 selectLine();
 
@@ -321,14 +325,16 @@ end
 
 figure;
 for kpont = 1:length(grpPonts)
-    for kfile = grpPonts{kpont}
+    for kf = 1:length(grpPonts{kpont})
+        kfile = grpPonts{kpont}(kf);
         set(gca, 'ColorOrderIndex', kpont)
-        plot(100*modesFreqsDevMatCorr(:, kfile), '-+', 'MarkerSize', 8);
+        plot(100*modesFreqsDevMatCorr(:, kfile), 'Marker', MarkersOrdre{kf}, 'MarkerSize', 8);
         hold on
     end
 end
 xlabel('mode');
 ylabel('Df [%]');
+xlim([2.5 10.5]);
 legend(filesNames2Temp);
 selectLine();
 

@@ -10,6 +10,7 @@ if nargin == 0
 end
 
 defaultN = 5;
+defaultNbaseline = 2;
 
 %% initialisation
 
@@ -29,7 +30,7 @@ X = X0;
 
 %% display
 
-Nbuttons = 7;
+Nbuttons = 8;
 Hbuttons = 2.5; % characters
 
 Hpans = [Nbuttons*Hbuttons, 4, 4];
@@ -63,78 +64,87 @@ Hbuttons = paramPan.Position(4)/Nbuttons;
 
 removeMeanCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'remove mean',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.8, 0]);
-removeMeanCheck.Units = 'characters'; removeMeanCheck.Position([2 4]) = Hbuttons*[6 1];
+removeMeanCheck.Units = 'characters'; removeMeanCheck.Position([2 4]) = Hbuttons*[7 1];
 smoothSignalCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'smooth signal',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.8, 0]);
-smoothSignalCheck.Units = 'characters'; smoothSignalCheck.Position([2 4]) = Hbuttons*[5 1];
+smoothSignalCheck.Units = 'characters'; smoothSignalCheck.Position([2 4]) = Hbuttons*[6 1];
 removeLocalMeanCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'remove local mean',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.8, 0]);
-removeLocalMeanCheck.Units = 'characters'; removeLocalMeanCheck.Position([2 4]) = Hbuttons*[4 1];
+removeLocalMeanCheck.Units = 'characters'; removeLocalMeanCheck.Position([2 4]) = Hbuttons*[5 1];
 highPassCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'high pass',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.25, 0]);
-highPassCheck.Units = 'characters'; highPassCheck.Position([2 4]) = Hbuttons*[3 1];
+highPassCheck.Units = 'characters'; highPassCheck.Position([2 4]) = Hbuttons*[4 1];
 lowPassCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'low pass',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.25, 0]);
-lowPassCheck.Units = 'characters'; lowPassCheck.Position([2 4]) = Hbuttons*[2 1];
+lowPassCheck.Units = 'characters'; lowPassCheck.Position([2 4]) = Hbuttons*[3 1];
 deriveCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'derive',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.8, 0]);
-deriveCheck.Units = 'characters'; deriveCheck.Position([2 4]) = Hbuttons*[1 1];
+deriveCheck.Units = 'characters'; deriveCheck.Position([2 4]) = Hbuttons*[2 1];
 integrateCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'integrate',...
     'Units', 'normalized', 'Position', [0.03, 0, 0.8, 0]);
-integrateCheck.Units = 'characters'; integrateCheck.Position([2 4]) = Hbuttons*[0 1];
+integrateCheck.Units = 'characters'; integrateCheck.Position([2 4]) = Hbuttons*[1 1];
+baselineCheck = uicontrol('Parent', paramPan, 'Style', 'checkbox', 'String', 'baseline correction',...
+    'Units', 'normalized', 'Position', [0.03, 0, 0.5, 0]);
+baselineCheck.Units = 'characters'; baselineCheck.Position([2 4]) = Hbuttons*[0 1];
 
 localMeanWindows = {'rectangular', 'gaussian'};
 smoothSignalType = uicontrol('Parent', paramPan, 'Style', 'popupmenu', 'String', localMeanWindows,...
     'Units', 'normalized', 'Position', [0.43, 3/Nbuttons, 0.25, 0.25]);
-smoothSignalType.Units = 'characters'; smoothSignalType.Position([2 4]) = Hbuttons*[5 0.8];
+smoothSignalType.Units = 'characters'; smoothSignalType.Position([2 4]) = Hbuttons*[6 0.8];
 localMeanType = uicontrol('Parent', paramPan, 'Style', 'popupmenu', 'String', localMeanWindows,...
     'Units', 'normalized', 'Position', [0.43, 3/Nbuttons, 0.25, 0.25]);
-localMeanType.Units = 'characters'; localMeanType.Position([2 4]) = Hbuttons*[4 0.8];
+localMeanType.Units = 'characters'; localMeanType.Position([2 4]) = Hbuttons*[5 0.8];
 filtersNames = {'butterworth'};
 highPassType = uicontrol('Parent', paramPan, 'Style', 'popupmenu', 'String', filtersNames,...
     'Units', 'normalized', 'Position', [0.26, 3/Nbuttons, 0.25, 0.25]);
-highPassType.Units = 'characters'; highPassType.Position([2 4]) = Hbuttons*[3 0.8];
+highPassType.Units = 'characters'; highPassType.Position([2 4]) = Hbuttons*[4 0.8];
 lowPassType = uicontrol('Parent', paramPan, 'Style', 'popupmenu', 'String', filtersNames,...
     'Units', 'normalized', 'Position', [0.26, 2/Nbuttons, 0.25, 0.25]);
-lowPassType.Units = 'characters'; lowPassType.Position([2 4]) = Hbuttons*[2 0.8];
+lowPassType.Units = 'characters'; lowPassType.Position([2 4]) = Hbuttons*[3 0.8];
 
 smoothSignalTimeStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'time:',...
     'Units', 'normalized', 'Position', [0.72, 0.38, 0.1, 0.2]);
-smoothSignalTimeStr.Units = 'characters'; smoothSignalTimeStr.Position([2 4]) = Hbuttons*[5 0.7];
+smoothSignalTimeStr.Units = 'characters'; smoothSignalTimeStr.Position([2 4]) = Hbuttons*[6 0.7];
 smoothSignalTime = uicontrol('Parent', paramPan, 'Style', 'edit',...
     'Units', 'normalized', 'Position', [0.82, 0.38, 0.13, 0.23]);
-smoothSignalTime.Units = 'characters'; smoothSignalTime.Position([2 4]) = Hbuttons*[5 0.8];
+smoothSignalTime.Units = 'characters'; smoothSignalTime.Position([2 4]) = Hbuttons*[6 0.8];
 localMeanTimeStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'time:',...
     'Units', 'normalized', 'Position', [0.72, 0.38, 0.1, 0.2]);
-localMeanTimeStr.Units = 'characters'; localMeanTimeStr.Position([2 4]) = Hbuttons*[4 0.7];
+localMeanTimeStr.Units = 'characters'; localMeanTimeStr.Position([2 4]) = Hbuttons*[5 0.7];
 localMeanTime = uicontrol('Parent', paramPan, 'Style', 'edit',...
     'Units', 'normalized', 'Position', [0.82, 0.38, 0.13, 0.23]);
-localMeanTime.Units = 'characters'; localMeanTime.Position([2 4]) = Hbuttons*[4 0.8];
+localMeanTime.Units = 'characters'; localMeanTime.Position([2 4]) = Hbuttons*[5 0.8];
 highPassFreqStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'freq:',...
     'Units', 'normalized', 'Position', [0.54, 0.38, 0.1, 0.2]);
-highPassFreqStr.Units = 'characters'; highPassFreqStr.Position([2 4]) = Hbuttons*[3 0.7];
+highPassFreqStr.Units = 'characters'; highPassFreqStr.Position([2 4]) = Hbuttons*[4 0.7];
 highPassFreq = uicontrol('Parent', paramPan, 'Style', 'edit',...
     'Units', 'normalized', 'Position', [0.64, 0.38, 0.13, 0.23]);
-highPassFreq.Units = 'characters'; highPassFreq.Position([2 4]) = Hbuttons*[3 0.8];
+highPassFreq.Units = 'characters'; highPassFreq.Position([2 4]) = Hbuttons*[4 0.8];
 lowPassFreqStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'freq:',...
     'Units', 'normalized', 'Position', [0.54, 0.05, 0.1, 0.2]);
-lowPassFreqStr.Units = 'characters'; lowPassFreqStr.Position([2 4]) = Hbuttons*[2 0.7];
+lowPassFreqStr.Units = 'characters'; lowPassFreqStr.Position([2 4]) = Hbuttons*[3 0.7];
 lowPassFreq = uicontrol('Parent', paramPan, 'Style', 'edit',...
     'Units', 'normalized', 'Position', [0.64, 0.05, 0.13, 0.23]);
-lowPassFreq.Units = 'characters'; lowPassFreq.Position([2 4]) = Hbuttons*[2 0.8];
+lowPassFreq.Units = 'characters'; lowPassFreq.Position([2 4]) = Hbuttons*[3 0.8];
 
 highPassNStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'n:',...
     'Units', 'normalized', 'Position', [0.8, 0.38, 0.05, 0.2]);
-highPassNStr.Units = 'characters'; highPassNStr.Position([2 4]) = Hbuttons*[3 0.7];
+highPassNStr.Units = 'characters'; highPassNStr.Position([2 4]) = Hbuttons*[4 0.7];
 highPassN = uicontrol('Parent', paramPan, 'Style', 'edit', 'String', defaultN,...
     'Units', 'normalized', 'Position', [0.85, 0.38, 0.1, 0.23]);
-highPassN.Units = 'characters'; highPassN.Position([2 4]) = Hbuttons*[3 0.8];
+highPassN.Units = 'characters'; highPassN.Position([2 4]) = Hbuttons*[4 0.8];
 lowPassNStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'n:',...
     'Units', 'normalized', 'Position', [0.8, 0.05, 0.05, 0.2]);
-lowPassNStr.Units = 'characters'; lowPassNStr.Position([2 4]) = Hbuttons*[2 0.7];
+lowPassNStr.Units = 'characters'; lowPassNStr.Position([2 4]) = Hbuttons*[3 0.7];
 lowPassN = uicontrol('Parent', paramPan, 'Style', 'edit', 'String', defaultN,...
     'Units', 'normalized', 'Position', [0.85, 0.05, 0.1, 0.23]);
-lowPassN.Units = 'characters'; lowPassN.Position([2 4]) = Hbuttons*[2 0.8];
+lowPassN.Units = 'characters'; lowPassN.Position([2 4]) = Hbuttons*[3 0.8];
+baselineNStr = uicontrol('Parent', paramPan, 'Style', 'text', 'String', 'n:',...
+    'Units', 'normalized', 'Position', [0.8, 0.05, 0.05, 0.2]);
+baselineNStr.Units = 'characters'; baselineNStr.Position([2 4]) = Hbuttons*[0 0.7];
+baselineN = uicontrol('Parent', paramPan, 'Style', 'edit', 'String', defaultNbaseline,...
+    'Units', 'normalized', 'Position', [0.85, 0.05, 0.1, 0.23]);
+baselineN.Units = 'characters'; baselineN.Position([2 4]) = Hbuttons*[0 0.8];
 
 
     function removeMean()
@@ -222,6 +232,17 @@ lowPassN.Units = 'characters'; lowPassN.Position([2 4]) = Hbuttons*[2 0.8];
     end
 
 
+    function applyBaseline()
+        n = eval(get(baselineN, 'String'));
+        if isnan(n)
+            error('invalid syntax');
+        end
+        for k = 1:N
+            X{k} = baselineCorrection(T0{k}, X{k}, n);
+        end
+    end
+
+
 
 %% filter panel
 
@@ -249,6 +270,9 @@ buttonFilter = uicontrol('Parent',filterPan, 'Units', 'normalized','Style','push
         end
         if get(integrateCheck, 'Value')
             applyIntegrate();
+        end
+        if get(baselineCheck, 'Value')
+            applyBaseline();
         end
         
         for k = 1:N

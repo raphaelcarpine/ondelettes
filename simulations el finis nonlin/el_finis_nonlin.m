@@ -13,7 +13,7 @@ inertia_vehicles = 0;
 shock_mode = 0;
 temp_variation = 0;
 
-t_tot = 100;
+t_tot = 1000;
 Fe = 2000;
 resample_data = 1;
 Fe2 = 50;
@@ -46,13 +46,13 @@ dx = L / (N-1);
 g = 9.81;
 
 % courbure statique
-C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % A CORRIGER
+C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % corrigé plus bas pour le cas non-lin
 
 % parametres
 x_nonlin = L/pi; % endroit du defaut
 px_nonlin = round(x_nonlin/dx);
 x_nonlin = px_nonlin*dx;
-threshold_nonlin = max(C_static0) - 10*3e-6; % courbure, 5e-7
+threshold_nonlin = max(C_static0) + 5e-7; % courbure, 5e-7, 3e-5
 slope_nonlin_E = 0.75; % E2 = slope_nonlin*E
 
 % precontrainte etc.
