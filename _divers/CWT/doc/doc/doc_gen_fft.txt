@@ -1,0 +1,5 @@
+\bullet La transformée de Fourier est calculée à partir de l'algorithme fft, sans zero-padding.
+
+\bullet Pour une entrée à plusieurs signaux, elle recombine ces signaux de la même manière que l'ondelette, c'est à dire en fonction du "Mode". Pour plus de précisions voir Menus \rightarrow Mode.
+
+\bullet Il est possible d'utiliser un fenêtrage ou de faire du moyennage de spectre. Pour plus de précisions voir Menus \rightarrow Fourier.

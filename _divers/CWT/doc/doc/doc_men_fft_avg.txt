@@ -1,0 +1,5 @@
+Permet de faire du moyennage de spectre.
+
+\bullet La méthode utilisée est celle de Bartlett. Voir Wikipedia - Méthode de Bartlett.
+
+\bullet Le paramètre "Set averaging" correspond au nombre de sous-signaux en lequel est divisé le signal total.

@@ -1,0 +1,6 @@
+Choix du facteur de sécurité c_f.
+
+\bullet L'étalement fréquentiel de la CWT \Deltaf est proportionnel à la fréquence de la transformée f et inversement proportionnel au facteur de qualité Q.
+Voir Le & Argoul 2004, ou Erlicher & Argoul 2007
+
+\bullet Le facteur c_f est un facteur de sécurité, permettant de garantir une certaine précision des ridges dans le cas d'un signal comportant plusieur fréquences. Il est utilisé uniquement dans le calcul de Q_{max}, une borne supérieure pour Q, accessible depuis "Tools", "Bounds Q". Pour plus de précisions voir Tools \rightarrow Bounds Q.

@@ -1,0 +1,13 @@
+Courbes à afficher (cliquer sur le bouton "wavelet").
+
+\bullet "general plot" : informations générales sur la CWT
+
+\bullet "module plot" : affichage de l'amplitude de la CWT, dans le plan temps-fréquence. Les axes x, y et z sont respectivement le temps, la fréquence et l'amplitude. L'amplitude est également représentée par la couleur. Elle peut être affichée en échelle log ou linéaire (ce qui affecte également l'échelle des couleurs).
+
+\bullet "phase plot" : affichage de la phase de la CWT, dans le plan temps-fréquence. Les axes x et y sont respectivement le temps et la fréquence, et la phase est représentée par la couleur.
+
+\bullet "time, ampl on plot" : graph de l'amplitude des ridges en fonction du temps, affichés directement sur les axes où le signal est affiché. Appuyer sur "delete" pour le supprimer.
+
+\bullet [quantité x], [quantité y] : graph de [quantité y] des ridges en fonction de [quantité x]. Les boutons situés à droite permettent de changer l'échelle (linéaire ou log) pour les deux grandeurs.
+
+\bullet Les unités sont données en s pour le temps, en Hz pour la fréquence et en m.s^{-2} pour l'amplitude. Pour un signal dans d'autres unités d'amplitude, spécifier les paramètres 'SignalUnits' et 'SquaredSignalUnits' lors de l'appel de WaveletMenu (exemple : pour un signal en V, on prendra 'SignalUnits', 'V', 'SquaredSignalUnits', 'V²').

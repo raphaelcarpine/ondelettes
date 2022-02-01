@@ -18,7 +18,7 @@ close all
 
 m = [1, 1];
 k = 100 * [1, 1];
-c = [0.5, 0];
+c = 1*[0.5, 0];
 k = [k, 0];
 c = [c, 0];
 
@@ -60,7 +60,7 @@ freqs_amort = abs(imag(poles))/(2*pi);
 [Mb, Kb, Cb] = syst.modalDamping();
 % Kb^(-1/2)*Cb
 
-T = 100;
+T = 10000;
 dt = 0.05;
 fe = 1/dt;
 
@@ -69,6 +69,7 @@ t = dt * (0:nt-1);
 T = nt*dt;
 
 mu_tilde = nan(2, 0);
+f_tilde = nan(0, 2);
 
 ti = nan(1, 2);
 
@@ -100,7 +101,7 @@ for k_sim = 1:N_sim
         
         Topt = 1.4326/mu(k_mode);
         [~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
-        ti(k_mode) = DeltaT(freqs_amort(k_mode));
+        ti(k_mode) = ct*DeltaT(freqs_amort(k_mode));
         
         Rx = Rx(t <= Topt + 2*ti(k_mode) + 1);
         tRx = t(t <= Topt + 2*ti(k_mode) + 1);
@@ -123,6 +124,7 @@ for k_sim = 1:N_sim
         ridgeTime = ridge.time{1};
         reg_coeffs = [ones(size(ridgeTime)); ridgeTime].' \ logAmpl.';
         mu_tilde(k_mode, k_sim) = -reg_coeffs(2);
+        f_tilde(k_mode, k_sim) = mean(ridge.freq{1});
         
 %         % plot
 %         figure;
@@ -144,10 +146,14 @@ closeWaitBar();
 for k_mode = 1:2
     mu_tilde_mean = mean(mu_tilde(k_mode, :));
     mu_tilde_std = std(mu_tilde(k_mode, :));
+    f_tilde_mean = mean(f_tilde(k_mode, :));
+    f_tilde_std = std(f_tilde(k_mode, :));
     alpha_p = sqrt(4/(mu(k_mode)*T) + 2/(freqs_amort(k_mode)*T));
     Meff = mu_tilde_std/(mu(k_mode) * alpha_p * exp(mu(k_mode)*ti(k_mode)));
-    fprintf('mode %d (mu=%.4f):\nmu*T=%.1f, alpha=%.3f\nmean: %.4f, std dev: %.4f\nMeff: %.2f\n\n',...
-        [k_mode, mu(k_mode), mu(k_mode)*T, alpha_p, mu_tilde_mean, mu_tilde_std, Meff]);
+    fprintf('mode %d (mu=%.4f):\nmu*T=%.1f, alpha=%.3f, alpha*exp=%.2f\nf: mean: %.3f, std dev: %.3f\nmu: mean: %.3f, std dev: %.3f\nMeff: %.2f\n\n',...
+        [k_mode, mu(k_mode), mu(k_mode)*T, alpha_p, alpha_p*exp(mu(k_mode)*(ti(k_mode) + 1.4326/mu(k_mode))),...
+        f_tilde_mean, f_tilde_std, mu_tilde_mean, mu_tilde_std, Meff]);
+    
 end
 
 

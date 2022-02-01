@@ -1,0 +1,16 @@
+Paramètres de la CWT.
+
+\bullet Intervalle de fréquence [f_{min}, f_{max}] : utilisé pour le calcul de la CWT, mais aussi pour les limites en abcisse de la transformée de Fourier.
+
+\bullet Nombre de fréquences "NbFreq" : nombre de fréquences réparties entre f_{min} et f_{max} pour lesquelles est calculée la CWT. Ces fréquences sont réparties linéairement ou logarithmiquement en fonction de l'échelle de fréquence ("Options", "Frequency Scale").
+
+\bullet Facteur de qualité Q de l'ondelette mère \psi.
+
+\bullet Nombre maximum de ridges extraits "max ridges".
+
+\bullet Nombre maximum de ridges parallèles (à temps fixé) extraits "max parallel ridges". Par exemple, si il est fixé à deux, on pourra avoir plus de deux ridges en tout, mais jamais plus de deux ridges définis à un temps t.
+
+\bullet Condition d'arrêt des ridges "max ridge slope". Elle assure la continuité des ridges dans le plan temps-fréquence, selon la condition :
+    df_r/dt < [max ridge slope] * f_r^2
+
+Il existe d'autres conditions d'arrêt pour les ridge. Voir Menus \rightarrow Ridges \rightarrow Set ridge threshold et Menus \rightarrow Ridges \rightarrow Stop ridge when increasing

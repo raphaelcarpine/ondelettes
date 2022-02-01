@@ -1,4 +1,4 @@
-function [filesNames, FreqsCell, DampsCell, ShapesCell] = getCWTResults()
+function [filesNames, FreqsCell, DampsCell, ShapesCell, QsCell] = getCWTResults()
 
 %% modes à ignorer (modes proches etc)
 
@@ -29,6 +29,7 @@ end
 ShapesCell = cell(1, length(filesNames));
 FreqsCell = cell(1, length(filesNames));
 DampsCell = cell(1, length(filesNames));
+QsCell = cell(1, length(filesNames));
 
 for kfile = 1:length(filesNames)
     load(filesPaths{kfile});
@@ -37,4 +38,5 @@ for kfile = 1:length(filesNames)
     ShapesCell{kfile} = Shapes(:, I);
     FreqsCell{kfile} = Freqs(I);
     DampsCell{kfile} = Damps(I);
+    QsCell{kfile} = QualityFactors(I);
 end

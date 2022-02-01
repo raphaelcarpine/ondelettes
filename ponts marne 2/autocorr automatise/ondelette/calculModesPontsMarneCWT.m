@@ -5,8 +5,8 @@ savePath = 'ponts marne 2\autocorr automatise\ondelette\save';
 MotherWavelet = 'cauchy';
 
 % mode
-manualMode = 0;
-saveResults = 1;
+manualMode = 1;
+saveResults = 0;
 saveResults = saveResults & ~manualMode;
 
 % affichage
@@ -14,7 +14,7 @@ pauseModes = 1; % pause entre les modes
 plotRidgeExtract = 1;
 plotShapes = 1;
 plotShapesTime = 0;
-plotTemp = 0;
+plotTemp = 1;
 
 % filtrage passe haut
 filtrage = 1;
@@ -85,6 +85,7 @@ Freqs0bis = [0, Freqs0, inf];
 % save
 Freqs = [];
 Damps = [];
+QualityFactors= [];
 Shapes = nan(size(X, 1), 0);
 PbCalculRidge = [];
 MultipleSV = [];
@@ -132,7 +133,7 @@ for kf = Kf
     
     poleMode = 2i*pi*freq0 - 2*pi*damp0*freq0/sqrt(1-damp0^2);
     alphap = sqrt((-4/real(poleMode) + 2/abs(imag(poleMode)))/Ttot);
-    Tmaxridge = log(alphap)/real(poleMode);
+    Topt = -1.4326/real(poleMode);
     
     % filtrage
     if filtrage && freq0 > fmin_filtrage
@@ -145,6 +146,11 @@ for kf = Kf
     fmin = freq0-Df/2;
     fmax = freq0+Df/2;
     NbFreqs = 100;
+    Q = Qmin;
+    QualityFactors(end+1) = Q;
+    
+    [~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
+    Dt_edge = ct*DeltaT(freq0);
     
     if strcmp(dataFileName, 'changis_0705_1') && kf <= 2
         fmax = 2.2;
@@ -153,9 +159,9 @@ for kf = Kf
     if manualMode
         fig = figure;
         plt = plot(T, Xfiltr);
-        WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Qmin, 'XLimRidge', [0, Tmaxridge],...
+        WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'XLimRidge', [0, Dt_edge + Topt],...
             'AutocorrelationMode', true, 'AutocorrelationSVDMode', true, 'AutocorrelationFourierSVDMode', true,...
-            'AutocorrelationMaxLag', 2*Tmaxridge, 'AutocorrelationNsvd', Nsv, 'FourierScale', 'lin',...
+            'AutocorrelationMaxLag', 3*Dt_edge + Topt, 'AutocorrelationNsvd', Nsv, 'FourierScale', 'lin',...
             'MaxRidges', 1, 'MaxParallelRidges', inf, 'RealShapePlot', shapePlotBridge,...
             'AnimatedShapePlot', shapePlotBridgeAnim, 'MotherWavelet', MotherWavelet);
         waitfor(fig);
@@ -163,21 +169,21 @@ for kf = Kf
     end
     
     % calcul cross-corr
-    Rx = crossCorrelation(Xfiltr, round(2*Tmaxridge/dt), 'unbiased');
+    Rx = crossCorrelation(Xfiltr, round((3*Dt_edge + 2*Topt)/dt), 'unbiased');
     tRx = dt * (0:size(Rx, 3)-1);
     
     % calcul CWT
-    [SVrx, SVvectrx] = svdCWT(tRx, Rx, linspace(fmin, fmax, NbFreqs), Qmin, Nsv,...
+    [SVrx, SVvectrx] = svdCWT(tRx, Rx, linspace(fmin, fmax, NbFreqs), Q, Nsv,...
         'MotherWavelet', MotherWavelet);
     
     Nextractions = 2;
-    Tmaxridge0 = Tmaxridge;
+    Topt0 = Topt;
     for K = 1:Nextractions % répétition extractions ridges
         for K2 = 1:2
             % calcul ridge
             [t_r, freqs_r, shapes_r, amplitudes_r] = getModesCrossCorr(tRx, SVrx, SVvectrx,...
-                Qmin, fmin, fmax, NbFreqs, Nsv, 'NbMaxRidges', 1, 'NbMaxParallelRidges', inf,...
-                'XLimRidge', [0, Tmaxridge], 'MotherWavelet', MotherWavelet, 'StopWhenIncreasing', true);
+                Q, fmin, fmax, NbFreqs, Nsv, 'NbMaxRidges', 1, 'NbMaxParallelRidges', inf,...
+                'XLimRidge', [0, Dt_edge + Topt], 'MotherWavelet', MotherWavelet, 'StopWhenIncreasing', false);
             
             % cas SV2 pour deux premières freqs
             if Nsv == 2
@@ -195,13 +201,13 @@ for kf = Kf
                 fprintf('-> SV%d\n', Nsv);
             end
             
-            if K2 == 1 && Tmaxridge > Tmaxridge0 && (isempty(t_r{Nsv}) || abs(t_r{Nsv}{1}(end) - Tmaxridge) > 3*dt)
+            if K2 == 1 && Topt > 2*Topt0 && (isempty(t_r{Nsv}) || abs(t_r{Nsv}{1}(end) - 3*Dt_edge + Topt) > 3*dt)
                 % calcul cross-corr
-                Rx = crossCorrelation(Xfiltr, round(2*Tmaxridge/dt), 'unbiased');
+                Rx = crossCorrelation(Xfiltr, round((3*Dt_edge + Topt)/dt), 'unbiased');
                 tRx = dt * (0:size(Rx, 3)-1);
                 
                 % calcul CWT
-                [SVrx, SVvectrx] = svdCWT(tRx, Rx, linspace(fmin, fmax, NbFreqs), Qmin, Nsv,...
+                [SVrx, SVvectrx] = svdCWT(tRx, Rx, linspace(fmin, fmax, NbFreqs), Q, Nsv,...
                     'MotherWavelet', MotherWavelet);
             else
                 break
@@ -227,7 +233,7 @@ for kf = Kf
         amplitudes_r = amplitudes_r{Nsv}{1};
         
         % cas d'aret du ridge avant la limite
-        if abs(t_r(end) - Tmaxridge) > 3*dt
+        if abs(t_r(end) - (Dt_edge + Topt)) > 3*dt
             warning('arrêt ridge avant borne');
             PbCalculRidge(end) = true;
         end
@@ -244,7 +250,7 @@ for kf = Kf
         poleMode = 2i*pi*freq_moy + lambda_reg;
         alphap = sqrt((-4/real(poleMode) + 2/abs(imag(poleMode)))/Ttot);
         if K < Nextractions
-            Tmaxridge = log(alphap)/real(poleMode);
+            Topt = -1.4326/real(poleMode);
         end
         
         % parametres modaux
@@ -270,7 +276,7 @@ for kf = Kf
         fig.Position(1) = fig.Position(1) - fig.Position(3)/2;
         plot(t_r, freqs_r);
         yline(freq_moy, '--r');
-        xline(Tmaxridge);
+        xline(Dt_edge + Topt);
         set(gca, 'ylim', freq_moy*(1 + 0.1*[-1 1]));
         % damp
         fig = figure;
@@ -278,7 +284,7 @@ for kf = Kf
         plot(t_r, amplitudes_r);
         hold on
         plot(t_r, exp(coeffsRegLin * [ones(size(t_r)); t_r]), '--r');
-        xline(Tmaxridge);
+        xline(Dt_edge + Topt);
         set(gca, 'yscale', 'log');
         set(gca, 'ygrid', 'on');
     end
@@ -323,7 +329,8 @@ end
 
 if saveResults
     saveFile = fullfile(savePath, ['modes_', dataFileName]);
-    save(saveFile, 'Freqs', 'Damps', 'Shapes', 'PbCalculRidge', 'MultipleSV');
+    save(saveFile, 'Freqs', 'Damps', 'QualityFactors', 'Shapes', 'PbCalculRidge', 'MultipleSV');
+%     save(saveFile, 'QualityFactors', '-append');
     disp('saved');
 end
 

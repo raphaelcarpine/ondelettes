@@ -3,10 +3,12 @@ saveFigs = 0; % réenregistrement des figures
 
 %% chargement data
 
-[filesNames, FreqsCell, DampsCell, ShapesCell] = getCWTResults();
+[filesNames, FreqsCell, DampsCell, ShapesCell, QsCell] = getCWTResults();
 
 
 %% calcul température moyenne
+
+Ttot = nan(size(filesNames));
 
 TempMoyCell = cell(size(filesNames));
 
@@ -21,6 +23,13 @@ for bridge = 1:10
     [~, T] = removeNanSignal(X, T);
     [~, dataFileName] = fileparts(dataFilePath);
     disp(' ');
+    
+    % enregistrement temps total acquisition Ttot
+    for kfile = 1:length(filesNames)
+        if strcmp(dataFileName, filesNames{kfile}(7:end))
+            Ttot(kfile) = T(end) - T(1);
+        end
+    end
     
     % chargement température
     [timeTemp, Temp] = getTemperature(startDate);
@@ -56,11 +65,13 @@ modesMat = groupModShapes(FreqsCell, ShapesCell);
 
 modesFreqsMat = nan(size(modesMat));
 modesDampsMat = nan(size(modesMat));
+modesQsMat = nan(size(modesMat));
 for kfreq = 1:size(modesMat, 1)
     for kfile = 1:size(modesMat, 2)
         if ~isnan(modesMat(kfreq, kfile))
             modesFreqsMat(kfreq, kfile) = FreqsCell{kfile}(modesMat(kfreq, kfile));
             modesDampsMat(kfreq, kfile) = DampsCell{kfile}(modesMat(kfreq, kfile));
+            modesQsMat(kfreq, kfile) = QsCell{kfile}(modesMat(kfreq, kfile));
         end
     end
 end
@@ -71,6 +82,7 @@ freqsMoy = mean(modesFreqsMat, 2, 'omitnan');
 modesMat = modesMat(If, :);
 modesFreqsMat = modesFreqsMat(If, :);
 modesDampsMat = modesDampsMat(If, :);
+modesQsMat = modesQsMat(If, :);
 
 % tableaux
 modesTable = array2table(modesMat);
@@ -79,6 +91,8 @@ modesFreqsTable = array2table(modesFreqsMat);
 modesFreqsTable.Properties.VariableNames = filesNames;
 modesDampsTable = array2table(modesDampsMat);
 modesDampsTable.Properties.VariableNames = filesNames;
+modesQsTable = array2table(modesQsMat);
+modesQsTable.Properties.VariableNames = filesNames;
 
 
 %% preparation tableau latex et figures deformees
@@ -111,7 +125,7 @@ if saveFigs
     end
 end
 
-%%
+%% ecriture tableau
 
 % creation fichier tex
 xWidth = 1/(size(modesFreqsMat, 1)+1);
@@ -183,6 +197,34 @@ try
 catch
     fprintf(2, 'problème lecture/écriture fichier\n');
 end
+
+
+%% ecart type amortissement
+
+modesDampCovsMat = nan(size(modesMat));
+
+for kfile = 1:size(modesFreqsMat, 2)
+    for kmod = 1:size(modesFreqsMat, 1)
+        if ~isnan(modesFreqsMat(kmod, kfile))
+            freq = modesFreqsMat(kmod, kfile);
+            damp = modesDampsMat(kmod, kfile);
+            mu = damp*2*pi*freq/sqrt(1-damp^2);
+            Q = modesQsMat(kmod, kfile);
+            ct = 3;
+            MotherWavelet = 'cauchy';
+            [~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
+            t_ri = ct * DeltaT(freq*sqrt(1-damp^2));
+            
+            alpha = sqrt(4/(mu*Ttot(kfile)) + 2/(2*pi*freq*sqrt(1-damp^2)*Ttot(kfile)));
+            covMu = 0.9 * exp(mu*t_ri) * alpha;
+            
+            modesDampCovsMat(kmod, kfile) = covMu;
+        end
+    end
+end
+
+modesDampCovsTable = array2table(modesDampCovsMat);
+modesDampCovsTable.Properties.VariableNames = filesNames;
 
 
 %% graphs freqs & amorts

@@ -1,0 +1,23 @@
+Permet de faire des régression non linéaires, par minimisation de somme de carrés.
+
+\bullet La courbe sur laquelle la régression est faite est sélectionnée par un clic sur "select line", puis à l'aide de "<" et ">" qui permettent de changer de sélection.
+
+\bullet Paramètres :
+  - "y =" : fonction à ajuster. Le paramètre en abcisse est noté "x".
+  - "params" : paramètres de la fonction à ajuster, séparés par un espace.
+  - "params init" : valeurs initiales prises par les différents paramètres, pour l'initialisation de l'algorithme de minimisation des carrés. Les valeurs trouvées par l'algorithme seront affichées ici.
+  - "params lb" et "params up" : bornes inférieures et supérieures respectivement pour les différents paramètres, séparées par un espace (optionnel).
+  - "fit" : fonction appliquée avant la minimisation des carrés.
+  - "bounds" : bornes pour la variable "x". Permet de ne sélectionner qu'une partie de la courbe.
+
+\bullet En notant x_k et y_k les données de la courbe (abcisse et ordonnée), p le vecteur contenant les paramètres de la fonction à ajuster, f_p cette fonction, Fit la fonction "fit" et B l'intervalle "bounds", le résultat p_{reg} de la régression s'écrit :
+    p_{reg} = argmin_p [ \Sigma_{(k, x_k \in B)} (Fit(y_k) - Fit(f_p(x_k))^2 ]
+
+\bullet Exemple : on peut par exemple faire une régression linéaire, avec les arguments suivants :
+  - y = a*x + b
+  - params: a b
+  - params init: 0 0
+  - params lb:
+  - params ub:
+  - fit: y
+  - bounds: -inf inf

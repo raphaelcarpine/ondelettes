@@ -1,0 +1,7 @@
+Biais de l'estimateur d'intercorrélation.
+
+\bullet Cas "Biased" :
+    R_{ij}(\tau) = (1 / (Tmax - Tmin)) \int_{Tmin+\tau}^{Tmax} u_i(t) u_j(t - \tau) dt
+
+\bullet Cas "Unbiased" :
+    R_{ij}(\tau) = (1 / (Tmax - Tmin - \tau)) \int_{Tmin+\tau}^{Tmax} u_i(t) u_j(t - \tau) dt

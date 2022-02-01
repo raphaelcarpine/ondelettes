@@ -1,0 +1,4 @@
+Condition d'arrêt pour les ridges.
+
+Condition à respecter :
+    A_r \geq [threshold]
