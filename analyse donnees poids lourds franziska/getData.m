@@ -4,7 +4,7 @@ if nargin == 0
     jour = 1;
 end
 
-fileFolder = 'C:\Users\carpine\Documents\projets\donnees poids lourds franziska\donnees jours semaine';
+fileFolder = 'analyse donnees poids lourds franziska\donnees jours semaine';
 fileName = sprintf('%d.mat', jour);
 
 load(fullfile(fileFolder, fileName));
