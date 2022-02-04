@@ -5,8 +5,8 @@ savePath = 'ponts marne 2\erreur amort\save';
 MotherWavelet = 'cauchy';
 
 % mode
-manualMode = 0;
-saveResults = 1;
+manualMode = 1;
+saveResults = 0;
 saveResults = saveResults & ~manualMode;
 
 % affichage
@@ -23,11 +23,11 @@ fc_filtre = 3.5; % freq coupure
 fmin_filtrage = 5; % min freq propre avec filtre
 
 % séparation signal
-Nsep = 30;
+Nsep = 1;
 
 % pont et mode
 bridge = 6;
-Kf = 0;
+Kf = 1;
 
 % Meff
 Meff0 = 1;

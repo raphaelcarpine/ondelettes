@@ -27,6 +27,7 @@ Atot = getYtot(A);
 
 % capteurs
 pos_capteurs = L/2;
+% pos_capteurs = linspace(0, L, N);
 Ycapt = getYcapt2(Ytot, pos_capteurs, dx);
 Vcapt = getYcapt2(Vtot, pos_capteurs, dx);
 Acapt = getYcapt2(Atot, pos_capteurs, dx);
@@ -34,7 +35,7 @@ Acapt = getYcapt2(Atot, pos_capteurs, dx);
 %% display
 
 % freqs et def modales
-plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, fleche_pont, sigma0, sigma_min, sigma_max, delta_sigma_1t);
+plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, fleche_pont, sigma0, sigma_min, sigma_max, delta_sigma_1t, delta_sigma_1t_12m);
 
 % animation
 if plotAnimation
