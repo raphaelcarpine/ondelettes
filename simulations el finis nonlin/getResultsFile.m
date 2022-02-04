@@ -4,6 +4,9 @@ dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non 
 
 % last simulation
 if nargin == 0 || fileNb <= 0
+    if nargin == 0
+        fileNb = 0;
+    end
     listing = dir(dataFolder);
     listingNames = {listing.name};
     nbSimul = 0;
