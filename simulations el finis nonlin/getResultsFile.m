@@ -3,7 +3,7 @@ function filePath = getResultsFile(fileNb)
 dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
 
 % last simulation
-if nargin == 0
+if nargin == 0 || fileNb <= 0
     listing = dir(dataFolder);
     listingNames = {listing.name};
     nbSimul = 0;
@@ -14,7 +14,7 @@ if nargin == 0
             nbSimul = max(nbSimul, str2double(name1(6:end)));
         end
     end
-    fileNb = nbSimul;
+    fileNb = nbSimul + fileNb;
 end
 
 % data download

@@ -1,4 +1,4 @@
-function plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, fleche_pont, sigma0, sigma_min, sigma_max, delta_sigma_1t)
+function plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, fleche_pont, sigma0, sigma_min, sigma_max, delta_sigma_1t, delta_sigma_1t_12m)
 
 % precontrainte etc.
 if dispStresses
@@ -8,8 +8,9 @@ if dispStresses
     fprintf('max. compression: %.1f MPa\n', sigma_max*1e-6);
     fprintf('min. compression loss 1t vehicle: %.2f MPa\n', delta_sigma_1t*1e-6);
     fprintf('min. compression loss 2t vehicle: %.2f MPa\n', 2*delta_sigma_1t*1e-6);
-    fprintf('min. compression loss 20t vehicle: %.2f MPa\n', 20*delta_sigma_1t*1e-6);
-    fprintf('min. compression loss 40t vehicle: %.2f MPa\n', 40*delta_sigma_1t*1e-6);
+    fprintf('min. compression loss 20t vehicle: %.2f MPa\n', 20*delta_sigma_1t_12m*1e-6);
+    fprintf('min. compression loss 30t vehicle: %.2f MPa\n', 30*delta_sigma_1t_12m*1e-6);
+    fprintf('min. compression loss 40t vehicle: %.2f MPa\n', 40*delta_sigma_1t_12m*1e-6);
 end
 
 % frequences

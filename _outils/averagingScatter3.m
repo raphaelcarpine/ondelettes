@@ -14,24 +14,42 @@ elseif length(x) ~= length(y)
     error('length(x) ~= length(y)');
 end
 
+%% nan removal
+
+indexes_not_nan = ~isnan(x) & ~isnan(y);
+x = x(indexes_not_nan);
+y = y(indexes_not_nan);
+t = t(indexes_not_nan);
+
+
 %% time separation
 
 if ~isnan(t)
-    Nt = floor((t(end)-t(1))/DeltaT); % nb of time intervals
-    
-    kt = floor(length(t)/Nt);
-    rt = mod(length(t), kt);
-    randomKt = 1:Nt;
-    for i = 1:(Nt-rt)
-        randomKt(randi(length(randomKt))) = [];
+    t = t - t(1);
+    Kt = 0;
+    Tindex = nan(size(x));
+    for kt = 1:length(t)
+        if t(kt) >= length(Kt)*DeltaT
+            Kt(end+1) = 0;
+        end
+        Kt(end) = Kt(end) + 1;
+        Tindex(kt) = length(Kt);
     end
-    Kt = kt * ones(1, Nt); % nb of points in time interval
-    Kt(randomKt) = kt+1;
-    
-    Tindex = nan(size(x)); % time interval index
-    for it = 1:length(Kt)
-        Tindex(sum(Kt(1:it-1))+1:sum(Kt(1:it))) = it;
-    end
+%     Nt = floor((t(end)-t(1))/DeltaT); % nb of time intervals
+%     
+%     kt = floor(length(t)/Nt);
+%     rt = mod(length(t), kt);
+%     randomKt = 1:Nt;
+%     for i = 1:(Nt-rt)
+%         randomKt(randi(length(randomKt))) = [];
+%     end
+%     Kt = kt * ones(1, Nt); % nb of points in time interval
+%     Kt(randomKt) = kt+1;
+%     
+%     Tindex = nan(size(x)); % time interval index
+%     for it = 1:length(Kt)
+%         Tindex(sum(Kt(1:it-1))+1:sum(Kt(1:it))) = it;
+%     end
 else
     Kt = ones(size(x));
     Tindex = 1:length(x);
