@@ -635,16 +635,19 @@ clear options formatsTime
 clear Tdj1 Tdj2
 
 % sauvegarde
-for k_save = 1:10
+for k_save = 1:7*24
     try
         save(fullfile(saveFolder, simul_name), '-nocompression');
+        disp('saved');
         break
-    catch
-        0;
+    catch ME
+        warning('saving error');
+        warning(ME.identifier);
+        warning(ME.message);
+        pause(3600);
     end
 end
 
-disp('saved');
 
 
 %% affichage
