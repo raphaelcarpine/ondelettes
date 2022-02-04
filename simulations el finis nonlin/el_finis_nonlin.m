@@ -15,7 +15,7 @@ presence_PL = 1;
 temp_variation = 0; % variations E par température
 shock_mode = 0;
 
-t_tot = 20*60;
+t_tot = 20;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
