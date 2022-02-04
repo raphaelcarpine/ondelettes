@@ -1,8 +1,14 @@
 function el_finis_nonlin()
 
 results_name = 'test';
-saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
-saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
+
+if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
+    saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
+    saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
+else
+    error(' ');
+end
 
 solve_ODE = 1;
 plot_results = 1; % sauvegarde dans tous les cas

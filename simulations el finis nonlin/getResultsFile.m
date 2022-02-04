@@ -1,6 +1,12 @@
 function filePath = getResultsFile(fileNb)
 
-dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
+    dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
+    dataFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
+else
+    error(' ');
+end
 
 % last simulation
 if nargin == 0 || fileNb <= 0
