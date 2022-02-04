@@ -2,6 +2,7 @@ function el_finis_nonlin()
 
 results_name = 'test';
 saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
 
 solve_ODE = 1;
 plot_results = 1; % sauvegarde dans tous les cas
