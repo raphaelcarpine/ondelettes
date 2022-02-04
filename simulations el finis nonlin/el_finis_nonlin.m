@@ -1,6 +1,6 @@
 function el_finis_nonlin()
 
-results_name = 'test';
+results_name = 'simul1';
 
 if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
     saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
@@ -11,17 +11,17 @@ else
 end
 
 solve_ODE = 1;
-plot_results = 1; % sauvegarde dans tous les cas
+plot_results = 0; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 
 nonLin = 0;
 local_nonlin = 1; % non linearite sur ddl px_nonlin, ou sur tous les ddl
-inertia_vehicles = 1;
+inertia_vehicles = 0;
 presence_PL = 1;
 temp_variation = 0; % variations E par température
 shock_mode = 0;
 
-t_tot = 20;
+t_tot = 24*3600;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
@@ -112,13 +112,6 @@ select_nonlin_local(px_nonlin) = 1;
 func_nonlin_local0 = @nonlin_local1;
 
 
-%% données capteurs ponts
-
-% pos_capteurs = [L/6, L/3, L/2, 2*L/3, 5*L/6];
-pos_capteurs = linspace(0, L, 21);% pos_capteurs = pos_capteurs(2:end-1);
-% pos_capteurs = L/2;
-
-
 %% données temps
 
 ti = 0;
@@ -134,11 +127,11 @@ T = ti:dt:tf;
 
 % lois voitures
 tau_vehicle = [6 6]; % constante de tps loi sans memoire, deux sens de circulation
-m0_vehicle = 1e3; % espérance masse véhicules
-sigma_m_vehicle = 3e2; % écart type masse véhicules
-c0_vehicle = 60/3.6; % espérance vitesse véhicules
+m0_vehicle = 1.25e3; % espérance masse véhicules https://carlabelling.ademe.fr/chiffrescles/r/evolutionMasseMoyenne#:~:text=En%202019%2C%20la%20masse%20moyenne,moyenne%20totale%20atteignant%201240%20kg.&text=par%20les%20ventes-,En%202019%2C%20la%20masse%20moyenne*%20a%20augment%C3%A9%20de%2010%20kg,moyenne%20totale%20atteignant%201240%20kg.
+sigma_m_vehicle = 0.25e3; % écart type masse véhicules
+c0_vehicle = 55/3.6; % espérance vitesse véhicules
 sigma_c_vehicle = 10/3.6; % écart type vitesse véhicules
-d_axles_vehicle = 2.5; % distance essieux véhicules
+d_axles_vehicle = 2.6; % distance essieux véhicules https://www.courroie-distribution.fr/blog/empattement-role-et-calcul/#:~:text=L'empattement%20est%20donc%20primordial,empattement%20de%202%2C60%20m%C3%A8tres.
 
 % conversion loi log-normale
 sigma2_m_log = log((sigma_m_vehicle/m0_vehicle)^2 + 1);
