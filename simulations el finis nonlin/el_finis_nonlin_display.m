@@ -1,4 +1,4 @@
-function el_finis_nonlin_display(varargin)
+function el_finis_nonlin_display()
 
 dispStresses = 0;
 dispFreqs = 0;
@@ -10,7 +10,7 @@ plotAcc = 1;
 
 %%
 
-filePath = getResultsFile(varargin{:});
+filePath = getResultsFile(1);
 
 load(filePath);
 

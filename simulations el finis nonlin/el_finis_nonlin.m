@@ -10,7 +10,7 @@ else
     error(' ');
 end
 
-solve_ODE = 1;
+solve_ODE = 0;
 plot_results = 0; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 
@@ -99,8 +99,8 @@ func_nonlin_global0 = @nonlin1;
 
 % figure;
 % c0 = linspace(-3*threshold_nonlin, 3*threshold_nonlin, 1000).';
-% plot(c0, func_nonlin_global(c0));
-% return
+% plot(c0, func_nonlin_global0(c0));
+% % plot(c0, E*J*c0 + func_nonlin_global0(c0));
 
 select_nonlin_local = zeros(N-2, 1);
 select_nonlin_local(px_nonlin) = 1;
@@ -110,6 +110,11 @@ select_nonlin_local(px_nonlin) = 1;
     end
 
 func_nonlin_local0 = @nonlin_local1;
+
+% figure;
+% c0 = linspace(-3*threshold_nonlin, 3*threshold_nonlin, 1000);
+% plot(c0, select_nonlin_local.' * func_nonlin_local0(select_nonlin_local * c0));
+% plot(c0, E*J*c0 + select_nonlin_local.' * func_nonlin_local0(select_nonlin_local * c0));
 
 
 %% données temps

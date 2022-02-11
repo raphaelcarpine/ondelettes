@@ -33,12 +33,12 @@ if dispFreqs
     
     % affichage
     for kfreq = 1:5
-        fprintf('mode %d: f=%.2fHz (f_th=%.2fHz, %.2f%% error), z=%.2f%%\n',...
+        fprintf('mode %d: f=%.3fHz (f_th=%.3fHz, %.2f%% error), z=%.2f%%\n',...
             [kfreq, freqs(kfreq), freqsTh(kfreq), (freqs(kfreq)-freqsTh(kfreq))/freqsTh(kfreq)*100, 100*amorts(kfreq)]);
     end
     disp('...');
     kfreq = length(freqs);
-    fprintf('mode %d: f=%.2fHz (f_th=%.2fHz, %.2f%% error), z=%.2f%%\n',...
+    fprintf('mode %d: f=%.3fHz (f_th=%.3fHz, %.2f%% error), z=%.2f%%\n',...
         [kfreq, freqs(kfreq), freqsTh(kfreq), (freqs(kfreq)-freqsTh(kfreq))/freqsTh(kfreq)*100, 100*amorts(kfreq)]);
 end
 
