@@ -1,6 +1,6 @@
 function el_finis_nonlin()
 
-results_name = 'simul1';
+results_name = 'simul5';
 
 if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
     saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
@@ -14,8 +14,8 @@ solve_ODE = 1;
 plot_results = 0; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 
-nonLin = 0;
-local_nonlin = 1; % non linearite sur ddl px_nonlin, ou sur tous les ddl
+nonLin = 1;
+local_nonlin = 0; % non linearite sur ddl px_nonlin, ou sur tous les ddl
 inertia_vehicles = 0;
 presence_PL = 1;
 temp_variation = 0; % variations E par température
@@ -59,10 +59,14 @@ C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % corrigé plus bas
 x_nonlin = 2/5*L; % endroit du defaut, pour défaut local
 px_nonlin = round(x_nonlin/dx);
 x_nonlin = px_nonlin*dx;
-sigma0 = max(C_static0)*E*h_pont/2 + 0*0.8e6; % precontrainte
-% sigma0 = C_static0(px_nonlin)*E*h_pont/2; % precontrainte
+if local_nonlin
+    sigma0 = C_static0(px_nonlin)*E*h_pont/2; % contrainte au défaut local
+else
+    sigma0 = max(C_static0)*E*h_pont/2; % contrainte mi-travée
+end
+sigma0 = sigma0 + 0.4e6;
 threshold_nonlin = sigma0 * 2/(E*h_pont); % courbure nonlinéarité
-slope_nonlin_E = 0.75; % E2 = slope_nonlin*E
+slope_nonlin_E = 0.9; % E2 = slope_nonlin*E
 slope_nonlin_moment1 = 2*slope_nonlin_E/(1+slope_nonlin_E); % nonlinéarité sur le moment en fonction de celle sur le module E
 slope_nonlin_moment_local = 0.6;
 
@@ -635,18 +639,7 @@ clear options formatsTime
 clear Tdj1 Tdj2
 
 % sauvegarde
-for k_save = 1:7*24
-    try
-        save(fullfile(saveFolder, simul_name), '-nocompression');
-        disp('saved');
-        break
-    catch ME
-        warning('saving error');
-        warning(ME.identifier);
-        warning(ME.message);
-        pause(3600);
-    end
-end
+save(fullfile(saveFolder, simul_name), '-v7.3', '-nocompression');
 
 
 

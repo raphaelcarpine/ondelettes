@@ -6,7 +6,7 @@ plotShapes = 0;
 plotAnimation = 1;
 plotPosition = 1;
 plotSpeed = 0;
-plotAcc = 1;
+plotAcc = 0;
 
 %%
 
