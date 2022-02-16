@@ -1,6 +1,6 @@
 % https://doi.org/10.1016/0167-8442(90)90023-S
 
-zeta = 0.25; % a/b, avec a profondeur crack et b épaisseur totale
+zeta = 0.5/6; % a/b, avec a profondeur crack et b épaisseur totale
 
 Yf = @(z) 1.99*z.^(1/2) - 0.41*z.^(3/2) + 18.70*z.^(5/2) - 38.48*z.^(7/2) + 53.85*z.^(9/2);
 z0 = linspace(0, zeta, 10000);

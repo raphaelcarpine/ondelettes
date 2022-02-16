@@ -111,7 +111,7 @@ hilb = hilbert(x);
 Dhilb = angle(hilb(2:end)./hilb(1:end-1));
 Dhilb = [Dhilb(1), (Dhilb(1:end-1)+Dhilb(2:end))/2, Dhilb(end)];
 plot(abs(hilb), Dhilb/(2*pi*dt));
-xlabel('Displacement [m]');
+xlabel('Amplitude [m]');
 ylabel('Frequency [Hz]');
 
 % plot hilbert 2
@@ -120,7 +120,7 @@ P = round(2*pi/(sqrt(k1/m)*dt));
 hilb = hilbert(x);
 Dhilb = angle(hilb(1+P:end)./hilb(1:end-P));
 plot(abs(hilb(1+round(P/2):round(P/2)+length(Dhilb))), Dhilb/(2*pi*P*dt));
-xlabel('Displacement [m]');
+xlabel('Amplitude [m]');
 ylabel('Frequency [Hz]');
 
 

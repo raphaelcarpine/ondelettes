@@ -33,7 +33,7 @@ hold on
 ax = gca;
 ax.ColorOrderIndex = ax.ColorOrderIndex - 1;
 plot([flip(-C), C], [flip(-M0), M0], '--', 'LineWidth', 2);
-plot([flip(-C), C], [flip(-Mbis), Mbis], '-.', 'LineWidth', 2);
+% plot([flip(-C), C], [flip(-Mbis), Mbis], '-.', 'LineWidth', 2);
 % plot( C, M2, '--');
 % plot(flip(-C), flip(-M2), '--');
 % xline(c0, '--');
@@ -62,7 +62,7 @@ sigma0 = 0.35;
 
 fig = figure;
 fig.Position(3:4) = [380 300];
-plot([-1 sigma0 1], [-1 sigma0 sigma0+0.5*(1-sigma0)], 'LineWidth', 2);
+plot([-1 sigma0 1], [-1 sigma0 sigma0+E2/E1*(1-sigma0)], 'LineWidth', 2);
 hold on
 ax = gca;
 ax.ColorOrderIndex = ax.ColorOrderIndex - 1;
@@ -81,7 +81,7 @@ ylabel('Contrainte')
 
 xticks([0]);
 yticks([0 sigma0]);
-yticklabels({'0', '\sigma_0'});
+yticklabels({'0', '-\sigma_0'});
 
 text((-1+sigma0)/2, (-1+sigma0)/2, 'E', 'VerticalAlignment', 'top');
 text((1+sigma0)/2, sigma0+0.5*(1-sigma0)/2, 'E''', 'VerticalAlignment', 'top');

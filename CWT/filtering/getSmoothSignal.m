@@ -15,5 +15,10 @@ else % pas de temps constant
     
     Xmean = xcorr(X, localWindow);
     Xmean = Xmean(end-halfNt-length(X)+1 : end-halfNt);
+    
+    % correction bords
+    localWindowSum = cumsum(localWindow);
+    Xmean(1:halfNt+1) = Xmean(1:halfNt+1) ./ localWindowSum(halfNt+1:end);
+    Xmean(end-halfNt:end) = Xmean(end-halfNt:end) ./ flip(localWindowSum(halfNt+1:end));
 end
 end

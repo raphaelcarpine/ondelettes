@@ -1,9 +1,10 @@
 function el_finis_nonlin()
 
-results_name = 'simul5';
+results_name = 'test';
 
 if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
     saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+    saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\tests';
 elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
     saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
 else
@@ -11,7 +12,7 @@ else
 end
 
 solve_ODE = 1;
-plot_results = 0; % sauvegarde dans tous les cas
+plot_results = 1; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 
 nonLin = 1;
@@ -21,7 +22,7 @@ presence_PL = 1;
 temp_variation = 0; % variations E par température
 shock_mode = 0;
 
-t_tot = 24*3600;
+t_tot = 100;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
@@ -57,6 +58,7 @@ C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % corrigé plus bas
 
 % parametres
 x_nonlin = 2/5*L; % endroit du defaut, pour défaut local
+x_nonlin = 0.45*L; % endroit du defaut, pour défaut local
 px_nonlin = round(x_nonlin/dx);
 x_nonlin = px_nonlin*dx;
 if local_nonlin
@@ -103,8 +105,8 @@ func_nonlin_global0 = @nonlin1;
 
 % figure;
 % c0 = linspace(-3*threshold_nonlin, 3*threshold_nonlin, 1000).';
-% plot(c0, func_nonlin_global(c0));
-% return
+% plot(c0, func_nonlin_global0(c0));
+% % plot(c0, E*J*c0 + func_nonlin_global0(c0));
 
 select_nonlin_local = zeros(N-2, 1);
 select_nonlin_local(px_nonlin) = 1;
@@ -114,6 +116,11 @@ select_nonlin_local(px_nonlin) = 1;
     end
 
 func_nonlin_local0 = @nonlin_local1;
+
+% figure;
+% c0 = linspace(-3*threshold_nonlin, 3*threshold_nonlin, 1000);
+% plot(c0, select_nonlin_local.' * func_nonlin_local0(select_nonlin_local * c0));
+% plot(c0, E*J*c0 + select_nonlin_local.' * func_nonlin_local0(select_nonlin_local * c0));
 
 
 %% données temps
@@ -437,7 +444,9 @@ end
 Y0 = zeros(N-2, 1);
 V0 = zeros(N-2, 1);
 if shock_mode
-    V0 = 1e-2*rand(N-2, 1).*(1:N-2).'/N; % choc tous modes
+%     V0 = 1e-2*rand(N-2, 1).*(1:N-2).'/N; % choc tous modes
+%     V0 = zeros(N-2, 1);
+%     V0(1) = 1;
     V0 = 1000*1e-2*sin(pi*(1:N-2).'/(N-1)); % choc mode 1
 end
 YV0 = [Y0; V0];
