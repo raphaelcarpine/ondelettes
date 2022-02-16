@@ -1,5 +1,5 @@
 
-filePath = getResultsFile(7);
+filePath = getResultsFile(12);
 
 load(filePath);
 
@@ -12,6 +12,7 @@ Temp = var_temp(T);
 %% options
 
 methodeFreq = 'CWT'; % 'CWT', 'hilbert'
+intAccPos = 0; % integration acceleration pour position
 
 % hilbert
 fc1 = 0.5;
@@ -77,7 +78,32 @@ if filtragePos
     plot(T, Ycapt);
 end
 
+%% position, en intégrant 2 fois
+
+if intAccPos
+    windowType = 'gaussian'; % fenpetre de lissage
+    Tmean = 50; % largeur fenêtre de lissage
+    Amean = Acapt - getSmoothSignal(T, Acapt, windowType, Tmean);
+    IA = mean(diff(T)) * cumsum(Amean); % integration
+    IAmean = IA - getSmoothSignal(T, IA, windowType, Tmean);
+    IIA = mean(diff(T)) * cumsum(IAmean); % integration
+    Ycapt = IIA;
+end
+
 %% analyse CWT ou hilbert
+
+% recherche si ridges déjà calculés
+if strcmp(methodeFreq, 'CWT')
+    ridgeFolderPath = 'C:\Users\carpine\Documents\MATLAB\ondelettes\simulations el finis nonlin\data ridges';
+    continuouStr = '_continuous';
+    ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s', [fmin, fmax, Q,...
+        convertCharsToStrings(MotherWavelet), convertCharsToStrings(continuouStr(1:end*ridgeContinuity))]);
+    ridgeFileCompletePath = fullfile(ridgeFolderPath, ridgeFolder, fileName);
+    if ~isfile(ridgeFileCompletePath)
+        error('file not found');
+    end
+end
+
 
 if strcmp(methodeFreq, 'CWT')
     freqs = linspace(fmin, fmax, 100);
@@ -130,7 +156,8 @@ end
 %% post traitement
 
 % supression des valeurs nan
-notNaN = ~isnan(Fridge) & ~isnan(Aridge) & ~isnan(Yridge) & ~isnan(Tempridge);
+notNaN = ~isnan(Tridge) & ~isnan(Fridge) & ~isnan(Aridge) & ~isnan(Yridge) & ~isnan(Tempridge);
+Tridge = Tridge(notNaN);
 Fridge = Fridge(notNaN);
 Aridge = Aridge(notNaN);
 Yridge = Yridge(notNaN);
@@ -217,3 +244,15 @@ for kqty = 1:length(referenceQtyArray)
 
 end
 
+%% reg lin pos par heure
+
+coeffsPos = nan(1, 24);
+
+for kh = 1:24
+    indexesHeure = (Tridge >= (kh-1)*3600) & (Tridge < kh*3600);
+    coeffsRegLin = [ones(size(Fridge(indexesHeure))); Yridge(indexesHeure) - mean(Yridge(indexesHeure))].' \ Fridge(indexesHeure).';
+    coeffsPos(kh) = coeffsRegLin(2);
+end
+
+
+fprintf('\nReg. lin. pos :\ncoeff = %.1f +- %.1f Hz/m\n', [mean(coeffsPos), std(coeffsPos)/sqrt(24)]);

@@ -2,6 +2,7 @@ clear all
 
 removeNan = true;
 averageScale = 'lin';
+continuousRidge = 0;
 
 plotTemp = 0;
 plotFourier = 1;
@@ -160,8 +161,9 @@ for kbridge = 1:length(bridges)
     % cwt
     cA = 3;
     Q = sqrt(pi/zeta)/cA;
-    fmin = f0-2;
-    fmax = f0+2;
+    Q = 3;
+    fmin = f0-1;
+    fmax = f0+1;
     
     freqs = linspace(fmin, fmax, 300);
     
@@ -170,8 +172,21 @@ for kbridge = 1:length(bridges)
     
     Tridge = T(T >= T(1)+ct*DeltaT(fmin) & T <= T(end)-ct*DeltaT(fmin));
     CWTridge = [nan(1, length(Tridge)); CWT(:, T >= T(1)+ct*DeltaT(fmin) & T <= T(end)-ct*DeltaT(fmin)); nan(1, length(Tridge))];
+    CWTridge0 = [zeros(1, length(Tridge)); CWT(:, T >= T(1)+ct*DeltaT(fmin) & T <= T(end)-ct*DeltaT(fmin)); zeros(1, length(Tridge))];
     freqs = [nan, freqs, nan];
-    [~, Fridge] = max(abs(CWTridge), [], 1);
+    if continuousRidge
+        Fridge = nan(1, length(Tridge));
+        [~, Fridge(1)] = max(abs(CWTridge0(:, 1)));
+        localMax = abs(CWTridge0(1:end-1, :)) < abs(CWTridge0(2:end, :));
+        localMax = localMax(1:end-1, :) & ~localMax(2:end, :);
+        for kt = 2:length(Tridge)
+            localMaxFreq = find(localMax(:, kt)) + 1;
+            [~, closestLocalMax] = min(abs(localMaxFreq - Fridge(kt-1)));
+            Fridge(kt) = localMaxFreq(closestLocalMax);
+        end
+    else
+        [~, Fridge] = max(abs(CWTridge), [], 1);
+    end
     [Fridge, Aridge] = localMax3Points(freqs([Fridge-1; Fridge; Fridge+1]),...
         CWTridge([Fridge-1; Fridge; Fridge+1] + [1;1;1] * (0:size(CWTridge, 2)-1)*size(CWTridge, 1)));
     Aridge = abs(Aridge);
@@ -204,6 +219,15 @@ for kbridge = 1:length(bridges)
     end
     
     if 1
+        figure('Name', dataFileName);
+        yyaxis left
+        plot(Tridge(Ismooth), IIXridge(Ismooth));
+        ylabel('Position [m]');
+        yyaxis right
+        plot(Tridge(Ismooth), Fridge(Ismooth));
+        ylabel('Frequency [Hz]');
+        xlabel('Time [s]');
+        
         figure('Name', dataFileName);
         plot(IIXridge(Ismooth), Fridge(Ismooth));
         xlabel('Position [m]');

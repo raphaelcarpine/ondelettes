@@ -1,27 +1,28 @@
 function el_finis_nonlin()
 
-results_name = 'simul1';
+results_name = 'test';
 
 if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
     saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+    saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\tests';
 elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
     saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
 else
     error(' ');
 end
 
-solve_ODE = 0;
-plot_results = 0; % sauvegarde dans tous les cas
+solve_ODE = 1;
+plot_results = 1; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 
-nonLin = 0;
+nonLin = 1;
 local_nonlin = 1; % non linearite sur ddl px_nonlin, ou sur tous les ddl
 inertia_vehicles = 0;
 presence_PL = 1;
 temp_variation = 0; % variations E par température
 shock_mode = 0;
 
-t_tot = 24*3600;
+t_tot = 100;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
@@ -57,6 +58,7 @@ C_static0 = g*mu/(E*J) * ( -(dx*(1:N-2)-L/2).^2/2 + L^2/8).'; % corrigé plus bas
 
 % parametres
 x_nonlin = 2/5*L; % endroit du defaut, pour défaut local
+x_nonlin = 0.45*L; % endroit du defaut, pour défaut local
 px_nonlin = round(x_nonlin/dx);
 x_nonlin = px_nonlin*dx;
 sigma0 = max(C_static0)*E*h_pont/2 + 0*0.8e6; % precontrainte
@@ -438,7 +440,9 @@ end
 Y0 = zeros(N-2, 1);
 V0 = zeros(N-2, 1);
 if shock_mode
-    V0 = 1e-2*rand(N-2, 1).*(1:N-2).'/N; % choc tous modes
+%     V0 = 1e-2*rand(N-2, 1).*(1:N-2).'/N; % choc tous modes
+%     V0 = zeros(N-2, 1);
+%     V0(1) = 1;
     V0 = 1000*1e-2*sin(pi*(1:N-2).'/(N-1)); % choc mode 1
 end
 YV0 = [Y0; V0];

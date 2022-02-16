@@ -2,6 +2,8 @@ function LinearFilterMenu(dataPlot)
 %LINEARFILTERMENU Summary of this function goes here
 %   dataPlot = plot(t, x)
 
+fourierDervivInt = false;
+
 %%
 if nargin == 0
     figure;
@@ -211,8 +213,15 @@ baselineN.Units = 'characters'; baselineN.Position([2 4]) = Hbuttons*[0 0.8];
                 error('sampling problem');
             end
             
-            dX = 1/dt * diff(X{k});
-            X{k} = [dX(1), 1/2*(dX(1:end-1) + dX(2:end)), dX(end)];
+            if fourierDervivInt
+                dX = fft(X{k});
+                dX = dX .* (2i*pi*(0:length(X{k})-1)/(length(X{k})*dt));
+                dX = ifft(dX);
+                X{k} = dX;
+            else
+                dX = 1/dt * diff(X{k});
+                X{k} = [dX(1), 1/2*(dX(1:end-1) + dX(2:end)), dX(end)];
+            end
         end
     end
 
@@ -223,9 +232,20 @@ baselineN.Units = 'characters'; baselineN.Position([2 4]) = Hbuttons*[0 0.8];
                 error('sampling problem');
             end
             
-            iX = zeros(size(X{k}));
-            for i = 2:length(X{k})
-                iX(i) = iX(i-1) + dt * X{k}(i-1);
+            if fourierDervivInt
+                iX = fft(X{k});
+                iw = (2i*pi/(length(X{k})*dt)) * [0:floor(length(X{k})/2), -ceil(length(X{k})/2)+1:-1];
+                if mod(length(X{k}), 2) == 0
+                    iw(floor(length(X{k})/2) + 1) = inf;
+                end
+                iX = iX ./ iw;
+                iX(1) = 0;
+                iX = ifft(iX);
+            else
+                iX = zeros(size(X{k}));
+                for i = 2:length(X{k})
+                    iX(i) = iX(i-1) + dt * X{k}(i-1);
+                end
             end
             X{k} = iX;
         end

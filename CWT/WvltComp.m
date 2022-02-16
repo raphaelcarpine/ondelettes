@@ -10,6 +10,7 @@ ctDef = 3;
 MeanOverFreqFuncDef = []; % mode mean(func(wvlt), 1)
 XindexOutDef = []; % mode WvltOut = Wvlt(:, XindexOut);
 MeanSquareOverXelementsDef = {};
+DisplayWaitBarDef = true;
 
 %%
 addRequired(p,'X')
@@ -24,6 +25,7 @@ addParameter(p,'ct',ctDef);
 addParameter(p,'MeanOverFreqFunc', MeanOverFreqFuncDef);
 addParameter(p,'XindexOut', XindexOutDef);
 addParameter(p,'MeanSquareOverXelements', MeanSquareOverXelementsDef);
+addParameter(p,'DisplayWaitBar', DisplayWaitBarDef);
 
 parse(p,X,WvltFreq,Y,Q,varargin{:});
 
@@ -48,6 +50,7 @@ DerivationOrder = p.Results.DerivationOrder;
 MeanOverFreqFunc = p.Results.MeanOverFreqFunc;
 XindexOut = p.Results.XindexOut;
 MeanSquareOverXelements = p.Results.MeanSquareOverXelements;
+DisplayWaitBar = p.Results.DisplayWaitBar;
 
 ct = ct * ZeroPadding;
 
@@ -131,7 +134,7 @@ MeanSquareOverX = nan(0, length(MeanSquareOverXelements));
 % waitbar
 if ~isempty(MeanOverFreqFunc) || ~isempty(XindexOut) || longSignal
     [initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(length(WvltFreqTot),...
-        'displayTime', 0, 'windowTitle', 'Computing CWT');
+        'displayTime', 1/DisplayWaitBar, 'windowTitle', 'Computing CWT');
     initWaitBar();
 end
 

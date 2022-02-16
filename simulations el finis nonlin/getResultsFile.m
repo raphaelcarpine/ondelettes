@@ -1,4 +1,4 @@
-function filePath = getResultsFile(fileNb)
+function filePath = getResultsFile(fileNb, subFolder)
 
 if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
     dataFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
@@ -6,6 +6,10 @@ elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
     dataFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
 else
     error(' ');
+end
+
+if nargin > 1
+    dataFolder = fullfile(dataFolder, subFolder);
 end
 
 % last simulation
