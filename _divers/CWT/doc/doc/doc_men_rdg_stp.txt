@@ -1,4 +1,0 @@
-Condition d'arrêt pour les ridges.
-
-Condition à respecter :
-    dA_r/dt \leq 0

@@ -1,1 +1,0 @@
-Choix du facteur de sécurité pour les ridges [c_t ridge]. Pour plus de précisions voir Menus \rightarrow Ridges \rightarrow Set time limits ridge.

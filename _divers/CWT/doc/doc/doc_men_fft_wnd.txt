@@ -1,3 +1,0 @@
-Permet de régler le fenêtrage pour la transformée de Fourier. Par défaut, il est réglé sur "rectangular", ce qui équivaut à une absence de fenêtrage.
-
-Pour plus de précisions voir la page Wikipedia - Fenêtrage.

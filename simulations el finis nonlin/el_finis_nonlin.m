@@ -11,12 +11,12 @@ else
     error(' ');
 end
 
-solve_ODE = 1;
+solve_ODE = 0;
 plot_results = 1; % sauvegarde dans tous les cas
-disp_freq_nonlin = 0;
+disp_freq_nonlin = 1;
 
 nonLin = 1;
-local_nonlin = 0; % non linearite sur ddl px_nonlin, ou sur tous les ddl
+local_nonlin = 1; % non linearite sur ddl px_nonlin, ou sur tous les ddl
 inertia_vehicles = 0;
 presence_PL = 1;
 temp_variation = 0; % variations E par température

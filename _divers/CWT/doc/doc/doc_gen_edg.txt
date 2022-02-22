@@ -1,6 +1,0 @@
-\bullet Des effets de bords sont présents au début et à la fin du signal du fait de la coupure de celui-ci. Le zero padding utilisé à gauche et à droite du signal permet de mieux contrôler leur amplitude.
-
-\bullet Les effets de bords c_t\Deltat(f) sont proportionnels au facteur de qualité Q et inversement proportionnels à la fréquence de la transformée f.
-Voir Le & Argoul 2004, ou Erlicher & Argoul 2007
-
-\bullet Le facteur c_t est un facteur de sécurité, permettant de garantir une certaine précision en dehors des effets de bords.

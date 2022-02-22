@@ -1,5 +1,0 @@
-Amplitude de la CWT à fréquence ou temps fixé.
-
-\bullet Tous les paramètres sont les mêmes que pour le spectrogramme ("module plot" dans l'interface), cela revient à prendre la hauteur de la surface à la fréquence ou au temps fixé.
-
-\bullet Les effets de bords sont indiqués par des pointillés.

@@ -1,10 +1,11 @@
 ridgeFolderPath = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\data ridges';
 
 Nsimul = 26;
-Qarr = [2 6];
+Qarr = [2 6 10];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
 ridgeContinuityArr = [0 1];
+signalDerivation = -2;
 
 %%
 
@@ -12,15 +13,26 @@ ridgeContinuityArr = [0 1];
     'displayTime', 0, 'windowTitle', 'Computing ridges');
 initWaitBar();
 
-for kf = 1:Nsimul
+for kf = 101%1:Nsimul
     % load data file
     try
         filePath = getResultsFile(kf);
         load(filePath);
+        
+        % interpolation
+        getYtot = @(Y) [zeros(1, size(Y, 2)); Y; zeros(1, size(Y, 2))];
+        Y = getYtot(Y);
+        V = getYtot(V);
+        A = getYtot(A);
+        pos_capteurs = L/2;
+        Ycapt = getYcapt2(Y, pos_capteurs, dx);
+        Vcapt = getYcapt2(V, pos_capteurs, dx);
+        Acapt = getYcapt2(A, pos_capteurs, dx);
+        clear Y V A
+        
         dataFileExists = true;
     catch
         dataFileExists = false;
-        continue
     end
     
     for kq = 1:length(Qarr)
@@ -31,22 +43,24 @@ for kf = 1:Nsimul
                 fmax = fminmaxArr(kfm, 2);
                 MotherWavelet = MotherWaveletArr{kw};
                 
-                updateWaitBar();
-                
                 % check if file already exists
                 if ~dataFileExists
+                    updateWaitBar();
                     continue
                 end
                 [~, fileName] = fileparts(filePath);
-                ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s', [fmin, fmax, Q,  convertCharsToStrings(MotherWavelet)]);
-                mkdir(fullfile(ridgeFolderPath, ridgeFolder));
-                if isfile(fullfile(ridgeFolderPath, ridgeFolder, fileName))
+                signalDerivationName = ["_2integration", "_integration", "", "_derivation", "_2derivation"];
+                ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s', [fmin, fmax, Q,...
+                    convertCharsToStrings(MotherWavelet), signalDerivationName(signalDerivation+3)]);
+                if isfile(fullfile(ridgeFolderPath, ridgeFolder, [fileName, '.mat']))
+                    updateWaitBar();
                     continue
                 end
                 
                 % CWT computation
                 freqs = linspace(fmin, fmax, 100);
-                CWT = WvltComp(T, Acapt, freqs, Q, 'MotherWavelet', MotherWavelet, 'DisplayWaitBar', false);
+                CWT = WvltComp(T, Acapt, freqs, Q, 'MotherWavelet', MotherWavelet,...
+                    'DerivationOrder', signalDerivation, 'DisplayWaitBar', false);
                 freqs = [nan, freqs, nan];
                 CWT = [zeros(1, size(CWT, 2)); CWT; zeros(1, size(CWT, 2))];
                 
@@ -72,12 +86,17 @@ for kf = 1:Nsimul
                     
                     % save
                     if ridgeContinuity
-                        ridgeFileCompletePath = fullfile(ridgeFolderPath, [ridgeFolder, '_continuous'], fileName);
+                        ridgeFolder2 = [ridgeFolder, '_continuous'];
                     else
-                        ridgeFileCompletePath = fullfile(ridgeFolderPath, ridgeFolder, fileName);
+                        ridgeFolder2 = ridgeFolder;
                     end
-                    save(ridgeFileCompletePath, 'Fridge', 'Aridge');
+                    if ~exist(fullfile(ridgeFolderPath, ridgeFolder2), 'dir')
+                        mkdir(fullfile(ridgeFolderPath, ridgeFolder2));
+                    end
+                    save(fullfile(ridgeFolderPath, ridgeFolder2, fileName), 'Fridge', 'Aridge');
                 end
+                
+                updateWaitBar();
             end
         end
     end

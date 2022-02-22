@@ -1,1 +1,0 @@
-Le paramètre "max lag" correspond au temps maximal pour lequel est calculée l'autocorrélation (ou la matrice d'intercorrélation pour un signal à plusieurs voies).

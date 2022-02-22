@@ -1,3 +1,0 @@
-Permet d'enlever la moyenne temporelle du signal (sur chaque voie). Si les limites de temps on été modifiées, la moyenne est calculée à partir des nouvelles limites.
-
-Fortement conseillé lors de l'utilisation de l'auto ou intercorrélation.

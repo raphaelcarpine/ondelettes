@@ -1,1 +1,0 @@
-Choix de l'ondelette mère \psi. Dans tous les cas, elle est paramétrée par le facteur de qualité Q.

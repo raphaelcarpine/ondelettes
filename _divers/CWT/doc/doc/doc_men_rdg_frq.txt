@@ -1,6 +1,0 @@
-Mode de calcul de la fréquence du ridge f_r.
-
-\bullet max module : la fréquence du ridge est prise égale à f_r.
-
-\bullet phase derivative : la fréquence du ridge est calculée à partir de la dérivée de la phase de la CWT :
-    [fréquence du ridge] = (d/dt)[ arg CWT[u](t, f_r(t)) ] /2\pi

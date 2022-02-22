@@ -1,5 +1,5 @@
 
-filePath = getResultsFile(12);
+filePath = getResultsFile(101);
 
 load(filePath);
 
@@ -24,7 +24,20 @@ fmax = 3;
 Q = 2;
 MotherWavelet = 'morlet';
 ct = 3;
-ridgeContinuity = 0;
+ridgeContinuity = 1;
+signalDerivation = -1;
+
+filtrageSignal = 0;
+filtragePos = 0;
+discardThresholdAmpl = 0;
+thresholdAmpl = 0.01;
+
+averageTimeIntervals = 25;
+Kmin = 10;
+
+regLiMultiVarsNames = {'A', 'Y', 'T'};
+regLiMultiVars = [1 1 1]; %ampl, pos, temp
+regLiMultiVars = [true, logical(regLiMultiVars)];
 
 plotFA = 1;
 plotK = 0;
@@ -33,14 +46,8 @@ plotRegLin = 1;
 
 referenceQtyArray = {'ampl', 'pos', 'temp'};
 averageScale = 'lin';
-averageIncrementArray = [0.001, 0.0005, 0.5];
+averageIncrementArray = [0.002*(2*pi*2.08)^signalDerivation, 0.0005, 0.5];
 
-filtrageSignal = 0;
-filtragePos = 0;
-discardThresholdAmpl = 0;
-
-averageTimeIntervals = 25;
-Kmin = 10;
 
 %% calcul, mise en forme matrices
 
@@ -92,46 +99,22 @@ end
 
 %% analyse CWT ou hilbert
 
-% recherche si ridges déjà calculés
-if strcmp(methodeFreq, 'CWT')
-    ridgeFolderPath = 'C:\Users\carpine\Documents\MATLAB\ondelettes\simulations el finis nonlin\data ridges';
-    continuouStr = '_continuous';
-    ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s', [fmin, fmax, Q,...
-        convertCharsToStrings(MotherWavelet), convertCharsToStrings(continuouStr(1:end*ridgeContinuity))]);
-    ridgeFileCompletePath = fullfile(ridgeFolderPath, ridgeFolder, fileName);
-    if ~isfile(ridgeFileCompletePath)
-        error('file not found');
-    end
-end
-
 
 if strcmp(methodeFreq, 'CWT')
-    freqs = linspace(fmin, fmax, 100);
+    % load ridge file
+    ridgeFolderPath = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\data ridges';
+    continuouStrs = ["", "_continuous"];
+    signalDerivationStrs = ["_2integration", "_integration", "", "_derivation", "_2derivation"];
+    ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s%s', [fmin, fmax, Q,...
+        convertCharsToStrings(MotherWavelet), signalDerivationStrs(signalDerivation+3), continuouStrs(ridgeContinuity+1)]);
+    load(fullfile(ridgeFolderPath, ridgeFolder, [fileName, '.mat']));
     
-    CWT = WvltComp(T, Acapt, freqs, Q, 'MotherWavelet', MotherWavelet);
+    % edge effects
     [~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet);
-    
     indexes_ridge = T >= T(1)+ct*DeltaT(fmin) & T <= T(end)-ct*DeltaT(fmin);
     Tridge = T(indexes_ridge);
-    CWTridge = [nan(1, length(Tridge)); CWT(:, indexes_ridge); nan(1, length(Tridge))];
-    CWTridge0 = [zeros(1, length(Tridge)); CWT(:, indexes_ridge); zeros(1, length(Tridge))];
-    freqs = [nan, freqs, nan];
-    if ridgeContinuity
-        Fridge = nan(1, length(Tridge));
-        [~, Fridge(1)] = max(abs(CWTridge0(:, 1)));
-        localMax = abs(CWTridge0(1:end-1, :)) < abs(CWTridge0(2:end, :));
-        localMax = localMax(1:end-1, :) & ~localMax(2:end, :);
-        for kt = 2:length(Tridge)
-            localMaxFreq = find(localMax(:, kt)) + 1;
-            [~, closestLocalMax] = min(abs(localMaxFreq - Fridge(kt-1)));
-            Fridge(kt) = localMaxFreq(closestLocalMax);
-        end
-    else
-        [~, Fridge] = max(abs(CWTridge), [], 1);
-    end
-    [Fridge, Aridge] = localMax3Points(freqs([Fridge-1; Fridge; Fridge+1]),...
-        CWTridge([Fridge-1; Fridge; Fridge+1] + [1;1;1] * (0:size(CWTridge, 2)-1)*size(CWTridge, 1)));
-    Aridge = abs(Aridge);
+    Fridge = Fridge(indexes_ridge);
+    Aridge = abs(Aridge(indexes_ridge));
     Yridge = Ycapt(indexes_ridge);
     Tempridge = Temp(indexes_ridge);
 elseif strcmp(methodeFreq, 'hilbert')
@@ -164,9 +147,9 @@ Yridge = Yridge(notNaN);
 Tempridge = Tempridge(notNaN);
 
 % suppression ridge amplitude trop faible
-thresholdAmpl = 0.01;
 if discardThresholdAmpl
     amplOK = Aridge >= thresholdAmpl;
+    Tridge = Tridge(amplOK);
     Fridge = Fridge(amplOK);
     Aridge = Aridge(amplOK);
     Yridge = Yridge(amplOK);
@@ -175,15 +158,59 @@ end
 
 %% reg lin multi dimension
 
-coeffsRegLin = [ones(size(Fridge)); Aridge - mean(Aridge); Yridge - mean(Yridge); Tempridge - mean(Tempridge)].' \ Fridge.';
+regLiMultiVarsVals = [ones(size(Fridge)); Aridge; Yridge; Tempridge];
+regLiMultiVarsVals = regLiMultiVarsVals(regLiMultiVars, :);
+RLMVmult = ones(1, size(regLiMultiVarsVals, 1)); % mean selection, to avoid removing mean of 1
+RLMVmult(1) = 0;
 
-fprintf('Reg. lin. multi-param :\nf = %.4f + %.3g*(A-A0) + %.3g*(Y-Y0) + %.3g*(T-T0)\n', coeffsRegLin);
+[coeffsRegLin0, coeffsRegLinConfIntervals0] =...
+    regress(Fridge.', regLiMultiVarsVals.' - RLMVmult.*mean(regLiMultiVarsVals.'));
+coeffsRegLin = zeros(length(regLiMultiVars), 1);
+coeffsRegLinConfIntervals = zeros(length(regLiMultiVars), 2);
+coeffsRegLin(regLiMultiVars) = coeffsRegLin0;
+coeffsRegLinConfIntervals(regLiMultiVars, :) = coeffsRegLinConfIntervals0;
+coeffsRegLinConfIntervals = (coeffsRegLinConfIntervals(:, 2) - coeffsRegLinConfIntervals(:, 1))/2;
+
+% fprintf('Reg. lin. multi-param :\nf = %.4f + %.3g*(A-A0) + %.3g*(Y-Y0) + %.3g*(T-T0)\n', coeffsRegLin);
+fprintf('Reg. lin. multi-param :\nf = (%.4f+-%.4f) + (%.3g+-%.3g)*(A-A0) + (%.3g+-%.3g)*(Y-Y0) + (%.3g+-%.3g)*(T-T0)\n',...
+    [coeffsRegLin.'; coeffsRegLinConfIntervals.']);
 fprintf('%.3g*std(A) = %.3g Hz\n', abs(coeffsRegLin(2)) * [1, std(Aridge)]);
 fprintf('%.3g*std(Y) = %.3g Hz\n', abs(coeffsRegLin(3)) * [1, std(Yridge)]);
-fprintf('%.3g*std(T) = %.3g Hz\n', abs(coeffsRegLin(4)) * [1, std(Tempridge)]);
+fprintf('%.3g*std(T) = %.3g Hz\n\n', abs(coeffsRegLin(4)) * [1, std(Tempridge)]);
+
+%% reg lin multi dimension par minute de chaque heure
+
+coeffsRegLinMin = zeros(4, 60);
+
+for kmin = 1:60
+    indexesMin = mod(floor(Tridge/60), 60) == kmin-1;
+    coeffsRegLinMin(regLiMultiVars, kmin) = ...
+        (regLiMultiVarsVals(:, indexesMin).' - RLMVmult.*mean(regLiMultiVarsVals(:, indexesMin).'))\ Fridge(indexesMin).';
+end
+
+fprintf('Reg. lin. multi-param / min :\nf = (%.4f+-%.4f) + (%.3g+-%.3g)*(A-A0) + (%.3g+-%.3g)*(Y-Y0) + (%.3g+-%.3g)*(T-T0)\n',...
+    [mean(coeffsRegLinMin.'); 1.96*std(coeffsRegLinMin.')/sqrt(60)]);
+
+%% reg lin pos par heure
+
+coeffsPos = nan(1, 24);
+
+for kh = 1:24
+    indexesHeure = (Tridge >= (kh-1)*3600) & (Tridge < kh*3600);
+    coeffsRegLin0 = [ones(size(Fridge(indexesHeure))); Yridge(indexesHeure) - mean(Yridge(indexesHeure))].' \ Fridge(indexesHeure).';
+    coeffsPos(kh) = coeffsRegLin0(2);
+end
+
+
+fprintf('\nReg. lin. pos :\ncoeff = %.2f +- %.2f Hz/m\n', [mean(coeffsPos), 1.96*std(coeffsPos)/sqrt(24)]);
+
 
 
 %% averaging
+
+if ~plotFA
+    return
+end
 
 for kqty = 1:length(referenceQtyArray)
     % choix quantité de reference
@@ -243,16 +270,3 @@ for kqty = 1:length(referenceQtyArray)
     end
 
 end
-
-%% reg lin pos par heure
-
-coeffsPos = nan(1, 24);
-
-for kh = 1:24
-    indexesHeure = (Tridge >= (kh-1)*3600) & (Tridge < kh*3600);
-    coeffsRegLin = [ones(size(Fridge(indexesHeure))); Yridge(indexesHeure) - mean(Yridge(indexesHeure))].' \ Fridge(indexesHeure).';
-    coeffsPos(kh) = coeffsRegLin(2);
-end
-
-
-fprintf('\nReg. lin. pos :\ncoeff = %.1f +- %.1f Hz/m\n', [mean(coeffsPos), std(coeffsPos)/sqrt(24)]);

@@ -1,7 +1,0 @@
-Échelle de la fréquence, pour la CWT et la transformée de Fourier.
-
-\bullet Pour la CWT, en notant f_1,... , f_n les fréquences pour lesquelles elle est calculée, on a :
-  - dans le cas linéaire, les f_k sont linéairement répartis.
-  - dans le cas logarithmique, les ln(f_k) sont linéairement répartis.
-
-\bullet Pour ta transformée de Fourier, ce paramètre n'affecte que l'affichage. Les valeurs de fréquence pour lesquelles est calculée la transformée sont toujours linéairement réparties, d'incrément 1/T (avec T le temps total du signal).

@@ -1,7 +1,0 @@
-Choix du facteur de sécurité c_t.
-
-\bullet Les effets de bords c_t\Deltat sont proportionnels au facteur de qualité Q et inversement proportionnels à la fréquence de la transformée f.
-Voir Le & Argoul 2004, ou Erlicher & Argoul 2007
-
-\bullet Le facteur c_t est un facteur de sécurité, permettant de garantir une certaine précision en dehors des effets de bords.
-Voir Erlicher & Argoul 2007

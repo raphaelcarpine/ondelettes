@@ -1,6 +1,0 @@
-Mode permettant d'utiliser la Random Decrement Signature du signal.
-
-\bullet Le signal u est remplacé par sa Random Decrement Signature.
-Voir Ibrahim 1977.
-
-\bullet Peut être utilisé avec le mode "multi signal".

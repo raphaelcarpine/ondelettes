@@ -1,8 +1,0 @@
-Sélection des limites de temps [Tmin ridge] et [Tmax ridge] pour les ridges.
-
-\bullet Par défaut elles sont en -\infty et +\infty, mais on peut les changer pour ne garder qu'une partie des ridges.
-
-\bullet Les ridges sont confinés à la fois dans l'intervalle [Tmin + c_t\Deltat, Tmax - c_t\Deltat] (limites et effets de bords du signal lui même), et dans l'intervalle [ [Tmin ridge]  + [c_t ridge] \Deltat, [Tmax ridge] - [c_t ridge] \Deltat] (intervalle choisi pour limiter les ridges).
-[c_t ridge] est un paramètre permettant de considérer des effets de bords autour de [Tmin ridge] et [Tmax ridge], dans le cas où cela serait nécessaire. Il est par défaut à 0.
-
-\bullet Les paramètres [Tmin ridge], [Tmax ridge] et [c_t ridge] influent également sur le calcul de Q_{max}. Pour plus de précisions voir Menus \rightarrow Tools \rightarrow Bounds Q.
