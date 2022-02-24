@@ -3,14 +3,14 @@ function el_finis_nonlin_display()
 dispStresses = 0;
 dispFreqs = 0;
 plotShapes = 0;
-plotAnimation = 0;
+plotAnimation = 1;
 plotPosition = 1;
 plotSpeed = 0;
 plotAcc = 1;
 
 %%
 
-filePath = getResultsFile(106); % , 'tests'
+filePath = getResultsFile(15); % , 'tests'
 
 load(filePath);
 

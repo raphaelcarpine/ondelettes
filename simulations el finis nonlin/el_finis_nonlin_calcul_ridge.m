@@ -4,7 +4,7 @@ Nsimul = 26;
 Qarr = [2 6 10];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
-ridgeContinuityArr = [0 1];
+ridgeContinuityArr = {'none', 'simple'};
 signalDerivation = -2;
 
 %%
@@ -42,6 +42,7 @@ for kf = 101%1:Nsimul
                 fmin = fminmaxArr(kfm, 1);
                 fmax = fminmaxArr(kfm, 2);
                 MotherWavelet = MotherWaveletArr{kw};
+                ct = 0; % edge effect computed later
                 
                 % check if file already exists
                 if ~dataFileExists
@@ -61,35 +62,23 @@ for kf = 101%1:Nsimul
                 freqs = linspace(fmin, fmax, 100);
                 CWT = WvltComp(T, Acapt, freqs, Q, 'MotherWavelet', MotherWavelet,...
                     'DerivationOrder', signalDerivation, 'DisplayWaitBar', false);
-                freqs = [nan, freqs, nan];
-                CWT = [zeros(1, size(CWT, 2)); CWT; zeros(1, size(CWT, 2))];
                 
                 for kc = 1:length(ridgeContinuityArr)
-                    ridgeContinuity = ridgeContinuityArr(kc);
+                    ridgeContinuity = ridgeContinuityArr{kc};
                     
-                    % ridge computation
-                    if ridgeContinuity
-                        Fridge = nan(1, size(CWT, 2));
-                        [~, Fridge(1)] = max(abs(CWT(:, 1)));
-                        localMax = abs(CWT(1:end-1, :)) < abs(CWT(2:end, :));
-                        localMax = localMax(1:end-1, :) & ~localMax(2:end, :);
-                        for kt = 2:size(CWT, 2)
-                            localMaxFreq = find(localMax(:, kt)) + 1;
-                            [~, closestLocalMax] = min(abs(localMaxFreq - Fridge(kt-1)));
-                            Fridge(kt) = localMaxFreq(closestLocalMax);
-                        end
+                    if length(ridgeContinuity) >= 5 && strcmp(ridgeContinuity(1:5), 'slope')
+                        slopeTimeConst = str2double(ridgeContinuity(6:end));
+                        ridgeContinuity = 'slope';
                     else
-                        [~, Fridge] = max(abs(CWT), [], 1);
+                        slopeTimeConst = nan;
                     end
-                    [Fridge, Aridge] = localMax3Points(freqs([Fridge-1; Fridge; Fridge+1]),...
-                        CWT([Fridge-1; Fridge; Fridge+1] + [1;1;1] * (0:size(CWT, 2)-1)*size(CWT, 1)));
+                    
+                    ridge = SingleRidgeExtract(T, freqs, CWT, MotherWavelet, Q, ct, ridgeContinuity, slopeTimeConst);
+                    Fridge = ridge.freq;
+                    Aridge = ridge.val;
                     
                     % save
-                    if ridgeContinuity
-                        ridgeFolder2 = [ridgeFolder, '_continuous'];
-                    else
-                        ridgeFolder2 = ridgeFolder;
-                    end
+                    ridgeFolder2 = [ridgeFolder, '_', ridgeContinuity];
                     if ~exist(fullfile(ridgeFolderPath, ridgeFolder2), 'dir')
                         mkdir(fullfile(ridgeFolderPath, ridgeFolder2));
                     end
