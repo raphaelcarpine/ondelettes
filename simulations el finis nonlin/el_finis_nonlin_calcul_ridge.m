@@ -12,8 +12,13 @@ Nsimul = 26;
 Qarr = [2 6 10];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
+<<<<<<< HEAD
 signalDerivationArr = -2:0;
 ridgeContinuityArr = [0 1];
+=======
+ridgeContinuityArr = {'none', 'simple'};
+signalDerivation = -2;
+>>>>>>> f95e9f3008e237d85b9065a6611217016b9fcbd5
 
 %%
 
@@ -48,6 +53,7 @@ parfor kf = 1:Nsimul
     for kq = 1:length(Qarr)
         for kfm = 1:size(fminmaxArr, 1)
             for kw = 1:length(MotherWaveletArr)
+<<<<<<< HEAD
                 for ksd = 1:length(signalDerivationArr)
                     Q = Qarr(kq);
                     fmin = fminmaxArr(kfm, 1);
@@ -109,6 +115,53 @@ parfor kf = 1:Nsimul
                         disp(fullfile(ridgeFolder2, fileName));
                     end
                     updateWaitBar();
+=======
+                Q = Qarr(kq);
+                fmin = fminmaxArr(kfm, 1);
+                fmax = fminmaxArr(kfm, 2);
+                MotherWavelet = MotherWaveletArr{kw};
+                ct = 0; % edge effect computed later
+                
+                % check if file already exists
+                if ~dataFileExists
+                    updateWaitBar();
+                    continue
+                end
+                [~, fileName] = fileparts(filePath);
+                signalDerivationName = ["_2integration", "_integration", "", "_derivation", "_2derivation"];
+                ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s', [fmin, fmax, Q,...
+                    convertCharsToStrings(MotherWavelet), signalDerivationName(signalDerivation+3)]);
+                if isfile(fullfile(ridgeFolderPath, ridgeFolder, [fileName, '.mat']))
+                    updateWaitBar();
+                    continue
+                end
+                
+                % CWT computation
+                freqs = linspace(fmin, fmax, 100);
+                CWT = WvltComp(T, Acapt, freqs, Q, 'MotherWavelet', MotherWavelet,...
+                    'DerivationOrder', signalDerivation, 'DisplayWaitBar', false);
+                
+                for kc = 1:length(ridgeContinuityArr)
+                    ridgeContinuity = ridgeContinuityArr{kc};
+                    
+                    if length(ridgeContinuity) >= 5 && strcmp(ridgeContinuity(1:5), 'slope')
+                        slopeTimeConst = str2double(ridgeContinuity(6:end));
+                        ridgeContinuity = 'slope';
+                    else
+                        slopeTimeConst = nan;
+                    end
+                    
+                    ridge = SingleRidgeExtract(T, freqs, CWT, MotherWavelet, Q, ct, ridgeContinuity, slopeTimeConst);
+                    Fridge = ridge.freq;
+                    Aridge = ridge.val;
+                    
+                    % save
+                    ridgeFolder2 = [ridgeFolder, '_', ridgeContinuity];
+                    if ~exist(fullfile(ridgeFolderPath, ridgeFolder2), 'dir')
+                        mkdir(fullfile(ridgeFolderPath, ridgeFolder2));
+                    end
+                    save(fullfile(ridgeFolderPath, ridgeFolder2, fileName), 'Fridge', 'Aridge');
+>>>>>>> f95e9f3008e237d85b9065a6611217016b9fcbd5
                 end
             end
         end
