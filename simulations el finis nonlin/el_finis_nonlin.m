@@ -2,9 +2,9 @@ function el_finis_nonlin()
 
 results_name = 'simul12';
 
-if exist('C:\Users\carpine\Documents\projets\simulations elements finis non lin\data', 'dir')
-    saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
-    saveFolder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\tests';
+if exist('D:\simulations elements finis non lin\data', 'dir')
+    saveFolder = 'D:\simulations elements finis non lin\data';
+    saveFolder = 'D:\simulations elements finis non lin\data\tests';
 elseif exist('C:\Users\raphael\Documents\resultats simul diff finies', 'dir')
     saveFolder = 'C:\Users\raphael\Documents\resultats simul diff finies';
 else

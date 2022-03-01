@@ -40,7 +40,7 @@ averageScale = 'lin';
 averageIncrementArray = [0.002*(2*pi*2.08)^signalDerivation, 0.0005, 0.5];
 
 %%
-ridgeFolderPath = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data\data ridges';
+ridgeFolderPath = 'D:\simulations elements finis non lin\data\data ridges';
 signalDerivationStrs = ["_2integration", "_integration", "", "_derivation", "_2derivation"];
 ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s_%s', [fmin, fmax, Q,...
     convertCharsToStrings(MotherWavelet), signalDerivationStrs(signalDerivation+3), convertCharsToStrings(ridgeContinuity)]);
