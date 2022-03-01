@@ -8,12 +8,12 @@ else
     error(' ');
 end
 
-Ksimul = [1, 6];
+Ksimul = [6];
 Qarr = [2 6 10];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
 signalDerivationArr = -2:0;
-ridgeContinuityArr = {'none', 'simple', 'slope0.1', 'slope0.3', 'slope1'};
+ridgeContinuityArr = {'none', 'simple', 'reverse', 'double'};
 
 %%
 
