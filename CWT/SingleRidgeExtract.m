@@ -40,6 +40,31 @@ switch ridgeContinuity
         end
         [Fridge, Aridge] = localMax3Points(freqs([Fridge-1; Fridge; Fridge+1]),...
             CWT([Fridge-1; Fridge; Fridge+1] + [1;1;1] * (0:size(CWT, 2)-1)*size(CWT, 1)));
+    case 'double'
+        freqs = [nan, freqs, nan];
+        CWT = [zeros(1, size(CWT, 2)); CWT; zeros(1, size(CWT, 2))];
+        Fridge1 = nan(1, size(CWT, 2));
+        [~, Fridge1(1)] = max(abs(CWT(:, 1)));
+        Fridge2 = nan(1, size(CWT, 2));
+        [~, Fridge2(end)] = max(abs(CWT(:, end)));
+        localMax = abs(CWT(1:end-1, :)) < abs(CWT(2:end, :));
+        localMax = localMax(1:end-1, :) & ~localMax(2:end, :);
+        for kt = 2:size(CWT, 2)
+            localMaxFreq = find(localMax(:, kt)) + 1;
+            [~, closestLocalMax] = min(abs(localMaxFreq - Fridge1(kt-1)));
+            Fridge1(kt) = localMaxFreq(closestLocalMax);
+        end
+        for kt = size(CWT, 2)-1:-1:1
+            localMaxFreq = find(localMax(:, kt)) + 1;
+            [~, closestLocalMax] = min(abs(localMaxFreq - Fridge2(kt+1)));
+            Fridge2(kt) = localMaxFreq(closestLocalMax);
+        end
+        [Fridge1, Aridge1] = localMax3Points(freqs([Fridge1-1; Fridge1; Fridge1+1]),...
+            CWT([Fridge1-1; Fridge1; Fridge1+1] + [1;1;1] * (0:size(CWT, 2)-1)*size(CWT, 1)));
+        [Fridge2, Aridge2] = localMax3Points(freqs([Fridge2-1; Fridge2; Fridge2+1]),...
+            CWT([Fridge2-1; Fridge2; Fridge2+1] + [1;1;1] * (0:size(CWT, 2)-1)*size(CWT, 1)));
+        Fridge = (Fridge1 + Fridge2)/2;
+        Aridge = (Aridge1 + Aridge2)/2;
     case 'slope' % slope penalization, 10.1109/78.640725 Eq.(4)
         % frequency increment
         df = (freqs(end) - freqs(1))/(length(freqs)-1);
