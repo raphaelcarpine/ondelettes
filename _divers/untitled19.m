@@ -1,4 +1,6 @@
 folder = 'C:\Users\carpine\Documents\projets\simulations elements finis non lin\data';
+folder = 'C:\Users\raphael\Documents\resultats simul diff finies';
+
 
 files = dir([folder, '/**/*simul*.mat']);
 fileNames = {files.name};
