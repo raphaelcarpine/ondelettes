@@ -8,7 +8,7 @@ else
     error(' ');
 end
 
-Ksimul = [6];
+Ksimul = [1:36, 101, 106];
 Qarr = [2 6 10];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
@@ -24,7 +24,9 @@ initWaitBar();
 
 % parpool('threads');
 
-for kf = Ksimul
+parfor kkf = 1:length(Ksimul)
+    kf = Ksimul(kkf);
+
     % load data file
     try
         filePath = getResultsFile(kf);

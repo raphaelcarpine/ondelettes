@@ -1,6 +1,6 @@
 function el_finis_nonlin()
 
-results_name = 'test';
+results_name = 'simul12';
 
 if exist('D:\simulations elements finis non lin\data', 'dir')
     saveFolder = 'D:\simulations elements finis non lin\data';
@@ -11,18 +11,18 @@ else
     error(' ');
 end
 
-solve_ODE = 0;
-plot_results = 1; % sauvegarde dans tous les cas
-disp_freq_nonlin = 1;
+solve_ODE = 1;
+plot_results = 0; % sauvegarde dans tous les cas
+disp_freq_nonlin = 0;
 
 nonLin = 1;
 local_nonlin = 1; % non linearite sur ddl px_nonlin, ou sur tous les ddl
-inertia_vehicles = 0;
+inertia_vehicles = 1;
 presence_PL = 1;
-temp_variation = 0; % variations E par température
+temp_variation = 1; % variations E par température
 shock_mode = 0;
 
-t_tot = 100;
+t_tot = 24*3600;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
@@ -66,11 +66,11 @@ if local_nonlin
 else
     sigma0 = max(C_static0)*E*h_pont/2; % contrainte mi-travée
 end
-sigma0 = sigma0 + 0.4e6;
+sigma0 = sigma0 + 0.8e6;
 threshold_nonlin = sigma0 * 2/(E*h_pont); % courbure nonlinéarité
-slope_nonlin_E = 0.9; % E2 = slope_nonlin*E
+slope_nonlin_E = 0.97; % E2 = slope_nonlin*E
 slope_nonlin_moment1 = 2*slope_nonlin_E/(1+slope_nonlin_E); % nonlinéarité sur le moment en fonction de celle sur le module E
-slope_nonlin_moment_local = 0.6;
+slope_nonlin_moment_local = 0.8;
 
 % precontrainte etc.
 fleche_pont = g*mu*L^4/(384*E*J); % fleche (https://appx.cchic.ca/svilleneuve/materiaux/chap10.pdf)
