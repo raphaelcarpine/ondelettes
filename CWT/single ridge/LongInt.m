@@ -2,8 +2,13 @@ classdef LongInt
     %LONGINT Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties (Constant)
+    properties (Constant, Access = private)
         kmax = int64(3037000499); % 0 <= K(i) < kmax
+        logkmax = log(3037000499);
+    end
+    
+    properties (Constant)
+        Kmax = LongInt(LongInt.kmax);
     end
     
     properties
@@ -21,8 +26,9 @@ classdef LongInt
                 if obj.K(2) >= LongInt.kmax
                     obj.K(2) = obj.K(2) - LongInt.kmax;
                     obj.K(3) = 1;
-                elseif obj.K(2) == 0
-                    obj.K(2) = [];
+                end
+                while ~isempty(obj.K) &&  obj.K(end) == 0
+                    obj.K(end) = [];
                 end
             end
         end
@@ -42,124 +48,177 @@ classdef LongInt
             obj2.K = obj.K;
         end
         
-        function tronc(obj, n)
-            obj.K(1:n) = [];
-        end
-    end
-    
-    methods (Static)
-        function c = compare(obj1, obj2) % c=1 if obj1>obj2, c=-1 if obj1<obj2, c=0 if obj1=obj2
-            if obj1.s ~= obj2.s
-                c = 2*obj1.s - 1;
-            else
-                if length(obj1.K) ~= length(obj2.K)
-                    c = 2*(length(obj1.K) > length(obj2.K)) - 1;
+        function obj = trunc(obj, n)
+            if n > 0
+                if n < length(obj.K)
+                    obj.K(1:n) = [];
                 else
-                    c = 0;
-                    for i = length(obj1.K):-1:1
-                        if obj1.K(i) > obj2.K(i)
-                            c = 1;
-                            break
-                        elseif obj1.K(i) < obj2.K(i)
-                            c = -1;
-                            break
-                        end
-                    end
+                    obj.K = int64([]);
                 end
-                c = c * (2*obj1.s - 1);
+            elseif n < 0
+                obj.K = [int64(zeros(1, -n)), obj.K];
             end
         end
         
-        function obj3 = add(obj1, obj2)
+        function obj3 = plus(obj1, obj2)
             if obj1.s == obj2.s
                 n1 = length(obj1.K);
                 n2 = length(obj2.K);
                 n = max(n1, n2) + 1;
-                K = [obj1.K, zeros(1, n-n1)] + [obj2.K, zeros(1, n-n2)];
+                K3 = [obj1.K, zeros(1, n-n1)] + [obj2.K, zeros(1, n-n2)];
                 for i = 1:n-1
-                    if K(i) >= LongInt.kmax
-                        K(i) = K(i) - LongInt.kmax;
-                        K(i+1) = K(i+1) + 1;
+                    if K3(i) >= LongInt.kmax
+                        K3(i) = K3(i) - LongInt.kmax;
+                        K3(i+1) = K3(i+1) + 1;
                     end
                 end
-                if K(end) == 0
-                    K(end) = [];
+                if K3(end) == 0
+                    K3(end) = [];
                 end
                 obj3 = LongInt;
                 obj3.s = obj1.s;
-                obj3.K = K;
+                obj3.K = K3;
             else
                 obj2.s = ~obj2.s;
-                obj3 = LongInt.substract(obj1, obj2);
+                obj3 = obj1 - obj2;
                 obj2.s = ~obj2.s;
             end
         end
         
-        function obj3 = substract(obj1, obj2)
+        function obj3 = minus(obj1, obj2)
             if obj1.s == obj2.s
                 obj3 = LongInt;
                 obj3.s = obj1.s;
-                if LongInt.compare(obj1, obj2) * (2*obj1.s -1) < 0
+                if xor(obj1 > obj2, obj1.s) % if abs(obj1) <= abs(obj2)
                     [obj2, obj1] = deal(obj1, obj2);
                     obj3.s = ~obj3.s;
                 end
                 n1 = length(obj1.K);
                 n2 = length(obj2.K);
                 n = n1;
-                K = obj1.K - [obj2.K, zeros(1, n-n2)];
+                K3 = obj1.K - [obj2.K, zeros(1, n-n2)];
                 for i = 1:n-1
-                    if K(i) < 0
-                        K(i) = K(i) + LongInt.kmax;
-                        K(i+1) = K(i+1) - 1;
+                    if K3(i) < 0
+                        K3(i) = K3(i) + LongInt.kmax;
+                        K3(i+1) = K3(i+1) - 1;
                     end
                 end
-                if K(end) == 0
-                    K(end) = [];
+                while ~isempty(K3) && K3(end) == 0
+                    K3(end) = [];
                 end
-                obj3.K = K;
+                obj3.K = K3;
             else
                 obj2.s = ~obj2.s;
-                obj3 = LongInt.add(obj1, obj2);
+                obj3 = obj1 + obj2;
                 obj2.s = ~obj2.s;
             end
         end
         
-        function obj3 = multiply(obj1, obj2)
-            obj3 = LongInt;
-            obj3.s = ~xor(obj1.s, obj2.s);
-            n1 = length(obj1.K);
-            n2 = length(obj2.K);
-            n = n1 + n2;
-            K = int64(zeros(1, n));
-            for i = 1:n1
-                for j = 1:n2
-                    M = obj1.K(i) * obj2.K(j);
-                    r = mod(M, LongInt.kmax);
-                    d = idivide(M, LongInt.kmax);
-                    K(i+j-1) = K(i+j-1) + r;
-                    n0 = i+j-1;
-                    while K(n0) >= LongInt.kmax
-                        K(n0) = K(n0) - LongInt.kmax;
-                        K(n0+1) = K(n0+1) + 1;
-                        n0 = n0 + 1;
-                    end
-                    K(i+j) = K(i+j) + d;
-                    n0 = i+j;
-                    while K(n0) >= LongInt.kmax
-                        K(n0) = K(n0) - LongInt.kmax;
-                        K(n0+1) = K(n0+1) + 1;
-                        n0 = n0 + 1;
+        function obj3 = times(obj1, obj2)
+            if ~isa(obj1, 'LongInt')
+                [obj2, obj1] = deal(obj1, obj2);
+            end
+            if isa(obj2, 'LongInt')
+                obj3 = LongInt;
+                obj3.s = ~xor(obj1.s, obj2.s);
+                n1 = length(obj1.K);
+                n2 = length(obj2.K);
+                n = n1 + n2;
+                K3 = int64(zeros(1, n));
+                for i = 1:n1
+                    for j = 1:n2
+                        M = obj1.K(i) * obj2.K(j);
+                        r = mod(M, LongInt.kmax);
+                        d = idivide(M, LongInt.kmax);
+                        K3(i+j-1) = K3(i+j-1) + r;
+                        n0 = i+j-1;
+                        while K3(n0) >= LongInt.kmax
+                            K3(n0) = K3(n0) - LongInt.kmax;
+                            K3(n0+1) = K3(n0+1) + 1;
+                            n0 = n0 + 1;
+                        end
+                        K3(i+j) = K3(i+j) + d;
+                        n0 = i+j;
+                        while K3(n0) >= LongInt.kmax
+                            K3(n0) = K3(n0) - LongInt.kmax;
+                            K3(n0+1) = K3(n0+1) + 1;
+                            n0 = n0 + 1;
+                        end
                     end
                 end
+                while ~isempty(K3) &&  K3(end) == 0
+                    K3(end) = [];
+                end
+                obj3.K = K3;
+            else
+                x = double(obj2);
+                obj3 = obj1.copy();
+                if x < 0
+                    obj3.s = ~obj3.s;
+                    x = abs(x);
+                end
+                nx = floor(x);
+                rx = mod(x, 1);
+                r = 0;
+                for i = length(obj3.K):-1:1
+                    dk = double(obj3.K(i))*rx + double(LongInt.kmax)*r;
+                    r = mod(dk, 1);
+                    if i > 1
+                        obj3.K(i) = int64(floor(dk));
+                    else
+                        obj3.K(i) = int64(round(dk));
+                    end
+                end
+                while ~isempty(obj3.K) && obj3.K(end) == 0
+                    obj3.K(end) = [];
+                end
+                obj3 = obj3 + obj1 .* LongInt(nx);
             end
-            while K(end) == 0
-                K(end) = [];
+        end
+        
+        function c = gt(obj1, obj2)
+            if obj1.s ~= obj2.s
+                c = obj1.s;
+            else
+                if length(obj1.K) ~= length(obj2.K)
+                    c = length(obj1.K) > length(obj2.K);
+                else
+                    c = false;
+                    for i = length(obj1.K):-1:1
+                        if obj1.K(i) > obj2.K(i)
+                            c = true;
+                            break
+                        elseif obj1.K(i) < obj2.K(i)
+                            c = false;
+                            break
+                        end
+                    end
+                end
+                c = xor(c, ~obj1.s);
             end
-            obj3.K = K;
+        end
+        
+        function x = double(obj)
+            x = sum(exp(log(double(obj.K)) + LongInt.logkmax*(0:length(obj.K)-1)));
         end
         
         function x = divideDouble(obj1, obj2)
-            
+            K1 = flip(obj1.K);
+            K2 = flip(obj2.K);
+            x = sum(exp(log(double(K1)) - LongInt.logkmax*(0:length(K1)-1)));
+            x = x / sum(exp(log(double(K2)) - LongInt.logkmax*(0:length(K2)-1)));
+            x = x * exp((length(obj1.K) - length(obj2.K)) * LongInt.logkmax);
+        end
+    end
+    
+    methods (Static)
+        function Z = zeros(n1, n2)
+            Z = LongInt(0);
+            for i = 1:n1
+                for j = 1:n2
+                    Z(i, j) = LongInt(0);
+                end
+            end
         end
     end
 end

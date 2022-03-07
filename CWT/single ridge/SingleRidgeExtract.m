@@ -65,7 +65,18 @@ switch ridgeContinuity
             CWT([Fridge2-1; Fridge2; Fridge2+1] + [1;1;1] * (0:size(CWT, 2)-1)*size(CWT, 1)));
         Fridge = (Fridge1 + Fridge2)/2;
         Aridge = (Aridge1 + Aridge2)/2;
-    case 'slope' % slope penalization, 10.1109/78.640725 Eq.(4)
+    case 'slope'
+        df = (freqs(end) - freqs(1))/(length(freqs)-1);
+        if any(abs(diff(freqs)/df - 1) > 1e-4)
+            error('frequency increment must be constant');
+        end
+        
+        Fridge = SingleRidgeExtractSlope(T, freqs, CWT, slopeTimeConst);
+        Aridge = nan(size(Fridge));
+        for kt = 1:length(Aridge)
+            Aridge(kt) = doubleQuadInterpAmpl(kt, Fridge(kt));
+        end
+    case 'slope1' % slope penalization, 10.1109/78.640725 Eq.(4)
         % frequency increment
         df = (freqs(end) - freqs(1))/(length(freqs)-1);
         if any(abs(diff(freqs)/df - 1) > 1e-4)
