@@ -20,17 +20,19 @@ ct = 3;
 ridgeContinuity = 'none'; % 'none', 'simple', 'slope0.1', 'slope0.3', 'slope1'
 signalDerivation = 0;
 
+% linear regressions
 filtrageSignal = 0;
 filtragePos = 0;
 discardThresholdAmpl = 0;
 thresholdAmpl = 0.01;
 
-averageTimeIntervals = 25;
-Kmin = 10;
-
 regLiMultiVarsNames = {'A', 'Y', 'T'};
 regLiMultiVars = [1 1 1]; %ampl, pos, temp
 regLiMultiVars = [true, logical(regLiMultiVars)];
+
+% averaging
+averageTimeIntervals = 25;
+Kmin = 10;
 
 plotFA = 0;
 plotK = 0;
