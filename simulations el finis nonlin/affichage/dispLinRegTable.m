@@ -11,30 +11,37 @@ function dispLinRegTable()
     %% param
     fmin = 1;
     fmax = 3;
-    QArr = {2, 6, 10};
+    QArrVal = [2, 6, 10];
+    QArr = cellfun(@num2str, num2cell(QArrVal), 'UniformOutput', false);
     MotherWaveletArr = {'morlet'};
     ridgeContinuityArr = {'none', 'simple', 'reverse', 'double'};
-    signalDerivationArr = {-2, -1, 0};
+    signalDerivationArr = {'position', 'speed', 'acceleration'};
+    signalDerivationArrVal = [-2, -1, 0];
 
-    % Q = QArr{1};
-    % MotherWavelet = MotherWaveletArr{1};
-    % ridgeContinuity = ridgeContinuityArr{1};
-    % signalDerivation = signalDerivationArr{1};
+    Q = QArrVal(1);
+    MotherWavelet = MotherWaveletArr{1};
+    ridgeContinuity = ridgeContinuityArr{1};
+    signalDerivation = signalDerivationArrVal(1);
 
-    % T = getLinRegTable(fmin, fmax, Q, MotherWavelet, ridgeContinuity, signalDerivation);
+    T = getLinRegTable(fmin, fmax, Q, MotherWavelet, ridgeContinuity, signalDerivation);
 
     %% figure
     fig = uifigure;
-    paramPan = uipanel('Parent', fig, 'Position', [0, 0.9, 1, 0.1]);
-    tablePan = uipanel('Parent', fig, 'Position', [0, 0, 1, 0.9]);
+    paramPan = uipanel('Parent', fig, 'Units', 'normalized', 'Position', [0, 0.9 1 0.1]);
+    tablePan = uipanel('Parent', fig, 'Units', 'normalized', 'Position', [0, 0, 1, 0.9]);
 
-    % tableObj = uitable(tablePan, 'Data', T{:,:}, 'ColumnName', T.Properties.VariableNames, ...
-    %     'RowName', T.Properties.RowNames, 'Units', 'Normalized', 'Position', [0, 0, 1, 1]);
+    tableObj = uitable(tablePan, 'Data', T{:,:}, 'ColumnName', T.Properties.VariableNames, ...
+        'RowName', T.Properties.RowNames, 'Units', 'Normalized', 'Position', [0, 0, 1, 1]);
 
-    QMenu = uidropdown(paramPan, 'Items', QArr, 'ValueChangedFcn', @updateTable);
-    MotherWaveletMenu = uidropdown(paramPan, 'Items', MotherWaveletArr, 'ValueChangedFcn', @updateTable);
-    ridgeContinuityMenu = uidropdown(paramPan, 'Items', ridgeContinuityArr, 'ValueChangedFcn', @updateTable);
-    signalDerivationMenu = uidropdown(paramPan, 'Items', signalDerivationArr, 'ValueChangedFcn', @updateTable);
+    QMenu = uidropdown(paramPan, 'Items', QArr, 'ItemsData', QArrVal, 'ValueChangedFcn', @updateTable,...
+        'Position', [5, 5, 100, 22]);
+    MotherWaveletMenu = uidropdown(paramPan, 'Items', MotherWaveletArr, 'ValueChangedFcn', @updateTable,...
+        'Position', [125, 5, 100, 22]);
+    ridgeContinuityMenu = uidropdown(paramPan, 'Items', ridgeContinuityArr, 'ValueChangedFcn', @updateTable,...
+        'Position', [245, 5, 100, 22]);
+    signalDerivationMenu = uidropdown(paramPan, 'Items', signalDerivationArr, 'ItemsData', signalDerivationArrVal...
+        , 'ValueChangedFcn', @updateTable,...
+        'Position', [365, 5, 100, 22]);
 
     function updateTable(~, ~)
         Q = QMenu.Value;

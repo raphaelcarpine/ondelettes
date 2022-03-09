@@ -14,6 +14,7 @@ fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
 signalDerivationArr = -2:0;
 ridgeContinuityArr = {'none', 'simple', 'reverse', 'double'};
+ridgeContinuityArr = {'slope1'};
 
 %%
 
@@ -24,7 +25,7 @@ initWaitBar();
 
 % parpool('threads');
 
-parfor kkf = 1:length(Ksimul)
+for kkf = 1:length(Ksimul)
     kf = Ksimul(kkf);
 
     % load data file

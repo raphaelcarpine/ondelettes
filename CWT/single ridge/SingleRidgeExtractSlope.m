@@ -13,6 +13,12 @@ dt = (T(end)-T(1))/(length(T)-1);
 logFreqs = log(freqs);
 M = abs(CWT).^2;
 
+%% waitbar
+
+[initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(N*Nit, 'displayTime', 0, ...
+    'windowTitle', 'Computing ridge', 'msg', 'Initialization');
+initWaitBar();
+
 %% initial ridge extraction, lambda = 0
 
 [M0, Phi] = max(M);
@@ -24,16 +30,10 @@ lambda = Mref * slopeTimeConst^2;
 prec = 2; % precision digits, in the LongInt base (2 corresponds to 64bit precision)
 Prec = trunc(LongInt(1), -prec);
 
-%% waitbar
-
-[initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(N*Nit, 'displayTime', 0, ...
-    'windowTitle', 'Computing ridge', 'msg', 'Initialization');
-initWaitBar();
-
 %% computation of ridge
 
 for kit = 1:Nit
-    updateWaitBar((kit-1)*N, sprintf('Iteration %d/%d', [kit, Nit]));
+    updateWaitBar((kit-1)*N, sprintf('Iteration %d/%d (initialization)', [kit, Nit]));
     
     [phiMax, Beta] = quadInterp(Phi); % computation of quadratic coefficients
     
@@ -41,6 +41,8 @@ for kit = 1:Nit
     coeffC = dt^2*Beta.*phiMax/lambda;
     
     Phi = nan(size(Phi));
+    
+    updateWaitBar((kit-1)*N, sprintf('Iteration %d/%d (initialization)', [kit, Nit]));
     
     kt1 = 1; % subinterval computation start
     kt2 = 0; % previous subinterval end
