@@ -368,8 +368,8 @@ ridge.freq = ridge.freq(nt1:nt2);
         T2 = CWT(Kf2, kt).';
         
         % quadratic computation
-        A1 = sum(T1 .* ([1/2 -1 1/2]/df^2) .* (prod(f-f1)*[1 1 1] ./ (f-f1)));
-        A2 = sum(T2 .* ([1/2 -1 1/2]/df^2) .* (prod(f-f2)*[1 1 1] ./ (f-f2)));
+        A1 = sum(T1 .* ([1/2 -1 1/2]/df^2) .* [prod(f-f1([2 3])), prod(f-f1([3 1])), prod(f-f1([1 2]))]);
+        A2 = sum(T2 .* ([1/2 -1 1/2]/df^2) .* [prod(f-f2([2 3])), prod(f-f2([3 1])), prod(f-f2([1 2]))]);
         A = (A1 + A2)/2;
     end
 

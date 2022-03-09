@@ -33,13 +33,14 @@ classdef LongInt
             end
         end
         
-        function str = toString(obj)
+        function disp(obj)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             n = length(obj.K);
             Ksym = sym(obj.K);
             ksym = sym(LongInt.kmax);
-            str = char(sum(Ksym .* ksym.^(0:n-1)));
+            disp(sum(Ksym .* ksym.^(0:n-1)));
+            fprintf('(%d int64 digits)\n', length(obj.K));
         end
         
         function obj2 = copy(obj)
@@ -129,7 +130,7 @@ classdef LongInt
                     for j = 1:n2
                         M = obj1.K(i) * obj2.K(j);
                         r = mod(M, LongInt.kmax);
-                        d = idivide(M, LongInt.kmax);
+                        d = (M-r) ./ LongInt.kmax;
                         K3(i+j-1) = K3(i+j-1) + r;
                         n0 = i+j-1;
                         while K3(n0) >= LongInt.kmax

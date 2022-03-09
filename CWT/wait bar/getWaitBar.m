@@ -71,10 +71,7 @@ I_update_freq = floor(24*3600*now*updateFreq);
     end
 
     function s = msgString()
-        s = '';
-        if ~isempty(msg)
-            s = [s, msg];
-        end
+        s = msg;
         if printProgress && ~isnan(K)
             if ~isempty(s)
                 s = [s, ', ', progressStringFcn(K)];
@@ -118,6 +115,7 @@ I_update_freq = floor(24*3600*now*updateFreq);
             try
                 waitbar(K/N, waitBarObj, msgString());
                 set(waitBarObj, 'Name', windowTitle2);
+                drawnow
             catch
             end
         end
@@ -156,7 +154,7 @@ I_update_freq = floor(24*3600*now*updateFreq);
     end
 
     function updateWaitBar0(k, new_msg)
-        if floor(24*3600*now*updateFreq) <= I_update_freq
+        if nargin < 2 && floor(24*3600*now*updateFreq) <= I_update_freq
             return
         else
             I_update_freq = floor(24*3600*now*updateFreq);
