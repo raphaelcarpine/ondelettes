@@ -2,7 +2,7 @@ clear all
 
 %% options
 
-computeAll = 1;
+computeAll = 0;
 
 methodeFreq = 'CWT'; % 'CWT', 'hilbert'
 intAccPos = 0; % integration acceleration pour position
@@ -14,7 +14,7 @@ fc2 = 5;
 % CWT
 fmin = 1;
 fmax = 3;
-Q = 10;
+Q = 2;
 MotherWavelet = 'morlet';
 ct = 3;
 ridgeContinuity = 'none'; % 'none', 'simple', 'slope0.1', 'slope0.3', 'slope1'
@@ -229,19 +229,21 @@ for kfolder = 1:length(ridgeFolders)
         coeffTemp(ks) = coeffsRegLin(4);
 
         %% reg lin multi dimension par minute de chaque heure
+        
+        Ndecoup = 20; % decoupe heure
 
-        coeffsRegLinMin = zeros(4, 60);
+        coeffsRegLinMin = zeros(4, Ndecoup);
 
-        for kmin = 1:60
-            indexesMin = mod(floor(Tridge/60), 60) == kmin-1;
+        for kmin = 1:Ndecoup
+            indexesMin = mod(floor(Tridge*Ndecoup/3600), Ndecoup) == kmin-1;
             coeffsRegLinMin(regLiMultiVars, kmin) = ...
                 (regLiMultiVarsVals(:, indexesMin).' - RLMVmult.*mean(regLiMultiVarsVals(:, indexesMin).'))\ Fridge(indexesMin).';
         end
 
         fprintf('Reg. lin. multi-param / min :\nf = (%.4f+-%.4f) + (%.3g+-%.3g)*(A-A0) + (%.3g+-%.3g)*(Y-Y0) + (%.3g+-%.3g)*(T-T0)\n',...
-            [mean(coeffsRegLinMin.'); 1.96*std(coeffsRegLinMin.')/sqrt(60)]);
+            [mean(coeffsRegLinMin.'); 1.96*std(coeffsRegLinMin.')/sqrt(Ndecoup)]);
 
-        coeffsErr = 1.96*std(coeffsRegLinMin.')/sqrt(60);
+        coeffsErr = 1.96*std(coeffsRegLinMin.')/sqrt(Ndecoup);
 
         % save
         F0_err(ks) = coeffsErr(1);
@@ -337,7 +339,7 @@ for kfolder = 1:length(ridgeFolders)
     disp(ridgeFolder);
     disp(' ');
     disp(T);
-    save(fullfile(ridgeFolderPath, ridgeFolder, 'linreg.mat'), 'T');
+%     save(fullfile(ridgeFolderPath, ridgeFolder, 'linreg.mat'), 'T');
 
 end
 

@@ -9,12 +9,12 @@ else
 end
 
 Ksimul = [1:36, 101, 106];
-Qarr = [2 6 10];
+Qarr = [2 6];
 fminmaxArr = [1 3];
 MotherWaveletArr = {'morlet'};
-signalDerivationArr = -2:0;
+signalDerivationArr = 0;
 ridgeContinuityArr = {'none', 'simple', 'reverse', 'double'};
-ridgeContinuityArr = {'slope1'};
+ridgeContinuityArr = {'slope3'};
 
 %%
 

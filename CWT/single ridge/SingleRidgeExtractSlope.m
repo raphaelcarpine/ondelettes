@@ -42,7 +42,7 @@ for kit = 1:Nit
     
     Phi = nan(size(Phi));
     
-    updateWaitBar((kit-1)*N, sprintf('Iteration %d/%d (initialization)', [kit, Nit]));
+    updateWaitBar((kit-1)*N, sprintf('Iteration %d/%d', [kit, Nit]));
     
     kt1 = 1; % subinterval computation start
     kt2 = 0; % previous subinterval end

@@ -10,7 +10,7 @@ plotAcc = 1;
 
 %%
 
-filePath = getResultsFile(20); % , 'tests'
+filePath = getResultsFile(6); % , 'tests'
 
 load(filePath);
 
