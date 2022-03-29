@@ -2,7 +2,7 @@ function Fridge = SingleRidgeExtractSlope(T, freqs, CWT, slopeTimeConst)
 %SINGLERIDGEEXTRACT Summary of this function goes here
 %   Detailed explanation goes here
 
-Nit = 2; % nb of iterations
+Nit = 1; % nb of iterations
 Ndigitsmax = 5; % maximum of digits in the LongInt class base
 precRidge = 1e-4; % precision of the ridge, i.e. ratio of the ridge impacted by the start and end values
 

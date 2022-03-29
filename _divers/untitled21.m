@@ -1,8 +1,8 @@
-% t = 0:0.005:10;
-% x = sin(2*pi*10*(t + 0*sin(t))) .* (-(t-t(end)/2+0.3)/300);
+t = 0:0.01:10;
+x = sin(2*pi*10*t);
 
 Q = 2;
-freqs = linspace(1, 3, 300);
+freqs = linspace(5, 15, 300);
 MotherWavelet = 'morlet';
 ct = 3;
 ridgeContinuity = 'slope';

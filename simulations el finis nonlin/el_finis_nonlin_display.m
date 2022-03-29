@@ -1,16 +1,17 @@
 function el_finis_nonlin_display()
 
 dispStresses = 0;
-dispFreqs = 0;
+dispFreqs = 1;
 plotShapes = 0;
-plotAnimation = 1;
-plotPosition = 1;
+plotAnimation = 0;
+plotAnimationGif = 0;
+plotPosition = 0;
 plotSpeed = 0;
 plotAcc = 1;
 
 %%
 
-filePath = getResultsFile(6); % , 'tests'
+filePath = getResultsFile(1); % , 'tests'
 
 load(filePath);
 
@@ -41,6 +42,15 @@ plotDefModales(dispStresses, dispFreqs, plotShapes, L, E, J, mu, N, Mr, Cr, Kr, 
 if plotAnimation
     time_coeff = 1.;
     movingPlotVehicles(Ytot, T, L, [t_vehicles_left, t_PL_left], [t_vehicles_right, t_PL_right],...
+        [m_vehicles_left, m_PL_left], [m_vehicles_right, m_PL_right],...
+        [c_vehicles_left, c_PL_left], [c_vehicles_right, c_PL_right],...
+        pos_capteurs, x_nonlin, nonlin_reached, time_coeff);
+end
+
+% animation gif
+if plotAnimationGif
+    time_coeff = 1.;
+    movingPlotVehiclesGif(Ytot, T, L, [t_vehicles_left, t_PL_left], [t_vehicles_right, t_PL_right],...
         [m_vehicles_left, m_PL_left], [m_vehicles_right, m_PL_right],...
         [c_vehicles_left, c_PL_left], [c_vehicles_right, c_PL_right],...
         pos_capteurs, x_nonlin, nonlin_reached, time_coeff);

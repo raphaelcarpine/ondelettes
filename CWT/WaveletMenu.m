@@ -2355,6 +2355,10 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     end
                     Yfour = [Yfour, zeros(1, ZeroPaddingFourier*length(Yfour))];
                     Xfour = mean(diff(Xfour)) * (0:length(Yfour)-1);
+                    Tfour = mean(diff(Xfour)) * length(Xfour);
+                    if FourierAveraging
+                        Tfour = Tfour/FourierAveragingNb;
+                    end
                     
                     [freqs, four] = fourierTransform(Xfour, Yfour,...
                         'Averaging', FourierAveraging, 'AveragingNb', FourierAveragingNb,...

@@ -45,7 +45,7 @@ end
 
 
 % time
-T = 10000;
+T = 1000;
 % T = 30;
 T0 = 5/(c/(2*m));
 fe = 1000;
@@ -92,10 +92,10 @@ t = t(kt0:end);
 x = x(kt0:end);
 
 % resampling
-% fe2 = 100;
-% Nfe = floor(fe/fe2);
-% t = t(1:Nfe:end);
-% x = x(1:Nfe:end);
+fe2 = 100;
+Nfe = floor(fe/fe2);
+t = t(1:Nfe:end);
+x = x(1:Nfe:end);
 
 %%
 
@@ -124,8 +124,24 @@ xlabel('Amplitude [m]');
 ylabel('Frequency [Hz]');
 
 
+% plot CWT slope
+fmin = 5;
+fmax = 15;
+Q = 2;
+MotherWavelet = 'morlet';
+freqs = linspace(fmin, fmax, 100);
+CWT = WvltComp(t, x, freqs, Q, 'MotherWavelet', MotherWavelet);
+for slopeTime = [0.1 0.5 1 2]
+    ridge = SingleRidgeExtract(t, freqs, CWT, MotherWavelet, Q, 3, 'slope', slopeTime);
+    figure('Name', sprintf('CWT slope penalization %f', slopeTime));
+    plot(abs(ridge.val), ridge.freq);
+    xlabel('Amplitude [m]');
+    ylabel('Frequency [Hz]');
+end
 
-% wavelet
+
+%%
+% wavelet menu
 
 fmin = 5;
 fmax = 15;

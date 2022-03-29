@@ -3,6 +3,7 @@ clear all
 %% options
 
 computeAll = 0;
+saveResults = 0;
 
 methodeFreq = 'CWT'; % 'CWT', 'hilbert'
 intAccPos = 0; % integration acceleration pour position
@@ -17,8 +18,9 @@ fmax = 3;
 Q = 2;
 MotherWavelet = 'morlet';
 ct = 3;
-ridgeContinuity = 'none'; % 'none', 'simple', 'slope0.1', 'slope0.3', 'slope1'
+ridgeContinuity = 'slope3'; % 'none', 'simple', 'reverse, 'double', 'slope3'
 signalDerivation = 0;
+noiseLevel = inf;
 
 % linear regressions
 filtrageSignal = 0;
@@ -34,10 +36,10 @@ regLiMultiVars = [true, logical(regLiMultiVars)];
 averageTimeIntervals = 25;
 Kmin = 10;
 
-plotFA = 0;
+plotFA = 1;
 plotK = 0;
-plotDiscardedFA = 1;
-plotRegLin = 1;
+plotDiscardedFA = 0;
+plotRegLin = 0;
 
 referenceQtyArray = {'ampl', 'pos', 'temp'};
 averageScale = 'lin';
@@ -56,6 +58,9 @@ if ~computeAll
     signalDerivationStrs = ["_2integration", "_integration", "", "_derivation", "_2derivation"];
     ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s_%s', [fmin, fmax, Q,...
         convertCharsToStrings(MotherWavelet), signalDerivationStrs(signalDerivation+3), convertCharsToStrings(ridgeContinuity)]);
+    if noiseLevel < inf   
+        ridgeFolder = [ridgeFolder, '_noise', num2str(noiseLevel)];
+    end
     ridgeFolders = {ridgeFolder};
 else
     folders = dir(ridgeFolderPath);
@@ -84,7 +89,7 @@ for kfolder = 1:length(ridgeFolders)
     coeffTemp = nan(size(Ksimu));
     coeffTemp_err = nan(size(Ksimu));
 
-    for ks = 1:length(Ksimu)
+    for ks = 6%1:length(Ksimu)
         ksim = Ksimu(ks);
         filePath = getResultsFile(ksim);
 
@@ -220,7 +225,8 @@ for kfolder = 1:length(ridgeFolders)
             [coeffsRegLin.'; coeffsRegLinConfIntervals.']);
         fprintf('%.3g*std(A) = %.3g Hz\n', abs(coeffsRegLin(2)) * [1, std(Aridge)]);
         fprintf('%.3g*std(Y) = %.3g Hz\n', abs(coeffsRegLin(3)) * [1, std(Yridge)]);
-        fprintf('%.3g*std(T) = %.3g Hz\n\n', abs(coeffsRegLin(4)) * [1, std(Tempridge)]);
+        fprintf('%.3g*std(T) = %.3g Hz\n', abs(coeffsRegLin(4)) * [1, std(Tempridge)]);
+        fprintf('std(eps) = %.3g Hz\n\n', std(Fridge.' - regLiMultiVarsVals.'*coeffsRegLin0));
 
         % save
         F0(ks) = coeffsRegLin(1);
@@ -230,7 +236,7 @@ for kfolder = 1:length(ridgeFolders)
 
         %% reg lin multi dimension par minute de chaque heure
         
-        Ndecoup = 20; % decoupe heure
+        Ndecoup = 60; % decoupe heure
 
         coeffsRegLinMin = zeros(4, Ndecoup);
 
@@ -330,6 +336,9 @@ for kfolder = 1:length(ridgeFolders)
             end
 
         end
+        
+        drawnow
+        input('');
 
     end
 
@@ -339,7 +348,9 @@ for kfolder = 1:length(ridgeFolders)
     disp(ridgeFolder);
     disp(' ');
     disp(T);
-%     save(fullfile(ridgeFolderPath, ridgeFolder, 'linreg.mat'), 'T');
+    if saveResults
+        save(fullfile(ridgeFolderPath, ridgeFolder, 'linreg.mat'), 'T');
+    end
 
 end
 
