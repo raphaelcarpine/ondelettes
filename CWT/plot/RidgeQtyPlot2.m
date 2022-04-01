@@ -17,7 +17,7 @@ defaultGrid = 'on'; % 'auto' pour ne pas changer
 defaultRenameAxes = true;
 defaultDampingInPercents = false;
 
-validQty = {'time', 'val', 'freq', 'diff', 'damping', 'damping2', 'damping3', 'bandwidth', 'freq2', 'pha', 'pha2'};
+validQty = {'time', 'val', 'freq', 'diff', 'damping', 'damping2', 'damping3', 'bandwidth', 'freq2', 'pha', 'pha2', 'signal'};
 checkQty = @(str) ismember(str, validQty);
 validEvaluationFunction = {'', 'abs', 'angle', 'real', 'imag', 'log'};
 checkEvaluationFunction = @(str) ismember(str, validEvaluationFunction);

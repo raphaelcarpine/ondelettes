@@ -113,7 +113,7 @@ if fig == 0
     fig = figure('Name', 'Wavelet Menu', 'numbertitle', 'off');
     fig.Units = 'characters';
     fig.Position(3) = 110;
-    fig.Position(4) = 27;
+    fig.Position(4) = 28;
     fig.MenuBar = 'none';
     fig.Resize = false;
 %     fig.ToolBar = 'none';
@@ -432,10 +432,20 @@ xscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','tog
 yscaleTimePhase = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
     'String', 'linear', 'Value', false);
 
+checkboxCustom = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','checkbox', 'Value', false);
+XpopupCustom = uicontrol('Parent', plotPan, 'Units', 'normalized','Style','popupmenu',...
+    'String', {'ampl', 'freq', 'damping', 'phase', 'signal'});
+YpopupCustom = uicontrol('Parent', plotPan, 'Units', 'normalized','Style','popupmenu',...
+    'String', {'ampl', 'freq', 'damping', 'phase', 'signal'});
+xscaleCustom = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+yscaleCustom = uicontrol('Parent',plotPan, 'Units', 'normalized','Style','togglebutton',...
+    'String', 'linear', 'Value', false);
+
 Checkboxs2 = [checkboxTimeAmpl, checkboxTimeFreq, checkboxTimeDamp, checkboxAmplFreq, checkboxAmplDamp,...
-    checkboxTimePhase];
-XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleTimeDamp, xscaleAmplFreq, xscaleAmplDamp, xscaleTimePhase];
-YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleTimeDamp, yscaleAmplFreq, yscaleAmplDamp, yscaleTimePhase];
+    checkboxTimePhase, checkboxCustom];
+XScales = [xscaleTimeAmpl, xscaleTimeFreq, xscaleTimeDamp, xscaleAmplFreq, xscaleAmplDamp, xscaleTimePhase, xscaleCustom];
+YScales = [yscaleTimeAmpl, yscaleTimeFreq, yscaleTimeDamp, yscaleAmplFreq, yscaleAmplDamp, yscaleTimePhase, yscaleCustom];
 n1 = length(Checkboxs1);
 n2 = length(Checkboxs2);
 n = n1+n2;
@@ -452,8 +462,8 @@ for k=2:n1
     deleteButton.Position = [0.76, 0.01+(n-k)/n, 0.23, 1/n-0.02];
 end
 for k=(n1+1:n1+n2)
-    XScales(k-n1).Position = [0.51, 0.01+(n-k)/n, 0.23, 1/n-0.02];
-    YScales(k-n1).Position = [0.76, 0.01+(n-k)/n, 0.23, 1/n-0.02];
+    XScales(k-n1).Position = [0.51, 0.005+(n-k)/n, 0.23, 1/n-0.01];
+    YScales(k-n1).Position = [0.76, 0.005+(n-k)/n, 0.23, 1/n-0.01];
 end
 
 scalesNames = {'linear', 'log'};
@@ -485,6 +495,10 @@ end
         end
     end
 WvltScaleButton.Callback = @WvltScaleButtonCallback;
+
+% custom variables
+XpopupCustom.Position = [0.08, 0.005, 0.21, 1/n-0.01];
+YpopupCustom.Position = [0.29, 0.005, 0.21, 1/n-0.01];
 
 
 
@@ -1790,6 +1804,10 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                         'MotherWavelet', MotherWavelet, 'DerivationOrder', DerivationOrder,...
                         'XLimRidge', XLimRidge, 'ctRidge', ctRidge,...
                         'FrequencyScale', FrequencyScale, 'SquaredCWT', multiSignalMode);
+                    for kr = 1:length(ridges{kPlot}.time)
+                        ridges{kPlot}.signal{kr} =...
+                            yRidgePlot(xRidgePlot >= ridges{kPlot}.time{kr}(1) & xRidgePlot <= ridges{kPlot}.time{kr}(end));
+                    end
                 end
                 
             elseif multiSignalMode
@@ -1918,8 +1936,58 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
                     axRidges = RidgeQtyPlot2(ridge, 'time', phaseRidgeName,...
                         'ScaleX', get(xscaleTimePhase, 'String'), 'ScaleY', get(yscaleTimePhase, 'String'),...
                         'Axes', axesFiguresCheckboxs2(6, kPlot), 'RenameAxes', true,...
-                        'NameX', 'Time [s]', 'NameY', 'Phase (rad)', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
+                        'NameX', 'Time [s]', 'NameY', 'Phase [rad]', 'XLim', XLimRidgePlot, 'Threshold', RidgeMinModu);
                     XLimDisplayObj.addAxes(axRidges, false(size(axRidges)));
+                end
+                if checkboxCustom.Value % plot customisé
+                    argsCell = cell(1, 2); % arguments fonction RidgeQtyPlot2
+                    optsCell = {}; % options fonction RidgeQtyPlot2
+                    switch XpopupCustom.String{XpopupCustom.Value}
+                        case 'ampl'
+                            argsCell{1} = 'val';
+                            optsCell = [optsCell, {'EvaluationFunctionX', 'abs', 'NameX', ['Amplitude [', signalUnit, ']']}];
+                        case 'freq'
+                            argsCell{1} = freqRidgeName;
+                            optsCell = [optsCell, {'NameX', 'Frequency [Hz]'}];
+                        case 'damping'
+                            argsCell{1} = dampingRidgeName;
+                            optsCell = [optsCell, {'NameX', 'Damping [%]'}];
+                        case 'phase'
+                            argsCell{1} = phaseRidgeName;
+                            optsCell = [optsCell, {'NameX', 'Phase [rad]'}];
+                        case 'signal'
+                            if ~isfield(ridge, 'signal')
+                                warning('''signal'' quantity unavailable in multi signal or SVD mode');
+                                continue
+                            end
+                            argsCell{1} = 'signal';
+                            optsCell = [optsCell, {'NameX', ['Signal [', signalUnit, ']']}];
+                    end
+                    switch YpopupCustom.String{YpopupCustom.Value}
+                        case 'ampl'
+                            argsCell{2} = 'val';
+                            optsCell = [optsCell, {'EvaluationFunctionY', 'abs', 'NameY', ['Amplitude [', signalUnit, ']']}];
+                        case 'freq'
+                            argsCell{2} = freqRidgeName;
+                            optsCell = [optsCell, {'NameY', 'Frequency [Hz]'}];
+                        case 'damping'
+                            argsCell{2} = dampingRidgeName;
+                            optsCell = [optsCell, {'NameY', 'Damping [%]'}];
+                        case 'phase'
+                            argsCell{2} = phaseRidgeName;
+                            optsCell = [optsCell, {'NameY', 'Phase [rad]'}];
+                        case 'signal'
+                            if ~isfield(ridge, 'signal')
+                                warning('''signal'' quantity unavailable in multi signal or SVD mode');
+                                continue
+                            end
+                            argsCell{2} = 'signal';
+                            optsCell = [optsCell, {'NameY', ['Signal [', signalUnit, ']']}];
+                    end
+                    RidgeQtyPlot2(ridge, argsCell{:}, optsCell{:},...
+                        'ScaleX', get(xscaleCustom, 'String'), 'ScaleY', get(yscaleCustom, 'String'),...
+                        'Axes', axesFiguresCheckboxs2(7, kPlot), 'RenameAxes', true, 'DampingInPercents', true,...
+                        'Threshold', RidgeMinModu);
                 end
             end
         end

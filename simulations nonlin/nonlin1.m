@@ -66,8 +66,9 @@ f0 = 150;
 f0 = 150*sqrt(4);
 f = f0/sqrt(dt) * randn(size(t));
 
-% noise + diracs
-
+% noise + static
+f0 = 30;
+f = f0/sqrt(dt) * randn(size(t)) + 50000*sin(2*pi*t/100);
 
 % Aref
 Aref = f0*sqrt(dt)/(2*m*sqrt(k1/m)*sqrt(zeta*sqrt(k1/m)*dt))
@@ -105,39 +106,39 @@ plt = plot(t, x);
 xlabel('Time [s]');
 ylabel('Displacement [m]');
 
-% plot hilbert
-figure('Name', 'Hilbert');
-hilb = hilbert(x);
-Dhilb = angle(hilb(2:end)./hilb(1:end-1));
-Dhilb = [Dhilb(1), (Dhilb(1:end-1)+Dhilb(2:end))/2, Dhilb(end)];
-plot(abs(hilb), Dhilb/(2*pi*dt));
-xlabel('Amplitude [m]');
-ylabel('Frequency [Hz]');
-
-% plot hilbert 2
-figure('Name', 'Hilbert 2');
-P = round(2*pi/(sqrt(k1/m)*dt));
-hilb = hilbert(x);
-Dhilb = angle(hilb(1+P:end)./hilb(1:end-P));
-plot(abs(hilb(1+round(P/2):round(P/2)+length(Dhilb))), Dhilb/(2*pi*P*dt));
-xlabel('Amplitude [m]');
-ylabel('Frequency [Hz]');
-
-
-% plot CWT slope
-fmin = 5;
-fmax = 15;
-Q = 2;
-MotherWavelet = 'morlet';
-freqs = linspace(fmin, fmax, 100);
-CWT = WvltComp(t, x, freqs, Q, 'MotherWavelet', MotherWavelet);
-for slopeTime = [0.1 0.5 1 2]
-    ridge = SingleRidgeExtract(t, freqs, CWT, MotherWavelet, Q, 3, 'slope', slopeTime);
-    figure('Name', sprintf('CWT slope penalization %f', slopeTime));
-    plot(abs(ridge.val), ridge.freq);
-    xlabel('Amplitude [m]');
-    ylabel('Frequency [Hz]');
-end
+% % plot hilbert
+% figure('Name', 'Hilbert');
+% hilb = hilbert(x);
+% Dhilb = angle(hilb(2:end)./hilb(1:end-1));
+% Dhilb = [Dhilb(1), (Dhilb(1:end-1)+Dhilb(2:end))/2, Dhilb(end)];
+% plot(abs(hilb), Dhilb/(2*pi*dt));
+% xlabel('Amplitude [m]');
+% ylabel('Frequency [Hz]');
+% 
+% % plot hilbert 2
+% figure('Name', 'Hilbert 2');
+% P = round(2*pi/(sqrt(k1/m)*dt));
+% hilb = hilbert(x);
+% Dhilb = angle(hilb(1+P:end)./hilb(1:end-P));
+% plot(abs(hilb(1+round(P/2):round(P/2)+length(Dhilb))), Dhilb/(2*pi*P*dt));
+% xlabel('Amplitude [m]');
+% ylabel('Frequency [Hz]');
+% 
+% 
+% % plot CWT slope
+% fmin = 5;
+% fmax = 15;
+% Q = 2;
+% MotherWavelet = 'morlet';
+% freqs = linspace(fmin, fmax, 100);
+% CWT = WvltComp(t, x, freqs, Q, 'MotherWavelet', MotherWavelet);
+% for slopeTime = [0.1 0.5 1 2]
+%     ridge = SingleRidgeExtract(t, freqs, CWT, MotherWavelet, Q, 3, 'slope', slopeTime);
+%     figure('Name', sprintf('CWT slope penalization %f', slopeTime));
+%     plot(abs(ridge.val), ridge.freq);
+%     xlabel('Amplitude [m]');
+%     ylabel('Frequency [Hz]');
+% end
 
 
 %%
