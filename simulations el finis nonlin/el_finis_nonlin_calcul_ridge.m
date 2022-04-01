@@ -21,7 +21,7 @@ noiseLevelArr = [20, 15, 10, 5];
 
 [initWaitBar, updateWaitBar, closeWaitBar] = getWaitBar(length(Ksimul) * length(Qarr) * size(fminmaxArr, 1) *...
     length(MotherWaveletArr) * length(signalDerivationArr) * length(ridgeContinuityArr),...
-    'displayTime', 0, 'windowTitle', 'Computing ridges');
+    'displayTime', 0, 'windowTitle', 'Computing ridges', 'printMsg', true);
 initWaitBar();
 
 % parpool('threads');
@@ -82,7 +82,7 @@ for kkf = 1:length(Ksimul)
                             ridgeFolder = sprintf('ridges_fmin%g_fmax%g_Q%g_%s%s_%s', [fmin, fmax, Q,...
                                 convertCharsToStrings(MotherWavelet), signalDerivationStrs(signalDerivation+3), convertCharsToStrings(ridgeContinuity)]);
                             if noiseLevel < inf
-                                ridgeFolder = [ridgeFolder, '_noise', num2str(ridgeFolder)];
+                                ridgeFolder = [ridgeFolder, '_noise', num2str(noiseLevel)];
                             end
                             if isfile(fullfile(ridgeFolderPath, ridgeFolder, [fileName, '.mat']))
                                 updateWaitBar();

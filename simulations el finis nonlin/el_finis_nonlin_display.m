@@ -1,13 +1,13 @@
 function el_finis_nonlin_display()
 
-dispStresses = 0;
+dispStresses = 1;
 dispFreqs = 1;
 plotShapes = 0;
 plotAnimation = 0;
 plotAnimationGif = 0;
 plotPosition = 0;
 plotSpeed = 0;
-plotAcc = 1;
+plotAcc = 0;
 
 %%
 

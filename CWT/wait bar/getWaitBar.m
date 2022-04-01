@@ -12,6 +12,7 @@ progressStringFcnDef = @(k) sprintf('%d%%', round(100*k/N));
 printTimeRemainingDef = true;
 minimumBeepTimeDef = inf;
 updateFreqDef = 5;
+printMsgDef = false;
 
 update_waitbar_time = 0.1;
 update_remainingTime_time = 2;
@@ -25,6 +26,7 @@ addParameter(p,'progressStringFcn', progressStringFcnDef);
 addParameter(p,'printTimeRemaining', printTimeRemainingDef);
 addParameter(p,'minimumBeepTime', minimumBeepTimeDef);
 addParameter(p,'updateFreq', updateFreqDef);
+addParameter(p,'printMsg', printMsgDef);
 
 %
 parse(p, varargin{:});
@@ -38,6 +40,7 @@ progressStringFcn = p.Results.progressStringFcn;
 printTimeRemaining = p.Results.printTimeRemaining;
 minimumBeepTime = p.Results.minimumBeepTime;
 updateFreq = p.Results.updateFreq;
+printMsg = p.Results.printMsg;
 
 %%
 
@@ -118,6 +121,11 @@ I_update_freq = floor(24*3600*now*updateFreq);
                 drawnow
             catch
             end
+        end
+        
+        % print
+        if printMsg
+            disp([msgString(), ' (', timeRemainingString(time_rem), '...)']);
         end
     end
 
