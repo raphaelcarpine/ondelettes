@@ -2,14 +2,14 @@
 m = 1;
 k1 = (10*2*pi)^2;
 k2 = k1/2;
-x0 = 6;
+x0 = 1;
 zeta = 0.005;
 zeta = 0.01;
 c = 2*zeta*sqrt(k1*m);
 
 
 g = @(x) (k2-k1)*(x-x0).*(x>x0);
-g = @(x) (k2-k1)*(x-x0).*(x>x0) + (k2-k1)*(x+x0).*(x<-x0);
+% g = @(x) (k2-k1)*(x-x0).*(x>x0) + (k2-k1)*(x+x0).*(x<-x0);
 % g = @(x) 0;
 
 if 0
@@ -45,7 +45,7 @@ end
 
 
 % time
-T = 1000;
+T = 10000;
 % T = 30;
 T0 = 5/(c/(2*m));
 fe = 1000;
@@ -62,13 +62,12 @@ f = zeros(size(t));
 f(kt0) = 1000 / dt;
 
 % noise
-f0 = 150;
-f0 = 150*sqrt(4);
+f0 = 50;
 f = f0/sqrt(dt) * randn(size(t));
 
 % noise + static
-f0 = 30;
-f = f0/sqrt(dt) * randn(size(t)) + 50000*sin(2*pi*t/100);
+f0 = 5;
+f = f0/sqrt(dt) * randn(size(t)) + 2*k1*sin(2*pi*t/100);
 
 % Aref
 Aref = f0*sqrt(dt)/(2*m*sqrt(k1/m)*sqrt(zeta*sqrt(k1/m)*dt))
@@ -144,7 +143,7 @@ ylabel('Displacement [m]');
 %%
 % wavelet menu
 
-fmin = 5;
+fmin = 3;
 fmax = 15;
 Q = sqrt(pi/zeta)/3;
 MotherWavelet = 'morlet';
@@ -177,7 +176,35 @@ if false
 end
 
 
+Am = linspace(0, 2.5, 300);
+Aasym = nan(size(Am));
+fasym = nan(size(Am));
+for k = 1:length(Am)
+    [Aasym(k), fasym(k)] = f2asym(Am(k), m, k1, k2, x0);
+end
 
+
+function [A, f] = f2asym(Am, m, k1, k2, x0)
+if Am <= x0
+    A = Am;
+    f = sqrt(k1/m)/(2*pi);
+    return
+end
+
+d = Am - x0;
+c1 = k2;
+c2 = k1*2*x0;
+c3 = -k1*(2*x0*d+d^2);
+D = (-c2+sqrt(c2^2-4*c1*c3))/(2*c1);
+T = sqrt(m/k1)*pi/2;
+T = T + sqrt(m/k1)*atan(x0/sqrt(Am^2-x0^2));
+T = T + sqrt(m/k2)*(atan((k1/k2*x0+D)/sqrt(k1/k2*2*x0*D+(k1/k2*x0)^2+D^2-(k1/k2*x0+D)^2)) -...
+    atan((k1/k2*x0)/sqrt(k1/k2*2*x0*D+(k1/k2*x0)^2+D^2-(k1/k2*x0)^2)));
+T = 2*T;
+f = 1/T;
+A = x0 + (d+D)/2;
+
+end
 
 
 

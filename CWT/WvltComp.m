@@ -77,7 +77,7 @@ Fs = 1/mean(diff(X)); %Frequence d'echantillonage
 
 Diff = diff(X);
 Diff = Diff/Diff(1);
-if max(abs(Diff-1)) > 1e-5
+if max(abs(Diff-1)) > 1e-3
     warning(['non-constant time step, error : ', num2str(max(abs(Diff-1)))]);
 end
 

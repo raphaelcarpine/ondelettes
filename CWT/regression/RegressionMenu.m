@@ -10,7 +10,8 @@ defaultEq = 'a*x+b';
 defaultParam = 'a b';
 defaultParam0 = '1 1';
 defaultFit = 'y';
-defaultBounds = '-inf inf';
+defaultXBounds = '-inf inf';
+defaultYBounds = '-inf inf';
 defaultLowerBoundsParams = '';
 defaultUpperBoundsParams = '';
 defaultFigureName = 'Regression';
@@ -23,7 +24,8 @@ addOptional(p, 'Equation', defaultEq);
 addOptional(p, 'Param', defaultParam);
 addOptional(p, 'Param0', defaultParam0);
 addOptional(p, 'Fit', defaultFit);
-addOptional(p, 'Bounds', defaultBounds);
+addOptional(p, 'XBounds', defaultXBounds);
+addOptional(p, 'YBounds', defaultYBounds);
 addOptional(p, 'LowerBoundsParams', defaultLowerBoundsParams);
 addOptional(p, 'UpperBoundsParams', defaultUpperBoundsParams);
 addOptional(p, 'FigureName', defaultFigureName);
@@ -37,11 +39,15 @@ param0 = p.Results.Param0;
 fit = p.Results.Fit;
 figureName = p.Results.FigureName;
 
-bounds = p.Results.Bounds;
+Xbounds = p.Results.XBounds;
+Ybounds = p.Results.YBounds;
 lowerBoundsParams = p.Results.LowerBoundsParams;
 upperBoundsParams = p.Results.UpperBoundsParams;
-if isa(bounds, 'double')
-    bounds = num2str(bounds, numericPrecision);
+if isa(Xbounds, 'double')
+    Xbounds = num2str(Xbounds, numericPrecision);
+end
+if isa(Ybounds, 'double')
+    Ybounds = num2str(Ybounds, numericPrecision);
 end
 if isa(lowerBoundsParams, 'double')
     lowerBoundsParams = num2str(lowerBoundsParams, numericPrecision);
@@ -169,20 +175,22 @@ fig.CloseRequestFcn = @(~,~) closeReg();
 
 eqStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'y = ');
 eqEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', eq);
-paramStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params :');
+paramStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Params :');
 paramEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param);
-param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params init :');
+param0Str = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Params init :');
 param0Edit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', param0);
-paramLbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params lb :');
+paramLbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Params lb :');
 paramLbEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', lowerBoundsParams);
-paramUbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'params ub :');
+paramUbStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Params ub :');
 paramUbEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', upperBoundsParams);
-fitStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'fit :');
+fitStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Fit :');
 fitEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', fit);
-boundsStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'bounds :');
-boundsEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', bounds);
+XboundsStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Bounds x :');
+XboundsEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', Xbounds);
+YboundsStr = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','text', 'String', 'Bounds y :');
+YboundsEdit = uicontrol('Parent', eqPan, 'Units', 'normalized','Style','edit', 'String', Ybounds);
 
-nLign = 7;
+nLign = 8;
 marge = 0.02;
 h = (1-(nLign+1)*marge)/nLign;
 H = h+marge;
@@ -198,8 +206,10 @@ paramUbStr.Position = [0.01, 1-5*H, 0.2, h];
 paramUbEdit.Position = [0.22, 1-5*H, 0.77, h];
 fitStr.Position = [0.01, 1-6*H, 0.2, h];
 fitEdit.Position = [0.22, 1-6*H, 0.77, h];
-boundsStr.Position = [0.01, 1-7*H, 0.2, h];
-boundsEdit.Position = [0.22, 1-7*H, 0.77, h];
+XboundsStr.Position = [0.01, 1-7*H, 0.2, h];
+XboundsEdit.Position = [0.22, 1-7*H, 0.77, h];
+YboundsStr.Position = [0.01, 1-8*H, 0.2, h];
+YboundsEdit.Position = [0.22, 1-8*H, 0.77, h];
 
 
 %% options
@@ -303,15 +313,25 @@ dimension = nan;
             X = X(~isnan(X));
             Y = Y(~isnan(X));
             
-            % bounds
-            Bounds = boundsEdit.String;
-            Bounds = strsplit2(Bounds);
+            % x bounds
+            XBounds = XboundsEdit.String;
+            XBounds = strsplit2(XBounds);
             for iBounds = 1:2
-                Bounds{iBounds} = eval(Bounds{iBounds});
+                XBounds{iBounds} = eval(XBounds{iBounds});
             end
-            Bounds = [Bounds{:}];
-            Y = Y(X>=Bounds(1) & X<=Bounds(2));
-            X = X(X>=Bounds(1) & X<=Bounds(2));
+            XBounds = [XBounds{:}];
+            Y = Y(X>=XBounds(1) & X<=XBounds(2));
+            X = X(X>=XBounds(1) & X<=XBounds(2));
+            
+            % y bounds
+            YBounds = YboundsEdit.String;
+            YBounds = strsplit2(YBounds);
+            for iBounds = 1:2
+                YBounds{iBounds} = eval(YBounds{iBounds});
+            end
+            YBounds = [YBounds{:}];
+            X = X(Y>=YBounds(1) & Y<=YBounds(2));
+            Y = Y(Y>=YBounds(1) & Y<=YBounds(2));
             
             ax = get(line, 'Parent');
             ok = ~isempty(X);

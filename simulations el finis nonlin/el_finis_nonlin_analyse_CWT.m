@@ -18,7 +18,7 @@ fmax = 3;
 Q = 2;
 MotherWavelet = 'morlet';
 ct = 3;
-ridgeContinuity = 'slope3'; % 'none', 'simple', 'reverse, 'double', 'slope3'
+ridgeContinuity = 'none'; % 'none', 'simple', 'reverse, 'double', 'slope3'
 signalDerivation = 0;
 noiseLevel = inf;
 

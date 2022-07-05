@@ -14,7 +14,7 @@ L = 54;
 fig.Position(3) = L;
 fig.Position(4) = 7.5;
 
-WinOnTop(fig);
+% WinOnTop(fig);
 
 uicontrol(fig, 'Style', 'text', 'String', 'Axis or lines selection', 'FontWeight', 'bold',...
     'Units', 'characters', 'Position', [0 5.5 L 1]);

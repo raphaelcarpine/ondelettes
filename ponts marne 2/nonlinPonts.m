@@ -161,7 +161,7 @@ for kbridge = 1:length(bridges)
     % cwt
     cA = 3;
     Q = sqrt(pi/zeta)/cA;
-    Q = 3;
+    Q = 6;
     fmin = f0-1;
     fmax = f0+1;
     

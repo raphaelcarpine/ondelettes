@@ -13,7 +13,7 @@ Nt = length(t);
 dt = (t(end)-t(1))/(Nt-1);
 fs = 1/dt;
 
-if max( abs( diff(t)/dt -1)) > 1e-4
+if max( abs( diff(t)/dt -1)) > 1e-3
     error('sampling problem');
 end
 

@@ -1574,7 +1574,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         end
         
         % test time step
-        if any( abs(diff(X(1, :)) / mean(diff(X(1, :))) - 1) > 1e-4)
+        if any( abs(diff(X(1, :)) / mean(diff(X(1, :))) - 1) > 1e-3)
             error('non-constant time step');
         end
         

@@ -1,15 +1,19 @@
 function Xmean = getSmoothSignal(T, X, windowType, Tmean)
+% windowType : 'rectangular', 'gaussian'
+% Tmean : for 'rectangular' Tmean = b-a, for 'gaussian' Tmean = 2σ
 dt = mean(diff(T));
-if any(abs(diff(T)/dt - 1) > 1e-4) % pas de temps non constant
+if any(abs(diff(T)/dt - 1) > 1e-3) % pas de temps non constant
     error('uneven time step, not implemented');
 else % pas de temps constant
-    halfNt = round(1/2*Tmean/dt);
-    Nt = 2*halfNt + 1; % impair pour parité fenêtre
     switch windowType
         case 'rectangular'
+            halfNt = round(1/2*Tmean/dt);
+            Nt = 2*halfNt + 1; % impair pour parité fenêtre
             localWindow = 1/Nt * ones(1, Nt);
         case 'gaussian'
-            localWindow = exp(-(-halfNt:halfNt).^2 / (2*(halfNt/3)^2));
+            halfNt = round(2*Tmean/dt);
+            Nt = 2*halfNt + 1; % impair pour parité fenêtre
+            localWindow = exp(-(-halfNt:halfNt).^2 / (2*(Tmean/dt/2)^2));
             localWindow = localWindow / sum(localWindow);
     end
     

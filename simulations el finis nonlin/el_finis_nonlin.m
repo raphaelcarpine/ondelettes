@@ -1,6 +1,6 @@
 function el_finis_nonlin()
 
-results_name = 'simul12';
+results_name = 'test';
 
 if exist('D:\simulations elements finis non lin\data', 'dir')
     saveFolder = 'D:\simulations elements finis non lin\data';
@@ -22,7 +22,7 @@ presence_PL = 1;
 temp_variation = 1; % variations E par température
 shock_mode = 0;
 
-t_tot = 24*3600;
+t_tot = 1*3600;
 Fe = 2000; % freq echantillonnage calcul EDP
 Fe2 = 50; % freq reechantillonnage
 T0_resampl = 100; % decoupage en tps, economie memoire
@@ -66,7 +66,7 @@ if local_nonlin
 else
     sigma0 = max(C_static0)*E*h_pont/2; % contrainte mi-travée
 end
-sigma0 = sigma0 + 0.8e6;
+sigma0 = sigma0 + 0.4e6;
 threshold_nonlin = sigma0 * 2/(E*h_pont); % courbure nonlinéarité
 slope_nonlin_E = 0.97; % E2 = slope_nonlin*E
 slope_nonlin_moment1 = 2*slope_nonlin_E/(1+slope_nonlin_E); % nonlinéarité sur le moment en fonction de celle sur le module E
@@ -190,6 +190,10 @@ if presence_PL
     [Tdj1, Tdj2] = getData(jourPL);
     Tdj1.time = 2*Tdj1.time; % division par deux densité camions
     Tdj2.time = 2*Tdj2.time;
+    %%%%% TEST %%%%%
+    Tdj1.time = 10*Tdj1.time;
+    Tdj2.time = 10*Tdj2.time;
+    %%%%%%%%%%%%%%%%
     Tdj1 = Tdj1(Tdj1.time <= t_tot, :);
     Tdj2 = Tdj2(Tdj2.time <= t_tot, :);
     

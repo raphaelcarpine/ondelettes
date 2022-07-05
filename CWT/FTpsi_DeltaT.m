@@ -20,6 +20,7 @@ elseif strcmp(MotherWavelet, 'morlet')
 elseif strcmp(MotherWavelet, 'harmonic')
     deltaf_lil = sqrt(3)/Q; % parametre de l'ondelette de harmonique
     DeltaT_psi = 0;
+%     DeltaT_psi = Q / (2*pi); % pour mu = 1/2
     
     FTpsi = @(nu) (nu >= 1 - deltaf_lil/2) & (nu <= 1 + deltaf_lil/2); % Calcul Ondelettes harmonique en a * f pour f>0
     DeltaT = @(f) DeltaT_psi ./ f;

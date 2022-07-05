@@ -1,7 +1,11 @@
 %% double trains : 2, 6, 8, 9, 13, 15
-N = 1;
-mode = 2; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
+N = 14;
+mode = 3; % 0: affichage, 1: t0, 1.5 : t0 affichage, 2: ft, 3: passage train, 4 :apres train
 saveResults = false;
+
+MotherWavelet = 'harmonic';
+addOpts = {'MaxSlopeRidge', inf, 'MaxParallelRidges', 1}; % additionnal options for WaveletMenu
+addOpts = {};
 
 channels = [3 4 5 6 7 9 10 15];
 % temps_avant = dataArray{:, 1};
@@ -66,6 +70,13 @@ if mode == 3
 elseif mode == 4 || mode == 5
     saveName = [saveName, 'B'];
 end
+switch MotherWavelet
+    case 'cauchy'
+    case {'morlet', 'harmonic'}
+        saveName = [saveName, MotherWavelet];
+    otherwise
+        error(' ');
+end
 savePath = fullfile(saveFolder, saveName);
 
 
@@ -112,7 +123,7 @@ if mode == 0
     plt = plot(t, X);
     WaveletMenu('WaveletPlot', plt, 'fmin', 2, 'fmax', 20, 'Q', 10,...
         'RealShapePlot', @realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-        'StopRidgeWhenIncreasing', true);
+        'StopRidgeWhenIncreasing', true, 'MotherWavelet', MotherWavelet, addOpts{:});
 end
 
 
@@ -169,7 +180,7 @@ if mode == 2
     plt = plot(t, X);
     WaveletMenu('WaveletPlot', plt, 'fmin', 2, 'fmax', 7, 'Q', 7, 'XLim', [t1+Delta_t, t2-Delta_t],...
         'RealShapePlot', @realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-        'StopRidgeWhenIncreasing', true);
+        'StopRidgeWhenIncreasing', true, 'MotherWavelet', MotherWavelet, addOpts{:});
 end
 
 %% extraction informations modales 1
@@ -196,7 +207,7 @@ if mode == 3
     wvltFig = WaveletMenu('WaveletPlot', plt, 'fmin', 4.6, 'fmax', 7.5, 'Q', F0Qa.Qf1(N),...
         'XLim', [t1+Delta_t, t2-Delta_t],...
         'RealShapePlot', realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-        'StopRidgeWhenIncreasing', false);
+        'StopRidgeWhenIncreasing', false, 'MotherWavelet', MotherWavelet, addOpts{:});
     
     % ampl-freq graph
     disp('ampl-freq graph');
@@ -224,7 +235,7 @@ if mode == 3
     wvltFig = WaveletMenu('WaveletPlot', plt, 'fmin', 3, 'fmax', 5.5, 'Q', F0Qa.Qft(N),...
         'XLim', [t1+Delta_t, t2-Delta_t],...
         'RealShapePlot', realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-        'StopRidgeWhenIncreasing', false);
+        'StopRidgeWhenIncreasing', false, 'MotherWavelet', MotherWavelet, addOpts{:});
     % "mode" shapes
     try
         shapesFt(1, 1) = input('shape: ');
@@ -247,7 +258,7 @@ if mode == 3
     wvltFig = WaveletMenu('WaveletPlot', plt, 'fmin', 7.5, 'fmax', 9, 'Q', F0Qa.Qft2(N),...
         'XLim', [t1+Delta_t, t2-Delta_t],...
         'RealShapePlot', realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-        'StopRidgeWhenIncreasing', false);
+        'StopRidgeWhenIncreasing', false, 'MotherWavelet', MotherWavelet, addOpts{:});
     % "mode" shapes
     try
         shapesFt(2, 1) = input('shape: ');
@@ -304,7 +315,7 @@ if mode == 4
         wvltFig = WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q0b(k),...
             'XLim', [t2, min(t(end), t2+10)],...
             'RealShapePlot', realShapePlotPont, 'MultiSignalMode', true, 'MultiSignalModeAbsValue', true,...
-            'StopRidgeWhenIncreasing', true);
+            'StopRidgeWhenIncreasing', true, 'MotherWavelet', MotherWavelet, addOpts{:});
         
         % time-ampl graph
         disp('time-ampl graph');

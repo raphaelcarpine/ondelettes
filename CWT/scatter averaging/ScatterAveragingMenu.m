@@ -6,7 +6,7 @@ figureName = 'Scatter Averaging';
 
 p = inputParser;
 
-defaultFunction = '@(x, y) averagingScatter2(x, y, 1000)';
+defaultFunction = '@(x, y) averagingScatter1(x, y, 0.1)';
 defaultXaxis = '@(x) x';
 defaultYaxis = '@(y) y';
 

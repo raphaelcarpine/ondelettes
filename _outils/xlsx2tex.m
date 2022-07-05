@@ -1,5 +1,5 @@
-xlsxPath = 'C:\Users\carpine\Documents\projets\article bruno\tables\ResultsAB.xlsx';
-texPath = 'C:\Users\carpine\Documents\projets\article bruno\tables\ResultsAB.tex';
+xlsxPath = 'C:\Users\carpine\Documents\projets\article pont de sens\tables\ResultsABharmonic.xlsx';
+texPath = 'C:\Users\carpine\Documents\projets\article pont de sens\tables\ResultsABharmonic.tex';
 
 formatSpec = {'', '%.2f', '%.1f', '%.2f', '%.2f', '%.2f', '%.1f', '%.2f', '%.1f', '%.2f', '%.1f'};
 columnsSpec = '';
