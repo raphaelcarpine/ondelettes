@@ -308,10 +308,9 @@ dimension = nan;
                 Y = Y + 1i*Z;
             end
             
-            X = X(~isnan(Y)); % on enlève les valeurs inappropriées
-            Y = Y(~isnan(Y));
-            X = X(~isnan(X));
-            Y = Y(~isnan(X));
+            noNaN = ~isnan(X) & ~isnan(Y); % on enlève les valeurs inappropriées
+            X = X(noNaN);
+            Y = Y(noNaN);
             
             % x bounds
             XBounds = XboundsEdit.String;

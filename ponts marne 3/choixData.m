@@ -60,14 +60,13 @@ fileName = filesNames{fileIndex};
 filePathRadio = fullfile(dataFolder, 'radio', [filesNames{fileIndex}, '_resampled_filtered.mat']);
 fileNameRadio = [filesNames{fileIndex}, '_resampled_filtered'];
 
-Nlag = nan;
 switch fileName
     case 'changis3006'
-        Nlag = 162;
+        Nlag = 467;
     case 'esbly0107_matin'
-        Nlag = 416;
+        Nlag = 476;
     case 'esbly0107_aprem'
-        Nlag = 1750;
+        Nlag = 1810;
     otherwise
         error(' ');
 end

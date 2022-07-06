@@ -172,5 +172,23 @@ set(ax, 'InnerPosition', [0.02 0.02 0.96 0.96]);
 % lightangle(ax, -70, 40);
 % lighting gouraud
 
+
+%% vecteurs capteurs (figures capteurs)
+
+% Ksensors = [2:4, 9:11];
+% Ksensors = [3, 10];
+% Ksensors = [2, 4, 9, 11];
+% Hsensors = 5;
+% for ks = Ksensors
+%     if ks == 2 || ks == 9
+%         plot3(ax, sensorsPos(ks, 1)*[1 1], sensorsPos(ks, 2)*[1 1], [0 Hsensors], 'r', 'LineWidth', 3);
+%         plot3(ax, sensorsPos(ks, 1), sensorsPos(ks, 2), Hsensors, 'r', 'LineWidth', 3, 'Marker', '^');
+%     else
+%         plot3(ax, sensorsPos(ks, 1)*[1 1], sensorsPos(ks, 2)*[1 1], [0 -Hsensors], 'r', 'LineWidth', 3);
+%         plot3(ax, sensorsPos(ks, 1), sensorsPos(ks, 2), -Hsensors, 'r', 'LineWidth', 3, 'Marker', 'v');
+%     end
+% end
+
+
 end
 

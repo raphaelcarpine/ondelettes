@@ -37,12 +37,14 @@ plt.DataTipTemplate.DataTipRows.Label = 'k =';
 plt.DataTipTemplate.DataTipRows.Value = lags(lags0);
 plt.DataTipTemplate.DataTipRows.Format = 'auto';
 
-xline((seconds(startDateRadio - startDate) - DeltaT), 'LineWidth', 1);
-xline((seconds(startDateRadio - startDate) + 1 - DeltaT), 'LineWidth', 1);
+% xline((seconds(startDateRadio - startDate) - 0.5 - DeltaT), 'LineWidth', 1);
+% xline((seconds(startDateRadio - startDate) + 1 - DeltaT), 'LineWidth', 1);
+xline((seconds(startDateRadio - startDate) + 0.5 - DeltaT), 'k', 'LineWidth', 1,...
+    'Label', 'HEURE PC', 'LabelVerticalAlignment', 'bottom', 'LabelOrientation', 'horizontal');
 
-% changis : 162 / 222
-% esbly matin : 416 / 356
-% esbly aprem : 1750 / 1690
+% changis : 467
+% esbly matin : 476
+% esbly aprem : 1810
 
 
 
