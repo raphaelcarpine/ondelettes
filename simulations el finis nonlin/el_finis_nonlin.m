@@ -11,7 +11,7 @@ else
     error(' ');
 end
 
-solve_ODE = 1;
+solve_ODE = 0;
 plot_results = 0; % sauvegarde dans tous les cas
 disp_freq_nonlin = 0;
 

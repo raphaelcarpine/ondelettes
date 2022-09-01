@@ -5,11 +5,11 @@ clear all
 testWaveletMenu = 0;
 testAffichage = 0;
 
+contraindreRidge = 1; % contraindre le ridge à rester dans la plage de fréquences [fmin, fmax]
+
 kradio = 2;
 
-ridgeContinuity = 'none';
-
-projection = 2; % 1: mode 1, 2, 5
+projection = 5; % 1: mode 1, 2, 5
 
 % CWT
 MotherWavelet = 'morlet';
@@ -37,6 +37,7 @@ switch projection
     otherwise
         warning('pas de mode sélectionné');
 end
+Q = 2;
 
 %% data
 
@@ -57,18 +58,21 @@ switch projection
         k1 = find(contains(channelNames, '29280:ch3'));
         k2 = find(contains(channelNames, '40199:ch3'));
         A = A(k1, :) + A(k2, :);
+        A = 0.5*A;
     case 2
         k1 = find(contains(channelNames, '29279:ch3'));
         k2 = find(contains(channelNames, '29281:ch3'));
         k3 = find(contains(channelNames, '40196:ch3'));
         k4 = find(contains(channelNames, '40200:ch3'));
         A = A(k1, :) - A(k2, :) + A(k3, :) - A(k4, :);
+        A = 0.25*A;
     case 5
         k1 = find(contains(channelNames, '29279:ch3'));
         k2 = find(contains(channelNames, '29281:ch3'));
         k3 = find(contains(channelNames, '40196:ch3'));
         k4 = find(contains(channelNames, '40200:ch3'));
         A = A(k1, :) - A(k2, :) - A(k3, :) + A(k4, :);
+        A = 0.25*A;
     otherwise
 %         error(' ');
 end
@@ -141,11 +145,18 @@ ylabel('Fréquence [Hz]');
 
 Xtot = Xradio(kradio, T >= ridge.time(1) & T <= ridge.time(end)).';
 Ftot = ridge.freq.';
+Atot = abs(ridge.val.');
+if contraindreRidge
+    Ftot(Ftot < fmin | Ftot > fmax) = nan;
+end
 noNaN = ~isnan(Xtot) & ~isnan(Ftot);
 Xtot = Xtot(noNaN);
 Ftot = Ftot(noNaN);
-C = [ones(size(Xtot)), Xtot] \ Ftot;
-fprintf('\ncorr = %.0f mHz/mm\n', 1000*C(2));
+Atot = Atot(noNaN);
+C = [ones(size(Xtot)), Xtot, Atot] \ Ftot;
+fprintf('f0 = %.2f Hz\n', C(1));
+fprintf('corrX = %.0f mHz/mm\n', 1000*C(2));
+fprintf('corrA = %.1f Hz/acc\n', C(3));
 
 hold on
 plot(get(gca, 'XLim'), C(1) + C(2)*get(gca, 'XLim'), '--r');
@@ -157,15 +168,24 @@ plot(get(gca, 'XLim'), C(1) + C(2)*get(gca, 'XLim'), '--r');
 Ninterv = 10; % nb d'intervalles de division du signal
 
 Nsub = floor(length(Xtot)/Ninterv);
-coeffs = nan(1, Ninterv);
+coeffsF = nan(1, Ninterv);
+coeffsX = nan(1, Ninterv);
+coeffsA = nan(1, Ninterv);
 for ki = 1:Ninterv
     Xsub = Xtot(1+(ki-1)*Nsub:ki*Nsub);
     Fsub = Ftot(1+(ki-1)*Nsub:ki*Nsub);
-    C = [ones(size(Xsub)), Xsub] \ Fsub; % Fsub = [ones(size(Xsub)), Xsub] * C
-    coeffs(ki) = C(2);
+    Asub = Atot(1+(ki-1)*Nsub:ki*Nsub);
+    C = [ones(size(Xsub)), Xsub, Asub] \ Fsub; % Fsub = [ones(size(Xsub)), Xsub] * C
+    coeffsF(ki) = C(1);
+    coeffsX(ki) = C(2);
+    coeffsA(ki) = C(3);
 end
 
-fprintf('\ncorr = %.0f +- %.0f mHz/mm\n', 1000*[mean(coeffs), std(coeffs)/sqrt(Ninterv)]);
+fprintf('corrF = %.2f +- %.3f Hz\n', [mean(coeffsF), std(coeffsF)/sqrt(Ninterv)]);
+fprintf('corrX = %.0f +- %.0f mHz/mm\n', 1000*[mean(coeffsX), std(coeffsX)/sqrt(Ninterv)]);
+fprintf('corrA = %.1f +- %.1f Hz/acc\n', [mean(coeffsA), std(coeffsA)/sqrt(Ninterv)]);
+
+
 
 
 

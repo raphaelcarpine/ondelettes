@@ -45,7 +45,7 @@ end
 
 
 % time
-T = 10000;
+T = 1000;
 % T = 30;
 T0 = 5/(c/(2*m));
 fe = 1000;
@@ -65,9 +65,9 @@ f(kt0) = 1000 / dt;
 f0 = 50;
 f = f0/sqrt(dt) * randn(size(t));
 
-% noise + static
-f0 = 5;
-f = f0/sqrt(dt) * randn(size(t)) + 2*k1*sin(2*pi*t/100);
+% % noise + static
+% f0 = 5;
+% f = f0/sqrt(dt) * randn(size(t)) + 2*k1*sin(2*pi*t/100);
 
 % Aref
 Aref = f0*sqrt(dt)/(2*m*sqrt(k1/m)*sqrt(zeta*sqrt(k1/m)*dt))
@@ -160,11 +160,17 @@ WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'Q', Q, 'MotherWavel
 
 %% freq
 
+% approximation de krylov (non-linearité symétrique)
 f1 = @(A) 1/(2*pi) * (sqrt(k1/m) - (A > x0) *(k1-k2)/(pi*sqrt(m*k1)) .* ( ...
     acos(x0./A) - (x0./A) .* sqrt(1-(x0./A).^2)));
 
+% fréquence non-amortie (non-linearité symétrique)
 f2 = @(A) 1/(2*pi) * ( (A <= x0) *sqrt(k1/m) + (A > x0) * (pi/2) ./ ...
     (sqrt(m/k1)*asin(x0./sqrt(A.^2+(k2-k1)/k1*(A-x0).^2)) + sqrt(m/k2)*acos(k1*x0./(k2*A+(k1-k2)*x0))));
+
+% approximation de krylov (non-linearité asymétrique)
+f3 = @(A) 1/(2*pi) * (sqrt(k1/m) - 1/2 * (A > x0) *(k1-k2)/(pi*sqrt(m*k1)) .* ( ...
+    acos(x0./A) - (x0./A) .* sqrt(1-(x0./A).^2)));
 
 
 if false
@@ -176,7 +182,7 @@ if false
 end
 
 
-Am = linspace(0, 2.5, 300);
+Am = linspace(0, 4, 300);
 Aasym = nan(size(Am));
 fasym = nan(size(Am));
 for k = 1:length(Am)

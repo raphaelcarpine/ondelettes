@@ -21,7 +21,8 @@ p = contourf(X, Y, P, 6);
 % p.FaceColor = 'interp';
 % p.EdgeColor = 'none';
 colormap(flipud(hot)) %bone gray hot autumn
-colorbar('XTick', 0)
+colorbar
+% colorbar('XTick', 0)
 caxis([0 inf])
 
 yline(0, '-', 'Re');
@@ -32,11 +33,15 @@ color2 = [0.2 0.9 0];
 
 hold on
 plot(real(z0), imag(z0), '+', 'Color', color1, 'LineWidth', 1.5, 'MarkerSize', 6);
-plot(real(z), imag(z), '+', 'Color', color2, 'LineWidth', 1, 'MarkerSize', 6);
+plot(real(z), imag(z), '+', 'Color', color2, 'LineWidth', 1.5, 'MarkerSize', 6);
 
-text(real(z0), imag(z0), {'  $\mathbf{\underline X_n}$', ''}, 'Color', color1, 'Interpreter', 'latex', 'FontSize', 12);
-text(real(z), imag(z), {'', '$\mathbf{r_0\underline X_n}$'}, 'Color', color2,...
-    'Interpreter', 'latex', 'HorizontalAlignment', 'right', 'FontSize', 12);
+% text(real(z0), imag(z0), {'  $\mathbf{X[n]}$', ''}, 'Color', color1, 'Interpreter', 'latex', 'FontSize', 12);
+% text(real(z), imag(z), {'', '', '$\mathbf{r_0 X[n]}$ '}, 'Color', color2,...
+%     'Interpreter', 'tex', 'HorizontalAlignment', 'right', 'FontSize', 12, 'FontName', 'arial');
+text(real(z0), imag(z0), {'  X[n]', ''}, 'Color', color1,...
+    'Interpreter', 'tex', 'FontSize', 11, 'FontWeight', 'bold');
+text(real(z), imag(z), {'', 'r_0X[n] '}, 'Color', color2, 'HorizontalAlignment', 'right',...
+    'Interpreter', 'tex', 'FontSize', 11, 'FontWeight', 'bold');
 
 % text(real(z*exp(-2i*sigma)), imag(z*exp(-2i*sigma)),...
 %     '$f_{\underline X_{n+P} \, |\, \underline X_n}$', 'Interpreter', 'latex', 'FontSize', 12);

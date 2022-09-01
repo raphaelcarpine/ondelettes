@@ -16,7 +16,7 @@ fc2 = 5;
 fmin = 1;
 fmax = 3;
 Q = 2;
-MotherWavelet = 'morlet';
+MotherWavelet = 'cauchy'; %'morlet', 'cauchy';
 ct = 3;
 ridgeContinuity = 'none'; % 'none', 'simple', 'reverse, 'double', 'slope3'
 signalDerivation = 0;
@@ -36,7 +36,7 @@ regLiMultiVars = [true, logical(regLiMultiVars)];
 averageTimeIntervals = 25;
 Kmin = 10;
 
-plotFA = 1;
+plotFA = 0;
 plotK = 0;
 plotDiscardedFA = 0;
 plotRegLin = 0;
@@ -89,7 +89,7 @@ for kfolder = 1:length(ridgeFolders)
     coeffTemp = nan(size(Ksimu));
     coeffTemp_err = nan(size(Ksimu));
 
-    for ks = 6%1:length(Ksimu)
+    for ks = 1:length(Ksimu)
         ksim = Ksimu(ks);
         filePath = getResultsFile(ksim);
 

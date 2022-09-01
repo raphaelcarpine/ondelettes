@@ -5,7 +5,7 @@ savePath = 'ponts marne 2\autocorr automatise\ondelette\save';
 MotherWavelet = 'cauchy';
 
 % mode
-manualMode = 1;
+manualMode = 0;
 saveResults = 0;
 saveResults = saveResults & ~manualMode;
 

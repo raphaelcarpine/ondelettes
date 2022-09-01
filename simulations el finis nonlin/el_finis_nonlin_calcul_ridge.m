@@ -9,13 +9,13 @@ else
 end
 
 Ksimul = 1:36;
-Qarr = [2 6];
+Qarr = 2;
 fminmaxArr = [1 3];
-MotherWaveletArr = {'morlet'};
+MotherWaveletArr = {'cauchy'};
 signalDerivationArr = 0;
 ridgeContinuityArr = {'none', 'simple', 'reverse', 'double', 'slope3'};
-ridgeContinuityArr = {'none', 'slope3'};
 noiseLevelArr = [20, 15, 10, 5];
+noiseLevelArr = inf;
 
 %%
 
