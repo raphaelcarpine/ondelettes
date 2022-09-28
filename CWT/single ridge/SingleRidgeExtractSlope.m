@@ -117,6 +117,7 @@ closeWaitBar();
     function [phiMax, Beta] = quadInterp(logf)
         % closest frequencies indexes
         [~, Kf] = min(abs(logFreqs.' * ones(size(T)) - logf));
+        KfEdges = Kf == 1 | Kf == length(logFreqs);
         Kf(Kf == 1) = 2;
         Kf(Kf == length(logFreqs)) = length(logFreqs) - 1;
         
@@ -130,6 +131,9 @@ closeWaitBar();
         diffLogFk = [logFk(3, :)-logFk(2, :); logFk(1, :)-logFk(3, :); logFk(2, :)-logFk(1, :)];
         Beta = sum(Mk .* diffLogFk ./ prod(diffLogFk));
         phiMax = sum((Mk .* diffLogFk ./ prod(diffLogFk)).*(sum(logFk)-logFk) ./ (2*Beta));
+        
+        % correction edges (no local max on freq interval)
+        Beta(KfEdges) = 0; % flat => no influence
     end
 
 end

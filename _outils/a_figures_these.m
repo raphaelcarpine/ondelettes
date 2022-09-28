@@ -35,6 +35,9 @@ ax.YLabel.Interpreter = 'none';
 
 %% xylabel latex
 
+xlabel('$\xi$');
+ylabel('$\psi(\xi)$');
+
 ax = gca;
 ax.XLabel.FontSize = 12;
 ax.XLabel.Interpreter = 'latex';
