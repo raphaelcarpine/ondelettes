@@ -13,9 +13,9 @@ captPos = [
     0      -l     -l/2   0      l/2    l      ; % x
     H      h      h      h      h      h      ]; % z
 
-captNumber = [
-    40200 40201  ];
-captNumber = 40201;
+% captNumber = [
+%     40200 40201  ];
+% captNumber = 40201;
 
 
 %% data

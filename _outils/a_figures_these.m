@@ -79,7 +79,7 @@ ax.ZLim = [0 1];
 fig = gcf;
 ax = gca;
 
-set(fig, 'Renderer', 'painters');
+% set(fig, 'Renderer', 'painters');
 
 waitfor(msgbox('600 dpi => .png'));
 

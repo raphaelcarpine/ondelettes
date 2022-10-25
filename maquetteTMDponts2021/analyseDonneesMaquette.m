@@ -1,8 +1,8 @@
-dataFile = 'SensorConnectData7.csv';
+dataFile = 'SensorConnectDataT100.csv';
 
 getData();
 
-% [fctDefModale, fctDefModaleAnimation] = deformeeMaquette(captPos, captDir);
+[fctDefModale, fctDefModaleAnimation] = deformeeMaquette(captPos, captDir);
 
 %%
 
@@ -13,6 +13,6 @@ selectLine();
 
 fmin = 0.;
 fmax = 2;
-WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'RemoveMean', true);%,...
-%     'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation,...
-%     'FrequencyScale', 'lin', 'FourierScale', 'lin');
+WaveletMenu('WaveletPlot', plt, 'fmin', fmin, 'fmax', fmax, 'RemoveMean', true,...
+    'RealShapePlot', fctDefModale, 'AnimatedShapePlot', fctDefModaleAnimation,...
+    'FrequencyScale', 'lin', 'FourierScale', 'lin');
