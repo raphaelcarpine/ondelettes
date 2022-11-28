@@ -233,7 +233,7 @@ if isnan(XLim)
 end
 
 if isnan(maxLagCorr)
-    maxLagCorr = XLim(2)-XLim(1);
+    maxLagCorr = (XLim(2)-XLim(1)) / 100; % moyennage de 100 par défaut
 end
 
 x = nan; y = nan;
@@ -846,7 +846,7 @@ crosscorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot cr
     function displayCrossCorr()
         getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-        NmaxLagCorr = floor(maxLagCorr/Dx);
+        NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
         plotCrossCorr(Dx, y, NmaxLagCorr, 1);
     end
 set(crosscorrelationDisplayMenu, 'CallBack', @(~,~) displayCrossCorr);
@@ -857,7 +857,7 @@ autocorrelationDisplayMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Plot aut
     function displayAutoCorr()
         getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-        NmaxLagCorr = floor(maxLagCorr/Dx);
+        NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
         plotCrossCorr(Dx, y, NmaxLagCorr, 2);
     end
 set(autocorrelationDisplayMenu, 'CallBack', @(~,~) displayAutoCorr);
@@ -878,7 +878,7 @@ autocorrelationMaxLagMenu = uimenu(autocorrelationParamsMenu, 'Text', 'Set max l
         resetCrossCorr();
         getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-        NmaxLagCorr = floor(maxLagCorr/Dx);
+        NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
         plotCrossCorr(Dx, y, NmaxLagCorr, true);
     end
 set(autocorrelationMaxLagMenu, 'CallBack', @(~,~) setMaxLagCorr);
@@ -900,7 +900,7 @@ set(autocorrelationBiasMenuChoices(find(strcmp(autocorrelationBiasValues, autoco
         resetCrossCorr();
         getXY();
         Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-        NmaxLagCorr = floor(maxLagCorr/Dx);
+        NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
         plotCrossCorr(Dx, y, NmaxLagCorr, true);
     end
 set(autocorrelationBiasMenuChoices(1), 'CallBack', @(~,~) selectAutocorrelationBiasMenu(1));
@@ -1644,7 +1644,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         
         % cross corr
         if autocorrelationMode
-            NmaxLagCorr = floor(maxLagCorr/Dx);
+            NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
             plotCrossCorr(Dx, y, NmaxLagCorr);
             if autocorrelationSVDMode && isempty(SVry)
                 [SVry, SVvectry] = svdCWT(tRy, Ry, WvltFreqs, Q, autocorrelationNsvd,...
@@ -2328,7 +2328,7 @@ checkboxAmplRegMean.Tooltip = 'linear regression on amplitude log';
         
         if autocorrelationMode
             Dx = (x(1, end) - x(1, 1))/(size(x, 2)-1);
-            NmaxLagCorr = floor(maxLagCorr/Dx);
+            NmaxLagCorr = ceil(maxLagCorr/Dx) - 1;
             plotCrossCorr(Dx, y, NmaxLagCorr);
         end
         

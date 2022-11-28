@@ -125,6 +125,15 @@ for ksep = 1:Nsep
     Damps(:, ksep) = zeta;
     Shapes(:, :, ksep) = phi;
     
+    % disp
+    disp(Freqs.');
+    disp(mean(Freqs.', 'omitnan'));
+    disp(std(Freqs.', [], 'omitnan'));
+    
+    disp(Damps.');
+    disp(mean(Damps.', 'omitnan'));
+    disp(std(Damps.', [], 'omitnan'));
+    
     % waitbar
     updateWaitBar();
     
@@ -151,8 +160,8 @@ closeWaitBar();
 
 
 %% results
-disp(Freqs);
-disp(Damps);
+disp(Freqs.');
+disp(Damps.');
 
 if saveResults
     saveFile = fullfile(savePath, ['modes_', dataFileName, '_Nsep', num2str(Nsep)]);
