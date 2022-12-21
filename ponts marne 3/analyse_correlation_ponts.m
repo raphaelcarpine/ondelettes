@@ -137,17 +137,17 @@ for projection = [1 2 5] % 1: mode 1, 2, 5
         % xlabel('Temps [s]');
         % ylabel('Fréquence [Hz]');
         
-        % % plot amplitude
-        % figure;
-        % plot(abs(ridge.val), ridge.freq);
-        % xlabel('Amplitude [m/s²]');
-        % ylabel('Fréquence [Hz]');
+        % plot amplitude
+        figure;
+        plot(abs(ridge.val), ridge.freq);
+        xlabel('Amplitude [m/s²]');
+        ylabel('Fréquence [Hz]');
         
-        % % plot fleche
-        % figure;
-        % plot(Xradio(kradio, T >= ridge.time(1) & T <= ridge.time(end)), ridge.freq);
-        % xlabel('Flèche [mm]');
-        % ylabel('Fréquence [Hz]');
+        % plot fleche
+        figure;
+        plot(Xradio(kradio, T >= ridge.time(1) & T <= ridge.time(end)), ridge.freq);
+        xlabel('Flèche [mm]');
+        ylabel('Fréquence [Hz]');
         
         
         Xtot = Xradio(kradio, T >= ridge.time(1) & T <= ridge.time(end)).';

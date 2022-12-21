@@ -22,4 +22,5 @@ for kf = 1:length(Freqs)
         figName = [figName, ' (pb extractio nridge)'];
     end
     shapePlotBridge(real(Shapes(:, kf)), figName);
+%     shapePlotBridgeAnim(Shapes(:, kf), figName);
 end

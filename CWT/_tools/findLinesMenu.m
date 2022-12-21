@@ -23,7 +23,6 @@ okButton = uicontrol(fig, 'Style', 'pushbutton', 'String', 'OK', 'Units', 'chara
 cancelButton = uicontrol(fig, 'Style', 'pushbutton', 'String', 'Cancel', 'Units', 'characters', 'Position', [L/2+1 0.5 12 2]);
 
 
-
 %% axes selection
 
 allAxes = findall(0, 'type', 'axes');
@@ -53,6 +52,9 @@ Lines = gobjects(1, 0);
                     case 'matlab.graphics.chart.primitive.Line'
                         if ismember(axOrLines2, axOrLines)
                             axOrLines = axOrLines(axOrLines ~= axOrLines2);
+                            if isempty(axOrLines)
+                                axOrLines = axOrLines2;
+                            end
                         else
                             axOrLines(end+1) = axOrLines2;
                         end
@@ -104,7 +106,7 @@ okButton.Callback = @okCallback;
         delete(fig);
     end
 
-fig.KeyReleaseFcn = @enterCallback;
+fig.KeyPressFcn = @enterCallback;
 
     function enterCallback(~,ev)
         switch ev.Key
@@ -119,10 +121,16 @@ fig.KeyReleaseFcn = @enterCallback;
 waitfor(fig);
 
 for k_ax = 1:length(allAxes)
-    set(allAxes(k_ax), 'ButtonDownFcn', allAxesButtonDownFcns{k_ax});
+    try
+        set(allAxes(k_ax), 'ButtonDownFcn', allAxesButtonDownFcns{k_ax});
+    catch
+    end
 end
 for k_li = 1:length(allLines)
-    set(allLines(k_li), 'ButtonDownFcn', allLinesButtonDownFcns{k_li});
+    try
+        set(allLines(k_li), 'ButtonDownFcn', allLinesButtonDownFcns{k_li});
+    catch
+    end
 end
 
 end

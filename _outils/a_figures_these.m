@@ -14,7 +14,7 @@ set(fig, 'Renderer', 'painters');
 
 fig = gcf;
 fig.Position(3:4) = [350 250];
-set(fig, 'Renderer', 'painters');
+% set(fig, 'Renderer', 'painters');
 
 %% petit (3 cote à cote)
 

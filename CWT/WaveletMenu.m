@@ -9,7 +9,7 @@ defaultFmin = 1;
 defaultFmax = 10;
 defaultNbFreq = 300;
 defaultParent = 0;
-defaultWaveletPlot = 0;
+defaultWaveletPlot = gobjects(1, 0);
 defaultQ = 10;
 defaultMaxRidges = 1;
 defaultMaxParallelRidges = inf;
@@ -108,6 +108,8 @@ addParameter(p, 'CheckForUpdates', defaultCheckForUpdates);
 
 parse(p, varargin{:})
 
+gca0 = gca;
+
 fig = p.Results.Parent;
 if fig == 0
     fig = figure('Name', 'Wavelet Menu', 'numbertitle', 'off');
@@ -137,11 +139,16 @@ end
     end
 
 WaveletPlot = p.Results.WaveletPlot;
+
+if isempty(WaveletPlot) && length(p.Results.X) == 1 && isnan(p.Results.X)
+    WaveletPlot = findLinesMenu(gca0, 'Sélection du signal');
+end
+
 if size(WaveletPlot, 1) > size(WaveletPlot, 2)
     WaveletPlot = transpose(WaveletPlot);
 end
-
-if WaveletPlot == 0
+    
+if isempty(WaveletPlot)
     getX = @() p.Results.X;
     getY = @() p.Results.Y;
     plotAxes = gobjects(1, 0);
@@ -170,7 +177,7 @@ nbPlots = nbPlotsTot;
 signalChannels = 1:nbPlots;
 signalChannelsNames = cell(1, nbPlots);
 for k = 1:nbPlots
-    if any(WaveletPlot == 0) || isempty(WaveletPlot(k).DisplayName)
+    if isempty(WaveletPlot) || isempty(WaveletPlot(k).DisplayName)
         signalChannelsNames{k} = sprintf('channel %u', k);
     else
         signalChannelsNames{k} = WaveletPlot(k).DisplayName;

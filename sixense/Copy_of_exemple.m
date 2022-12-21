@@ -1,16 +1,63 @@
+%% construction de faux signaux
+% On construit ici des faux signaux, d'une structure linéaire à trois
+% modes, avec 5 capteurs accélérométriques, excitée par un bruit blanc.
+
+% données simulation
+% T = 10000; % temps total d'acquisition
+% fe = 50; % fréquence d'échantillonnage
+% dt = 1/fe; % pas de temps
+% t = 0:dt:T; % vecteur temps
+% N = length(t); % nb de points
+% 
+% % données système
+% f1 = 2; % fréquences propres
+% f2 = 5;
+% f3 = 6;
+% w1 = 2*pi*f1; w2 = 2*pi*f2; w3 = 2*pi*f3;
+% z1 = 0.01; % taux d'amortissement
+% z2 = 0.01;
+% z3 = 0.02;
+% phi1 = [1;2;3;2;1]; % déformées modales
+% phi2 = [1;1;0;-1;-1];
+% phi3 = [0;0;1;2;1];
+% A1 = 1; % facteurs de participation modale
+% A2 = 1;
+% A3 = 1;
+% B = randn(1, N); % excitation
+% 
+% % calcul de la réponse
+% H1 = @(p) A1./(w1^2 + 2*z1*w1*p + p.^2); % fonctions de transfert des modes
+% H2 = @(p) A2./(w2^2 + 2*z2*w2*p + p.^2);
+% H3 = @(p) A3./(w3^2 + 2*z3*w3*p + p.^2);
+% iW = 2i*pi*fe/N*[0:floor(N/2), -ceil(N/2)+1:-1]; % vecteur des pusations
+% fftB = fft(B); % TF de l'excitation
+% fftX = phi1*(H1(iW).*fftB) + phi2*(H2(iW).*fftB) + phi3*(H3(iW).*fftB); % TF de la réponse
+% X = ifft(fftX, [], 2); % position
+% fftA = iW.^2 .* fftX;
+% A = ifft(fftA, [], 2); % accélération (signal des capteurs accéléromètres)
+
+
+%% test
+
+% figure;
+% plt = plot(t, A);
+% xlabel('Temps [s]');
+% ylabel('Accélération [m/s²]');
+% WaveletMenu('WaveletPlot', plt);
+
 %% chargement données
 % données de simulation d'un pont sous traffic ambiant, cas sans fissures
 
 load('data_simu.mat'); % Acapt, Ycapt, Temp, fe
 
-A = Acapt; % capteurs virtuels d'accélération, à 1/4, 1/2 et 3/4 de la travée
-X = Ycapt; % capteur virtuel de position, à mi-travée
+A = Acapt; % capteurs virtuels d'accélération
+X = Ycapt; % capteur virtuel de position
 
 % déformées modales (connues)
 phi1 = sin((1:3)*pi/4).';
 phi2 = sin((1:3)*pi/2).';
 
-% données complémentaires
+% données
 N = size(Acapt, 2); % nb de points
 dt = 1/fe; % pas de temps
 T = N*dt; % temps total d'acquisition
@@ -22,7 +69,7 @@ t = dt * (0:N-1); % vecteur temps
 % On suppose ici que les déformées modales ont déjà été estimées à partir
 % des données.
 
-proj = projectionMode(phi1, phi2); % calcul projection optimale pou isoler le mode 1
+proj = projectionMode(phi1, phi2);
 a1 = proj.' * A; % signal accélérométrique ne contenant que le mode 1
 
 % figures fourier
@@ -44,9 +91,9 @@ linkaxes([ax1,ax2],'x');
 %% calcul de l'arête de la TOC
 
 % paramètres ondelettes
-MotherWavelet = 'morlet'; % 'morlet', 'cauchy' (au choix, ne change pas les résultats finaux d'après les simulations)
+MotherWavelet = 'morlet'; % 'morlet', 'cauchy'
 ct = 3; % ne pas toucher
-Q = 2; % régler à 2, ou plus si mode proche non éliminé (à tester, peut changer les résultats finaux, idéal à 2 d'après les simulations)
+Q = 2; % régler à 2, ou plus si mode proche non éliminé
 fmin = 1.08; % f1 - 1
 fmax = 3.08; % f1 + 1
 freqs = linspace(fmin, fmax, 100);
@@ -61,7 +108,7 @@ ampl_arete = nan(size(t)); % squelette (amplitude instantanée)
 kti = 1; ktf = 1; % indices début et fin calcul
 [~, DeltaT] = FTpsi_DeltaT(Q, MotherWavelet); % dispersion temporelle TOC
 kt_effets_bord = ceil(fe * ct * DeltaT(fmin)); % largeur effets de bord
-[initWaitBar, updateWaitBar, closeWaitBar] = ... % barre de progression
+[initWaitBar, updateWaitBar, closeWaitBar] = ... % bar progression
     getWaitBar(N, 'windowTitle', 'Calcul TOC');
 initWaitBar();
 while ktf < N
@@ -81,16 +128,20 @@ while ktf < N
     freq_arete(kti_arete:ktf_arete) = arete.freq;
     ampl_arete(kti_arete:ktf_arete) = abs(arete.val);
     
-    updateWaitBar(ktf); % barre de progression
+    updateWaitBar(ktf); % bar progression
 end
-closeWaitBar(); % barre de progression
+closeWaitBar(); % bar progression
 
 
 %% décorrélation température
+% % manque le vecteur Temp ici, on en crée un virtuel
+% kTauVirtuel = 500*fe; % déphasage de 500s
+% Temp = [freq_reg(kTauVirtuel+1:end) - mean(freq_reg, 'omitnan'), zeros(1, kTauVirtuel)];
+% Temp = -2*Temp + 20 + 0.1*randn(size(Temp));
 
 % remplissage données NaN (arête non définie), pour simplification xcorr
 freq_arete_nonan = freq_arete;
-freq_arete_nonan(isnan(freq_arete)) = mean(freq_arete, 'omitnan'); % on remplace par la moyenne
+freq_arete_nonan(isnan(freq_arete)) = mean(freq_arete, 'omitnan');
 
 % temps de déphasage Tau0
 Rft = xcorr(freq_arete_nonan - mean(freq_arete_nonan), Temp - mean(Temp), 'biased');
@@ -127,18 +178,6 @@ freq_arete_corr = freq_arete - betaT*(Temp2 - mean(Temp2(I))); % fréquence corr
 % plot(Temp2(I), freq_arete(I), '+');
 % hold on
 % plot(get(gca, 'XLim'), coeffs(1) + betaT*(get(gca, 'XLim') - mean(Temp2(I))), 'r--');
-% xlabel('Température [°C]');
-% ylabel('Fréquence [Hz]');
-
-% affichage
-figure;
-plot(ampl_arete, freq_arete_corr);
-xlabel('Amplitude [m/s²]');
-ylabel('Fréquence [Hz]');
-figure;
-plot(1000*X, freq_arete_corr);
-xlabel('Flèche [mm]');
-ylabel('Fréquence [Hz]');
 
 
 %% régressions
