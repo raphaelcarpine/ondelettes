@@ -141,7 +141,7 @@ end
 WaveletPlot = p.Results.WaveletPlot;
 
 if isempty(WaveletPlot) && length(p.Results.X) == 1 && isnan(p.Results.X)
-    WaveletPlot = findLinesMenu(gca0, 'Sélection du signal');
+    WaveletPlot = findLinesMenu(gca0, 'Signal selection');
 end
 
 if size(WaveletPlot, 1) > size(WaveletPlot, 2)

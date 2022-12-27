@@ -11,7 +11,7 @@ phi1 = sin((1:3)*pi/4).';
 phi2 = sin((1:3)*pi/2).';
 
 % données complémentaires
-N = size(Acapt, 2); % nb de points
+N = size(Acapt, 2); % nb de points temporels
 dt = 1/fe; % pas de temps
 T = N*dt; % temps total d'acquisition
 t = dt * (0:N-1); % vecteur temps
@@ -22,7 +22,7 @@ t = dt * (0:N-1); % vecteur temps
 % On suppose ici que les déformées modales ont déjà été estimées à partir
 % des données.
 
-proj = projectionMode(phi1, phi2); % calcul projection optimale pou isoler le mode 1
+proj = projectionMode(phi1, phi2); % calcul projection optimale pour isoler le mode 1
 a1 = proj.' * A; % signal accélérométrique ne contenant que le mode 1
 
 % figures fourier
@@ -49,11 +49,11 @@ ct = 3; % ne pas toucher
 Q = 2; % régler à 2, ou plus si mode proche non éliminé (à tester, peut changer les résultats finaux, idéal à 2 d'après les simulations)
 fmin = 1.08; % f1 - 1
 fmax = 3.08; % f1 + 1
-freqs = linspace(fmin, fmax, 100);
+freqs = linspace(fmin, fmax, 100); % vecteur des fréquences de la TOC
 
 % paramètres arete
-ridgeContinuity = 'none'; % 'none', 'slope'
-slopeTimeConst = 3; % inutile pour ridgeContinuity = 'none'
+ridgeContinuity = 'none'; % 'none', 'slope' ('none' pour la def par argmax, 'slope' pour la def par optimisation de [Carmona et al., 1997] présentée en annexe G de la thèse)
+slopeTimeConst = 3; % temps caractéristique de "lissage" de l'arete, inutile pour ridgeContinuity = 'none'
 
 % calcul arête 5min par 5min
 freq_arete = nan(size(t)); % arete (fréquence instantanée)
@@ -63,11 +63,11 @@ kti = 1; ktf = 1; % indices début et fin calcul
 kt_effets_bord = ceil(fe * ct * DeltaT(fmin)); % largeur effets de bord
 [initWaitBar, updateWaitBar, closeWaitBar] = ... % barre de progression
     getWaitBar(N, 'windowTitle', 'Calcul TOC');
-initWaitBar();
+initWaitBar(); % barre de progression
 while ktf < N
     % calcul indices début et fin heure
-    kti = max(ktf - 2*kt_effets_bord, 1);
-    ktf = min(ktf + 5*60*fe, N);
+    kti = max(ktf - 2*kt_effets_bord, 1); % début à la fin de l'intervalle précédent, avec intervalles de recouvrement d'effets de bord
+    ktf = min(ktf + 5*60*fe, N); % fin 5 min plus tard
     
     % calcul TOC et arete
     TOC = WvltComp(t(kti:ktf), a1(kti:ktf), freqs, Q,...
@@ -79,7 +79,7 @@ while ktf < N
     kti_arete = find(t == arete.time(1)); % indice début arête
     ktf_arete = find(t == arete.time(end)); % indice fin arête
     freq_arete(kti_arete:ktf_arete) = arete.freq;
-    ampl_arete(kti_arete:ktf_arete) = abs(arete.val);
+    ampl_arete(kti_arete:ktf_arete) = abs(arete.val); % module, car arete.val est complexe car contient également la phase
     
     updateWaitBar(ktf); % barre de progression
 end
@@ -88,16 +88,16 @@ closeWaitBar(); % barre de progression
 
 %% décorrélation température
 
-% remplissage données NaN (arête non définie), pour simplification xcorr
+% remplissage données NaN (arête non définie), pour simplification calcul xcorr
 freq_arete_nonan = freq_arete;
 freq_arete_nonan(isnan(freq_arete)) = mean(freq_arete, 'omitnan'); % on remplace par la moyenne
 
 % temps de déphasage Tau0
-Rft = xcorr(freq_arete_nonan - mean(freq_arete_nonan), Temp - mean(Temp), 'biased');
-[~, kTau0] = max(abs(Rft));
-kTau0 = kTau0 - length(freq_arete_nonan);
+Rft = xcorr(freq_arete_nonan - mean(freq_arete_nonan), Temp - mean(Temp), 'biased'); % calcul corrélation
+[~, kTau0] = max(abs(Rft)); % argmax
+kTau0 = kTau0 - length(freq_arete_nonan); % correction car le déphasage 0 n'est pas à 0 dans le vecteur Rft
 if kTau0 < 0
-    warning('déphasage température négatif');
+    warning('déphasage température négatif'); % en principe, le déphasage est positif
     kTau0 = 0;
 end
 
@@ -118,9 +118,11 @@ Temp2 = [nan(1, kTau0), Temp(1:end-kTau0)]; % décalage temporel température
 I = ~isnan(freq_arete) & ~isnan(Temp2); % sélection indices de tps où l'arête est définie
 coeffs = [ones(size(Temp2(I).')), Temp2(I).' - mean(Temp2(I))] \ freq_arete(I).'; % régression affine
 betaT = coeffs(2); % coefficient régression
+freq_arete_corr = freq_arete - betaT*(Temp2 - mean(Temp2(I))); % fréquence corrigée
+
+% affichage
 disp('coefficient corrélation fréquence/température [Hz/°C] :');
 disp(betaT);
-freq_arete_corr = freq_arete - betaT*(Temp2 - mean(Temp2(I))); % fréquence corrigée
 
 % % affichage
 % figure;
@@ -148,7 +150,7 @@ I = ~isnan(freq_arete_corr) & ~isnan(ampl_arete) & ~isnan(X); % sélection indic
 coeffs = [ones(size(ampl_arete(I).')), ampl_arete(I).', X(:, I).'] \ freq_arete_corr(I).'; % régression affine multi-variables
 f0 = coeffs(1);
 betaA = coeffs(2);
-betaX = coeffs(3:end);
+betaX = coeffs(3:end); % betaX peut être de dimension > 1
 
 % par heure
 Nsep = 24; % nb de sous-intervalles de temps
