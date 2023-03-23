@@ -8,12 +8,12 @@ else
     error(' ');
 end
 
-Ksimul = 1:36;
+Ksimul = 6;
 Qarr = 2;
 fminmaxArr = [1 3];
-MotherWaveletArr = {'cauchy'};
+MotherWaveletArr = {'morlet'};
 signalDerivationArr = 0;
-ridgeContinuityArr = {'none', 'simple', 'reverse', 'double', 'slope3'};
+ridgeContinuityArr = {'slope3'};%{'none', 'simple', 'reverse', 'double', 'slope3'};
 noiseLevelArr = [20, 15, 10, 5];
 noiseLevelArr = inf;
 

@@ -20,7 +20,7 @@ fig.Position(3:4) = [350 250];
 
 fig = gcf;
 fig.Position(3:4) = [260 210];
-set(fig, 'Renderer', 'painters');
+% set(fig, 'Renderer', 'painters');
 
 
 %%
@@ -79,7 +79,7 @@ ax.ZLim = [0 1];
 fig = gcf;
 ax = gca;
 
-% set(fig, 'Renderer', 'painters');
+set(fig, 'Renderer', 'painters');
 
 waitfor(msgbox('600 dpi => .png'));
 
@@ -102,6 +102,10 @@ while k <= length(L)
 end
 
 % enregistrement axes
+try
+    export_fig(gcf, '.eps', '-nocrop') % bug mais indispensable !
+catch
+end
 for k = 1:length(S)
     S(k).Visible = 'off';
 end
@@ -112,10 +116,6 @@ end
 fig.Color = 'none';
 ax.Color = 'none';
 drawnow
-try
-    export_fig(gcf, '.eps', '-nocrop') % bug mais indispensable !
-catch
-end
 waitfor(msgbox('.eps'));
 
 % enregistrement axes 2

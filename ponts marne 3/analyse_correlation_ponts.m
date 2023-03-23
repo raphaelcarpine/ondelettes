@@ -7,7 +7,7 @@ CellCoeffs = {'', 'f_0', '', '\beta_X', '', '\beta_A', ''};
 %% parametres
 
 testWaveletMenu = 0;
-testAffichage = 0;
+testAffichage = 1;
 
 contraindreRidge = 1; % contraindre le ridge à rester dans la plage de fréquences [fmin, fmax]
 
